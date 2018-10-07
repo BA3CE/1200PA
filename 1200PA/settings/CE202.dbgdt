@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Project>
+  <Desktop>
+    <Static>
+      <Debug-Log>
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>965</ColumnWidth1></Debug-Log>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>723</ColumnWidth1><ColumnWidth2>193</ColumnWidth2><ColumnWidth3>48</ColumnWidth3></Build>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>208</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Disassembly>
+        <PreferedWindows>
+          
+          
+          
+          
+        <Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows>
+        
+        
+        
+      <MixedMode>1</MixedMode><CodeCovShow>0</CodeCovShow><InstrProfShow>0</InstrProfShow></Disassembly>
+      <Watch>
+        <Format>
+          <struct_types/>
+          <watch_formats><Fmt><Key>{W}Watch-0:1&lt;&lt;1</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:1&lt;&lt;2</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:1&lt;&lt;3</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:1&lt;&lt;4</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:1&lt;&lt;5</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:1&lt;&lt;6</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:1&lt;&lt;7</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:Cx&lt;&lt;3</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-1:0x50&amp;0x40</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-1:1&lt;&lt;6</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-1:TUNEDATAOFFSET[freqTune][15]</Key><Value>4</Value></Fmt></watch_formats>
+        </Format>
+        <PreferedWindows>
+          
+          
+          
+          
+        <Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Locals</Factory></Window></Windows></PreferedWindows>
+        
+        
+        
+        
+      <Column0>105</Column0><Column1>171</Column1><Column2>100</Column2><Column3>100</Column3></Watch>
+      <Locals>
+        <PreferedWindows>
+          
+          
+          
+          
+        <Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Watch</Factory></Window></Windows></PreferedWindows>
+        
+        
+        
+        
+      <Column0>100</Column0><Column1>100</Column1><Column2>100</Column2><Column3>100</Column3></Locals>
+      <Register>
+        <PreferedWindows>
+          
+          
+          
+          
+        <Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows>
+      </Register>
+    <TerminalIO><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><InputSource>1</InputSource><InputMode>10</InputMode><Filename>$PROJ_DIR$\TermIOInput.txt</Filename><InputEcho>1</InputEcho><ShowReset>0</ShowReset></TerminalIO></Static>
+    <Windows>
+      
+      
+      
+    <Wnd3>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-24428-15728</Identity>
+            <TabName>Debug Log</TabName>
+            <Factory>Debug-Log</Factory>
+            <Session/>
+          </Tab>
+          <Tab>
+            <Identity>TabID-23905-15738</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd3><Wnd4>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-2409-15732</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>CE202</ExpandedNode><ExpandedNode>CE202/APP</ExpandedNode><ExpandedNode>CE202/BSP</ExpandedNode><ExpandedNode>CE202/BSP/bsp.c</ExpandedNode><ExpandedNode>CE202/FWLib</ExpandedNode><ExpandedNode>CE202/FWLib/stm32f10x_adc.c</ExpandedNode><ExpandedNode>CE202/FWLib/stm32f10x_gpio.c</ExpandedNode><ExpandedNode>CE202/Interrupt</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd4><Wnd5><Tabs><Tab><Identity>TabID-19279-16160</Identity><TabName>Locals</TabName><Factory>Locals</Factory><Session><Column0>100</Column0><Column1>100</Column1><Column2>100</Column2><Column3>100</Column3></Session></Tab><Tab><Identity>TabID-11155-7390</Identity><TabName>Watch</TabName><Factory>Watch</Factory><Session><Expressions><Expression><Expression>ack</Expression></Expression><Expression><Expression>Display[1]</Expression></Expression><Expression><Expression>button_flag</Expression></Expression><Expression><Expression>1&lt;&lt;1</Expression></Expression><Expression><Expression>1&lt;&lt;2</Expression></Expression><Expression><Expression>1&lt;&lt;3</Expression></Expression><Expression><Expression>1&lt;&lt;4</Expression></Expression><Expression><Expression>1&lt;&lt;5</Expression></Expression><Expression><Expression>1&lt;&lt;6</Expression></Expression><Expression><Expression>1&lt;&lt;7</Expression></Expression></Expressions><TabId>0</TabId><Column0>105</Column0><Column1>171</Column1><Column2>100</Column2><Column3>100</Column3></Session></Tab></Tabs><SelectedTab>1</SelectedTab></Wnd5></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\Boards\BSP\bsp.c</Filename><XPos>0</XPos><YPos>198</YPos><SelStart>7499</SelStart><SelEnd>7512</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\FWLib\library\src\stm32f10x_gpio.c</Filename><XPos>0</XPos><YPos>243</YPos><SelStart>9838</SelStart><SelEnd>9847</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\Boards\BSP\bsp.h</Filename><XPos>0</XPos><YPos>84</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\Boards\eeprom.c</Filename><XPos>0</XPos><YPos>106</YPos><SelStart>3208</SelStart><SelEnd>3208</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\os_cpu_a.asm</Filename><XPos>0</XPos><YPos>78</YPos><SelStart>4176</SelStart><SelEnd>4176</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\Boards\app.c</Filename><XPos>0</XPos><YPos>652</YPos><SelStart>28532</SelStart><SelEnd>28532</SelEnd></Tab><ActiveTab>5</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\os_cpu_c.c</Filename><XPos>0</XPos><YPos>137</YPos><SelStart>5627</SelStart><SelEnd>5627</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\uCOS-II\Source\os_core.c</Filename><XPos>0</XPos><YPos>1762</YPos><SelStart>74967</SelStart><SelEnd>74967</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>F:\MyProjects\ce202\FWLib\library\inc\stm32f10x_gpio.h</Filename><XPos>0</XPos><YPos>41</YPos><SelStart>2499</SelStart><SelEnd>2514</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-00b0b540><key>iaridepm.enu1</key></Toolbar-00b0b540></Sizes></Row0><Row1><Sizes><Toolbar-042ec9d0><key>debuggergui.enu1</key></Toolbar-042ec9d0></Sizes></Row1></Top><Left><Row0><Sizes><Wnd4><Rect><Top>-2</Top><Left>-2</Left><Bottom>439</Bottom><Right>299</Right><x>-2</x><y>-2</y><xscreen>453</xscreen><yscreen>442</yscreen><sizeHorzCX>353906</sizeHorzCX><sizeHorzCY>613889</sizeHorzCY><sizeVertCX>235156</sizeVertCX><sizeVertCY>612500</sizeVertCY></Rect></Wnd4></Sizes></Row0></Left><Right><Row0><Sizes><Wnd5><Rect><Top>-2</Top><Left>-2</Left><Bottom>439</Bottom><Right>296</Right><x>-2</x><y>-2</y><xscreen>336</xscreen><yscreen>303</yscreen><sizeHorzCX>262500</sizeHorzCX><sizeHorzCY>420833</sizeHorzCY><sizeVertCX>232813</sizeVertCX><sizeVertCY>612500</sizeVertCY></Rect></Wnd5></Sizes></Row0></Right><Bottom><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>212</Bottom><Right>1282</Right><x>-2</x><y>-2</y><xscreen>1284</xscreen><yscreen>214</yscreen><sizeHorzCX>1003125</sizeHorzCX><sizeHorzCY>297222</sizeHorzCY><sizeVertCX>353906</sizeVertCX><sizeVertCY>613889</sizeVertCY></Rect></Wnd3></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Project>
+
+

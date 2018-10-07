@@ -1,0 +1,284 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  22:57:16 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Boards\Uart\Usart_Inter.c                             #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\Boards\Uart\Usart_Inter.c" -D _DLIB_FILE_DESCRIPTOR   #
+#                    -lC "F:\MyProjects\Tjinc\CAN & Uart over                 #
+#                    IP\Debug\List\" -o "F:\MyProjects\Tjinc\CAN & Uart over  #
+#                    IP\Debug\Obj\" --no_unroll --no_inline --no_tbaa         #
+#                    --no_scheduling --debug --endian=little --cpu=Cortex-M3  #
+#                    -e --fpu=None --dlib_config "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4                           #
+#                    Kickstart\arm\INC\DLib_Config_Normal.h" -I               #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\Usart_Inter.lst                            #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\Obj\Usart_Inter.o                               #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\Uart\Usart_Inter.c
+      1          /* Includes ------------------------------------------------------------------*/
+      2          #include <string.h>
+
+   \                                 In section .text, align 2
+   \   __??Code16?? __intrinsic __code __interwork void *memcpy(void *, void const *, size_t)
+   \                     memcpy:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+   \   00000004   ........           BL       __aeabi_memcpy
+   \   00000008   2046               MOV      R0,R4
+   \   0000000A   10BD               POP      {R4,PC}          ;; return
+      3          
+      4          #include "stm32f10x_lib.h"
+      5          #include "Usart_Inter.h"
+      6          #include "stm32/stm32_usart.h"
+      7          #include "ch432/ch432_usart.h"
+      8          #include "eeprom/at24c64.h"
+      9          
+     10          /* Extern variables ------------------------------------------------------------*/
+     11          extern INT8U SendBuffer[1024];
+     12          extern void STM32_DMA1_Init(enum COMPORT COMx,unsigned TxBufferSize);
+     13          /* Private typedef -----------------------------------------------------------*/
+     14          /* Private define ------------------------------------------------------------*/
+     15          /* Private macro -------------------------------------------------------------*/
+     16          /* Private variables ---------------------------------------------------------*/
+
+   \                                 In section .bss, align 4
+     17          OS_EVENT *WriteUsartSem;
+   \                     WriteUsartSem:
+   \   00000000                      DS8 4
+     18          /* Private functions ---------------------------------------------------------*/
+
+   \                                 In section .text, align 2, keep-with-next
+     19          void USART2_5_Init(void)
+     20          {
+   \                     USART2_5_Init:
+   \   00000000   00B5               PUSH     {LR}
+   \   00000002   83B0               SUB      SP,SP,#+12
+     21            	INT16U BaudRate[4];
+     22          	
+     23            	get_commport(BaudRate);
+   \   00000004   00A8               ADD      R0,SP,#+0
+   \   00000006   ........           BL       get_commport
+     24          	
+     25            	STM32_USART2_Init(BaudRate[0]);
+   \   0000000A   BDF80000           LDRH     R0,[SP, #+0]
+   \   0000000E   ........           BL       STM32_USART2_Init
+     26            	STM32_USART3_Init(BaudRate[1]);
+   \   00000012   BDF80200           LDRH     R0,[SP, #+2]
+   \   00000016   ........           BL       STM32_USART3_Init
+     27            	CH432_USART_Init(&BaudRate[2]);
+   \   0000001A   01A8               ADD      R0,SP,#+4
+   \   0000001C   ........           BL       CH432_USART_Init
+     28          	
+     29          	WriteUsartSem=OSSemCreate(1);
+   \   00000020   0120               MOVS     R0,#+1
+   \   00000022   ........           BL       OSSemCreate
+   \   00000026   ....               LDR.N    R1,??DataTable1  ;; WriteUsartSem
+   \   00000028   0860               STR      R0,[R1, #+0]
+     30          }
+   \   0000002A   07BD               POP      {R0-R2,PC}       ;; return
+
+   \                                 In section .text, align 4, keep-with-next
+     31          void USART_Send(enum COMPORT COMx,unsigned char *buff,unsigned short len)
+     32          {
+   \                     USART_Send:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   8046               MOV      R8,R0
+   \   00000006   0E46               MOV      R6,R1
+   \   00000008   1746               MOV      R7,R2
+     33            	OSSemPend(WriteUsartSem,0,NULL);	//获得串口写信号量
+   \   0000000A   ....               LDR.N    R5,??DataTable1  ;; WriteUsartSem
+   \   0000000C   0022               MOVS     R2,#+0
+   \   0000000E   1146               MOV      R1,R2
+   \   00000010   2868               LDR      R0,[R5, #+0]
+   \   00000012   ........           BL       OSSemPend
+     34          	
+     35          	STM32_DMA1_Init(COMx,len);
+   \   00000016   3C46               MOV      R4,R7
+   \   00000018   2146               MOV      R1,R4
+   \   0000001A   4046               MOV      R0,R8
+   \   0000001C   ........           BL       STM32_DMA1_Init
+     36          	
+     37            	if(COMx==COM2){
+   \   00000020   B8F1000F           CMP      R8,#+0
+   \   00000024   0FD1               BNE.N    ??USART_Send_0
+     38          		memcpy(SendBuffer,buff,len);
+   \   00000026   2246               MOV      R2,R4
+   \   00000028   3146               MOV      R1,R6
+   \   0000002A   1F48               LDR.N    R0,??USART_Send_1  ;; SendBuffer
+   \   0000002C   ........           BL       memcpy
+     39          		DMA_Cmd(DMA1_Channel7, ENABLE);
+   \   00000030   0121               MOVS     R1,#+1
+   \   00000032   1E48               LDR.N    R0,??USART_Send_1+0x4  ;; 0x40020080
+   \   00000034   ........           BL       DMA_Cmd
+     40          		/* Wait until DMA1_Channel 7 Transfer Complete */
+     41            		while (DMA_GetFlagStatus(DMA1_FLAG_TC7) == RESET);
+   \                     ??USART_Send_2:
+   \   00000038   4FF00070           MOV      R0,#+33554432
+   \   0000003C   ........           BL       DMA_GetFlagStatus
+   \   00000040   0028               CMP      R0,#+0
+   \   00000042   2CD1               BNE.N    ??USART_Send_3
+   \   00000044   F8E7               B.N      ??USART_Send_2
+     42          	}
+     43          	else if(COMx==COM3){
+   \                     ??USART_Send_0:
+   \   00000046   B8F1010F           CMP      R8,#+1
+   \   0000004A   0ED1               BNE.N    ??USART_Send_4
+     44          	  	memcpy(SendBuffer,buff,len);
+   \   0000004C   2246               MOV      R2,R4
+   \   0000004E   3146               MOV      R1,R6
+   \   00000050   1548               LDR.N    R0,??USART_Send_1  ;; SendBuffer
+   \   00000052   ........           BL       memcpy
+     45          		DMA_Cmd(DMA1_Channel2, ENABLE);
+   \   00000056   0121               MOVS     R1,#+1
+   \   00000058   1548               LDR.N    R0,??USART_Send_1+0x8  ;; 0x4002001c
+   \   0000005A   ........           BL       DMA_Cmd
+     46          		/* Wait until DMA1_Channel 2 Transfer Complete */
+     47            		while (DMA_GetFlagStatus(DMA1_FLAG_TC2) == RESET);
+   \                     ??USART_Send_5:
+   \   0000005E   2020               MOVS     R0,#+32
+   \   00000060   ........           BL       DMA_GetFlagStatus
+   \   00000064   0028               CMP      R0,#+0
+   \   00000066   1AD1               BNE.N    ??USART_Send_3
+   \   00000068   F9E7               B.N      ??USART_Send_5
+     48          	}
+     49          	else if(COMx==COM4)
+   \                     ??USART_Send_4:
+   \   0000006A   B8F1020F           CMP      R8,#+2
+   \   0000006E   09D1               BNE.N    ??USART_Send_6
+     50          	  	for(unsigned short i=0;i<len;i++)
+   \   00000070   0024               MOVS     R4,#+0
+   \                     ??USART_Send_7:
+   \   00000072   2046               MOV      R0,R4
+   \   00000074   B842               CMP      R0,R7
+   \   00000076   12D2               BCS.N    ??USART_Send_3
+     51          			CH432_USART1_SendByte(buff[i]);
+   \   00000078   805D               LDRB     R0,[R0, R6]
+   \   0000007A   ........           BL       CH432_USART1_SendByte
+   \   0000007E   641C               ADDS     R4,R4,#+1
+   \   00000080   A4B2               UXTH     R4,R4
+   \   00000082   F6E7               B.N      ??USART_Send_7
+     52          	else if(COMx==COM5)
+   \                     ??USART_Send_6:
+   \   00000084   B8F1030F           CMP      R8,#+3
+   \   00000088   09D1               BNE.N    ??USART_Send_3
+     53          	  	for(unsigned short i=0;i<len;i++)
+   \   0000008A   0024               MOVS     R4,#+0
+   \   0000008C   04E0               B.N      ??USART_Send_8
+     54          			CH432_USART2_SendByte(buff[i]);
+   \                     ??USART_Send_9:
+   \   0000008E   805D               LDRB     R0,[R0, R6]
+   \   00000090   ........           BL       CH432_USART2_SendByte
+   \   00000094   641C               ADDS     R4,R4,#+1
+   \   00000096   A4B2               UXTH     R4,R4
+   \                     ??USART_Send_8:
+   \   00000098   2046               MOV      R0,R4
+   \   0000009A   B842               CMP      R0,R7
+   \   0000009C   F7D3               BCC.N    ??USART_Send_9
+     55          	
+     56          	OSSemPost(WriteUsartSem);	//释放串口写信号量
+   \                     ??USART_Send_3:
+   \   0000009E   2868               LDR      R0,[R5, #+0]
+   \   000000A0   BDE8F041           POP      {R4-R8,LR}
+   \   000000A4   ........           B.W      OSSemPost
+   \                     ??USART_Send_1:
+   \   000000A8   ........           DC32     SendBuffer
+   \   000000AC   80000240           DC32     0x40020080
+   \   000000B0   1C000240           DC32     0x4002001c
+     57          }
+
+   \                                 In section .text, align 2, keep-with-next
+     58          unsigned char VerifyBaudRate(unsigned short BaudRate)
+     59          {
+     60          	switch(BaudRate){
+   \                     VerifyBaudRate:
+   \   00000000   B0F5966F           CMP      R0,#+1200
+   \   00000004   11D0               BEQ.N    ??VerifyBaudRate_0
+   \   00000006   B0F5166F           CMP      R0,#+2400
+   \   0000000A   0ED0               BEQ.N    ??VerifyBaudRate_0
+   \   0000000C   B0F5965F           CMP      R0,#+4800
+   \   00000010   0BD0               BEQ.N    ??VerifyBaudRate_0
+   \   00000012   B0F5165F           CMP      R0,#+9600
+   \   00000016   08D0               BEQ.N    ??VerifyBaudRate_0
+   \   00000018   B0F5615F           CMP      R0,#+14400
+   \   0000001C   05D0               BEQ.N    ??VerifyBaudRate_0
+   \   0000001E   B0F5164F           CMP      R0,#+38400
+   \   00000022   02D0               BEQ.N    ??VerifyBaudRate_0
+   \   00000024   B0F5614F           CMP      R0,#+57600
+   \   00000028   01D1               BNE.N    ??VerifyBaudRate_1
+     61          		case 1200:
+     62          		case 2400:
+     63          		case 4800:
+     64          		case 9600:
+     65          		case 14400:
+     66          		case 38400:
+     67          		case 57600:
+     68          		  	return 1;
+   \                     ??VerifyBaudRate_0:
+   \   0000002A   0120               MOVS     R0,#+1
+   \   0000002C   7047               BX       LR
+     69          	default:
+     70          		  	return 0;
+   \                     ??VerifyBaudRate_1:
+   \   0000002E   0020               MOVS     R0,#+0
+   \   00000030   7047               BX       LR               ;; return
+     71          	}
+     72          }
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable1:
+   \   00000000   ........           DC32     WriteUsartSem
+
+   Maximum stack usage in bytes:
+
+     Function       .cstack
+     --------       -------
+     USART2_5_Init      16
+     USART_Send         24
+     VerifyBaudRate      0
+     memcpy              8
+
+
+   Section sizes:
+
+     Function/Label Bytes
+     -------------- -----
+     memcpy           12
+     WriteUsartSem     4
+     USART2_5_Init    44
+     USART_Send      180
+     VerifyBaudRate   50
+     ??DataTable1      4
+
+ 
+   4 bytes in section .bss
+ 290 bytes in section .text
+ 
+ 278 bytes of CODE memory (+ 12 bytes shared)
+   4 bytes of DATA memory
+
+Errors: none
+Warnings: none

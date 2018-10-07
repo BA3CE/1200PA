@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Project>
+  <Desktop>
+    <Static>
+      <Debug-Log>
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1221</ColumnWidth1></Debug-Log>
+      <Build>
+        <ColumnWidth0>20</ColumnWidth0>
+        <ColumnWidth1>915</ColumnWidth1>
+        <ColumnWidth2>244</ColumnWidth2>
+        <ColumnWidth3>61</ColumnWidth3>
+      </Build>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>263</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Disassembly>
+        
+        
+        
+      <PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><MixedMode>1</MixedMode><CodeCovShow>0</CodeCovShow><InstrProfShow>0</InstrProfShow></Disassembly>
+    <TerminalIO><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><InputSource>1</InputSource><InputMode>10</InputMode><Filename>$PROJ_DIR$\TermIOInput.txt</Filename><InputEcho>1</InputEcho><ShowReset>0</ShowReset></TerminalIO><Watch><Format><struct_types><Fmt><Key>CanRxMsg-StdId</Key><Value>4</Value></Fmt></struct_types><watch_formats><Fmt><Key>{W}Watch-0:InterruptStatus</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:len</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:rxchar</Key><Value>5</Value></Fmt><Fmt><Key>{W}Watch-0:status</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:test</Key><Value>1</Value></Fmt></watch_formats></Format><Column0>154</Column0><Column1>163</Column1><Column2>100</Column2><Column3>100</Column3></Watch><QuickWatch><Column0>100</Column0><Column1>100</Column1><Column2>100</Column2><Column3>100</Column3></QuickWatch><Register><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows></Register><Locals><Column0>100</Column0><Column1>210</Column1><Column2>100</Column2><Column3>100</Column3></Locals><Find-in-Files><ColumnWidth0>440</ColumnWidth0><ColumnWidth1>62</ColumnWidth1><ColumnWidth2>754</ColumnWidth2></Find-in-Files></Static>
+    <Windows>
+      
+      
+      
+    <Wnd0>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-7540-13114</Identity>
+            <TabName>Debug Log</TabName>
+            <Factory>Debug-Log</Factory>
+            <Session/>
+          </Tab>
+          <Tab>
+            <Identity>TabID-7018-13124</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        <Tab><Identity>TabID-7328-6387</Identity><TabName>Breakpoints</TabName><Factory>Breakpoints</Factory></Tab><Tab><Identity>TabID-19046-22657</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab></Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd0><Wnd1>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-18289-13117</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>TJINC CAN &amp; USART over IP</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/APP</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/CAN</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/EEPROM</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/Interrupt</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/Network</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/Network/W5100</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/Usart</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/Usart/CH432</ExpandedNode><ExpandedNode>TJINC CAN &amp; USART over IP/Usart/STM32</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd1><Wnd2><Tabs><Tab><Identity>TabID-31481-31238</Identity><TabName>Quick Watch</TabName><Factory>QuickWatch</Factory><Session><Expression/></Session></Tab><Tab><Identity>TabID-2958-31568</Identity><TabName>Watch</TabName><Factory>Watch</Factory><Session><Expressions><Expression><Expression>test</Expression></Expression><Expression><Expression>status</Expression></Expression><Expression><Expression>buff[i]</Expression></Expression><Expression><Expression>Sock1MsgOSQ</Expression></Expression><Expression><Expression>msg</Expression></Expression><Expression><Expression>RecvSock</Expression></Expression><Expression><Expression>len</Expression></Expression><Expression><Expression>res</Expression></Expression><Expression><Expression>InterruptStatus</Expression></Expression><Expression><Expression>port</Expression></Expression><Expression><Expression>st</Expression></Expression><Expression><Expression>RxBuffer</Expression></Expression><Expression><Expression>ChConf</Expression></Expression><Expression><Expression>sizeof(ChConf[0])</Expression></Expression><Expression><Expression>i</Expression></Expression><Expression><Expression>msg</Expression></Expression><Expression><Expression>SendBuffer</Expression></Expression><Expression><Expression>data</Expression></Expression><Expression><Expression>TxBuffer[0]</Expression></Expression><Expression><Expression>BaudRate</Expression></Expression><Expression><Expression>RxMessage</Expression></Expression><Expression><Expression>CanConf</Expression></Expression><Expression><Expression>CanBuffer</Expression></Expression><Expression><Expression>CanBuffer</Expression></Expression><Expression><Expression>ChConf</Expression></Expression><Expression><Expression>msg</Expression></Expression><Expression><Expression>TxMessage</Expression></Expression><Expression><Expression>( (INT32U)msg->buff[1]&lt;&lt;8)+ (INT32U)msg->buff[0]</Expression></Expression><Expression><Expression>(INT32U)msg->buff[1]&lt;&lt;8</Expression></Expression></Expressions><TabId>0</TabId><Column0>154</Column0><Column1>163</Column1><Column2>100</Column2><Column3>100</Column3></Session></Tab><Tab><Identity>TabID-21046-6949</Identity><TabName>Locals</TabName><Factory>Locals</Factory><Session><Column0>100</Column0><Column1>210</Column1><Column2>100</Column2><Column3>100</Column3></Session></Tab></Tabs><SelectedTab>1</SelectedTab></Wnd2></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane/><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-00b0aeb0><key>iaridepm.enu1</key></Toolbar-00b0aeb0></Sizes></Row0><Row1><Sizes><Toolbar-04274f10><key>debuggergui.enu1</key></Toolbar-04274f10></Sizes></Row1></Top><Left><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>430</Bottom><Right>354</Right><x>-2</x><y>-2</y><xscreen>112</xscreen><yscreen>97</yscreen><sizeHorzCX>87500</sizeHorzCX><sizeHorzCY>133978</sizeHorzCY><sizeVertCX>278125</sizeVertCX><sizeVertCY>596685</sizeVertCY></Rect></Wnd1></Sizes></Row0></Left><Right><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>430</Bottom><Right>263</Right><x>-2</x><y>-2</y><xscreen>151</xscreen><yscreen>139</yscreen><sizeHorzCX>117969</sizeHorzCX><sizeHorzCY>191989</sizeHorzCY><sizeVertCX>207031</sizeVertCX><sizeVertCY>596685</sizeVertCY></Rect></Wnd2></Sizes></Row0></Right><Bottom><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>225</Bottom><Right>1282</Right><x>-2</x><y>-2</y><xscreen>1284</xscreen><yscreen>227</yscreen><sizeHorzCX>1003125</sizeHorzCX><sizeHorzCY>313536</sizeHorzCY><sizeVertCX>87500</sizeVertCX><sizeVertCY>133978</sizeVertCY></Rect></Wnd0></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Project>
+
+

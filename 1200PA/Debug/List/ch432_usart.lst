@@ -1,0 +1,773 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  22:57:17 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Boards\Uart\CH432\ch432_usart.c                       #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\Boards\Uart\CH432\ch432_usart.c" -D                   #
+#                    _DLIB_FILE_DESCRIPTOR -lC "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Debug\List\" -o "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Debug\Obj\" --no_unroll --no_inline         #
+#                    --no_tbaa --no_scheduling --debug --endian=little        #
+#                    --cpu=Cortex-M3 -e --fpu=None --dlib_config "D:\Program  #
+#                    Files\IAR Systems\Embedded Workbench 5.4                 #
+#                    Kickstart\arm\INC\DLib_Config_Normal.h" -I               #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\ch432_usart.lst                            #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\Obj\ch432_usart.o                               #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\Uart\CH432\ch432_usart.c
+      1          /* Includes ------------------------------------------------------------------*/
+      2          #include <intrinsics.h>
+      3          
+      4          #include "bsp.h"
+      5          #include "stm32f10x_it.h"
+      6          #include "uart/usart_Inter.h"
+      7          
+      8          /* Extern variables ------------------------------------------------------------*/
+      9          extern  OS_EVENT  *UartMsgQ;
+     10          /* Private typedef -----------------------------------------------------------*/
+     11          /* Private define ------------------------------------------------------------*/
+     12          #define Fpclk     			614400    /* 定义内部时钟频率  7.3728MHz晶振 12分频*/ 
+     13          /* 芯片定义 */
+     14          /* CH432串口0寄存器地址 */
+     15          
+     16          #define REG_RBR_ADDR        0x00      /* 串口0接收缓冲寄存器地址 */
+     17          #define REG_THR_ADDR        0x00      /* 串口0发送保持寄存器地址 */
+     18          #define REG_IER_ADDR        0x01      /* 串口0中断使能寄存器地址 */
+     19          #define REG_IIR_ADDR        0x02      /* 串口0中断识别寄存器地址 */
+     20          #define REG_FCR_ADDR        0x02      /* 串口0FIFO控制寄存器地址 */
+     21          #define REG_LCR_ADDR        0x03      /* 串口0线路控制寄存器地址 */
+     22          #define REG_MCR_ADDR        0x04      /* 串口0MODEM控制寄存器地址 */
+     23          #define REG_LSR_ADDR        0x05      /* 串口0线路状态寄存器地址 */
+     24          #define REG_MSR_ADDR        0x06      /* 串口0MODEM状态寄存器地址 */
+     25          #define REG_SCR_ADDR        0x07      /* 串口0用户可定义寄存器地址 */
+     26          #define REG_DLL_ADDR        0x00      /* 波特率除数锁存器低8位字节地址 */
+     27          #define REG_DLM_ADDR        0x01      /* 波特率除数锁存器高8位字节地址 */
+     28          
+     29          /* CH432串口1寄存器地址 */
+     30          
+     31          #define REG_RBR1_ADDR       0x08      /* 串口1接收缓冲寄存器地址 */
+     32          #define REG_THR1_ADDR       0x08      /* 串口1发送保持寄存器地址 */
+     33          #define REG_IER1_ADDR       0x09      /* 串口1中断使能寄存器地址 */
+     34          #define REG_IIR1_ADDR       0x0A      /* 串口1中断识别寄存器地址 */
+     35          #define REG_FCR1_ADDR       0x0A      /* 串口1FIFO控制寄存器地址 */
+     36          #define REG_LCR1_ADDR       0x0B      /* 串口1线路控制寄存器地址 */
+     37          #define REG_MCR1_ADDR       0x0C      /* 串口1MODEM控制寄存器地址 */
+     38          #define REG_LSR1_ADDR       0x0D      /* 串口1线路状态寄存器地址 */
+     39          #define REG_MSR1_ADDR       0x0E      /* 串口1MODEM状态寄存器地址 */
+     40          #define REG_SCR1_ADDR       0x0F      /* 串口1用户可定义寄存器地址 */
+     41          #define REG_DLL1_ADDR       0x08      /* 波特率除数锁存器低8位字节地址 */
+     42          #define REG_DLM1_ADDR       0x09      /* 波特率除数锁存器高8位字节地址 */
+     43          
+     44          /* IER寄存器的位 */
+     45          
+     46          #define BIT_IER_RESET       0x80      /* 该位置1则软复位该串口 */
+     47          #define BIT_IER_LOWPOWER    0x40      /* 该位为1则关闭该串口的内部基准时钟 */
+     48          #define BIT_IER_SLP         0x20      /* 串口0是SLP,为1则关闭时钟震荡器 */
+     49          #define BIT_IER1_CK2X       0x20      /* 串口1是CK2X,为1则强制将外部时钟信号2倍频后作为内部基准时钟 */
+     50          #define BIT_IER_IEMODEM     0x08      /* 该位为1允许MODEM输入状态变化中断 */
+     51          #define BIT_IER_IELINES     0x04      /* 该位为1允许接收线路状态中断 */
+     52          #define BIT_IER_IETHRE      0x02      /* 该位为1允许发送保持寄存器空中断 */
+     53          #define BIT_IER_IERECV      0x01      /* 该位为1允许接收到数据中断 */
+     54          
+     55          /* IIR寄存器的位 */
+     56          
+     57          #define BIT_IIR_FIFOENS1    0x80
+     58          #define BIT_IIR_FIFOENS0    0x40      /* 该2位为1表示起用FIFO */
+     59          
+     60          /* 中断类型：0001没有中断，0110接收线路状态中断，0100接收数据可用中断，
+     61          1100接收数据超时中断，0010THR寄存器空中断，0000MODEM输入变化中断 */
+     62          #define BIT_IIR_IID3        0x08
+     63          #define BIT_IIR_IID2        0x04
+     64          #define BIT_IIR_IID1        0x02
+     65          #define BIT_IIR_NOINT       0x01
+     66          
+     67          /* FCR寄存器的位 */
+     68          
+     69          /* 触发点： 00对应1个字节，01对应4个字节，10对应8个字节，11对应14个字节 */
+     70          #define BIT_FCR_RECVTG1     0x80      /* 设置FIFO的中断和自动硬件流控制的触发点 */
+     71          #define BIT_FCR_RECVTG0     0x40      /* 设置FIFO的中断和自动硬件流控制的触发点 */
+     72          
+     73          #define BIT_FCR_TFIFORST    0x04      /* 该位置1则清空发送FIFO中的数据 */
+     74          #define BIT_FCR_RFIFORST    0x02      /* 该位置1则清空接收FIFO中的数据 */
+     75          #define BIT_FCR_FIFOEN      0x01      /* 该位置1则起用FIFO,为0则禁用FIFO */
+     76          
+     77          /* LCR寄存器的位 */
+     78          
+     79          #define BIT_LCR_DLAB        0x80      /* 为1才能存取DLL，DLM，为0才能存取RBR/THR/IER */
+     80          #define BIT_LCR_BREAKEN     0x40      /* 为1则强制产生BREAK线路间隔*/
+     81          
+     82          /* 设置校验格式：当PAREN为1时，00奇校验，01偶校验，10标志位（MARK，置1)，11空白位（SPACE，清0) */
+     83          #define BIT_LCR_PARMODE1    0x20      /* 设置奇偶校验位格式 */
+     84          #define BIT_LCR_PARMODE0    0x10      /* 设置奇偶校验位格式 */
+     85          
+     86          #define BIT_LCR_PAREN       0x08      /* 为1则允许发送时产生和接收校验奇偶校验位 */
+     87          #define BIT_LCR_STOPBIT     0x04      /* 为1则两个停止位,为0一个停止位 */
+     88          
+     89          /* 设置字长度：00则5个数据位，01则6个数据位，10则7个数据位，11则8个数据位 */
+     90          #define BIT_LCR_WORDSZ1     0x02      /* 设置字长长度 */
+     91          #define BIT_LCR_WORDSZ0     0x01
+     92          
+     93          /* MCR寄存器的位 */
+     94          
+     95          #define BIT_MCR_AFE         0x20      /* 为1允许CTS和RTS硬件自动流控制 */
+     96          #define BIT_MCR_LOOP        0x10      /* 为1使能内部回路的测试模式 */
+     97          #define BIT_MCR_OUT2        0x08      /* 为1允许该串口的中断请求输出 */
+     98          #define BIT_MCR_OUT1        0x04      /* 为用户定义的MODEM控制位 */
+     99          #define BIT_MCR_RTS         0x02      /* 该位为1则RTS引脚输出有效 */
+    100          #define BIT_MCR_DTR         0x01      /* 该位为1则DTR引脚输出有效 */
+    101          
+    102          /* LSR寄存器的位 */
+    103          
+    104          #define BIT_LSR_RFIFOERR    0x80      /* 为1表示在接收FIFO中存在至少一个错误 */
+    105          #define BIT_LSR_TEMT        0x40      /* 为1表示THR和TSR全空 */
+    106          #define BIT_LSR_THRE        0x20      /* 为1表示THR空*/
+    107          #define BIT_LSR_BREAKINT    0x10      /* 该位为1表示检测到BREAK线路间隔 */
+    108          #define BIT_LSR_FRAMEERR    0x08      /* 该位为1表示读取数据帧错误 */
+    109          #define BIT_LSR_PARERR      0x04      /* 该位为1表示奇偶校验错误 */
+    110          #define BIT_LSR_OVERR       0x02      /* 为1表示接收FIFO缓冲区溢出 */
+    111          #define BIT_LSR_DATARDY     0x01      /* 该位为1表示接收FIFO中有接收到的数据 */
+    112          
+    113          /* MSR寄存器的位 */
+    114          
+    115          #define BIT_MSR_DCD         0x80      /* 该位为1表示DCD引脚有效 */
+    116          #define BIT_MSR_RI          0x40      /* 该位为1表示RI引脚有效 */
+    117          #define BIT_MSR_DSR         0x20      /* 该位为1表示DSR引脚有效 */
+    118          #define BIT_MSR_CTS         0x10      /* 该位为1表示CTS引脚有效 */
+    119          #define BIT_MSR_DDCD        0x08      /* 该位为1表示DCD引脚输入状态发生变化过 */
+    120          #define BIT_MSR_TERI        0x04      /* 该位为1表示RI引脚输入状态发生变化过 */
+    121          #define BIT_MSR_DDSR        0x02      /* 该位为1表示DSR引脚输入状态发生变化过 */
+    122          #define BIT_MSR_DCTS        0x01      /* 该位为1表示CTS引脚输入状态发生变化过 */
+    123          
+    124          /* 中断状态码 */
+    125          
+    126          #define INT_NOINT           0x01      /* 没有中断 */
+    127          #define INT_THR_EMPTY       0x02      /* THR空中断 */
+    128          #define INT_RCV_OVERTIME    0x0C      /* 接收超时中断 */
+    129          #define INT_RCV_SUCCESS     0x04      /* 接收数据可用中断 */
+    130          #define INT_RCV_LINES       0x06      /* 接收线路状态中断 */
+    131          #define INT_MODEM_CHANGE    0x00      /* MODEM输入变化中断 */
+    132          
+    133          #define CH432_IIR_FIFOS_ENABLED 0xC0  /* 起用FIFO */
+    134          
+    135          /**********************************************************************
+    136                  定义CH432串口0的寄存器地址
+    137          ***********************************************************************/
+    138          
+    139          #define CH432_RBR_PORT     REG_RBR_ADDR     /* 假定CH432接收缓冲寄存器0的I/O地址 */
+    140          #define CH432_THR_PORT     REG_THR_ADDR     /* 假定CH432发送保持寄存器0的I/O地址 */
+    141          #define CH432_IER_PORT     REG_IER_ADDR     /* 假定CH432中断使能寄存器0的I/O地址 */
+    142          #define CH432_IIR_PORT     REG_IIR_ADDR     /* 假定CH432中断识别寄存器0的I/O地址 */
+    143          #define CH432_FCR_PORT     REG_FCR_ADDR     /* 假定CH432FIFO控制寄存器0的I/O地址 */
+    144          #define CH432_LCR_PORT     REG_LCR_ADDR     /* 假定CH432线路控制寄存器0的I/O地址 */
+    145          #define CH432_MCR_PORT     REG_MCR_ADDR     /* 假定CH432MODEM控制寄存器0的I/O地址 */
+    146          #define CH432_LSR_PORT     REG_LSR_ADDR     /* 假定CH432线路状态寄存器0的I/O地址 */
+    147          #define CH432_MSR_PORT     REG_MSR_ADDR     /* 假定CH432MODEM状态寄存器0的I/O地址 */
+    148          #define CH432_SCR_PORT     REG_SCR_ADDR     /* 假定CH432用户可定义寄存器0的I/O地址 */
+    149          #define CH432_DLL_PORT     REG_DLL_ADDR
+    150          #define CH432_DLM_PORT     REG_DLM_ADDR
+    151          
+    152          /**************************************************************************
+    153                  定义CH432串口1的寄存器地址
+    154          **************************************************************************/
+    155          
+    156          #define CH432_RBR1_PORT    REG_RBR1_ADDR    /* 假定CH432接收缓冲寄存器1的I/O地址 */
+    157          #define CH432_THR1_PORT    REG_THR1_ADDR    /* 假定CH432发送保持寄存器1的I/O地址 */
+    158          #define CH432_IER1_PORT    REG_IER1_ADDR    /* 假定CH432中断使能寄存器1的I/O地址 */
+    159          #define CH432_IIR1_PORT    REG_IIR1_ADDR    /* 假定CH432中断识别寄存器1的I/O地址 */
+    160          #define CH432_FCR1_PORT    REG_FCR1_ADDR    /* 假定CH432FIFO控制寄存器1的I/O地址 */
+    161          #define CH432_LCR1_PORT    REG_LCR1_ADDR    /* 假定CH432线路控制寄存器1的I/O地址 */
+    162          #define CH432_MCR1_PORT    REG_MCR1_ADDR    /* 假定CH432MODEM控制寄存器1的I/O地址 */
+    163          #define CH432_LSR1_PORT    REG_LSR1_ADDR    /* 假定CH432线路状态寄存器1的I/O地址 */
+    164          #define CH432_MSR1_PORT    REG_MSR1_ADDR    /* 假定CH432MODEM状态寄存器1的I/O地址 */
+    165          #define CH432_SCR1_PORT    REG_SCR1_ADDR    /* 假定CH432用户可定义寄存器1的I/O地址 */
+    166          #define CH432_DLL1_PORT    REG_DLL1_ADDR
+    167          #define CH432_DLM1_PORT    REG_DLM1_ADDR
+    168          /* Private macro -------------------------------------------------------------*/
+    169          /* Private variables ---------------------------------------------------------*/
+
+   \                                 In section .bss, align 4
+    170          static RXBUFF RxBuffer[UartMsgNum];
+   \                     RxBuffer:
+   \   00000000                      DS8 256
+   \   00000100                      DS8 1
+    171          static INT8U  RxCount=0;
+    172          /* Private function prototypes -----------------------------------------------*/
+    173          /* Private functions ---------------------------------------------------------*/
+    174          
+    175          
+    176          void CH432_PORT_INIT(void);
+    177          void WriteCH432Data( INT8U mAddr, INT8U mData );
+    178          INT8U ReadCH432Data( INT8U mAddr );
+    179          void Delay_us(void);
+    180          
+    181          
+
+   \                                 In section .text, align 4, keep-with-next
+    182          void CH432_Interrupt(void)
+    183          {
+   \                     CH432_Interrupt:
+   \   00000000   10B5               PUSH     {R4,LR}
+    184            	INT8U InterruptStatus;
+    185          	
+    186            	InterruptStatus=ReadCH432Data(CH432_IIR_PORT);
+   \   00000002   0220               MOVS     R0,#+2
+   \   00000004   ........           BL       ReadCH432Data
+    187          	
+    188          	if((InterruptStatus & INT_NOINT) == 0x00){
+   \   00000008   0146               MOV      R1,R0
+   \   0000000A   11F0010F           TST      R1,#0x1
+   \   0000000E   2CD1               BNE.N    ??CH432_Interrupt_0
+    189          		  if(InterruptStatus==INT_RCV_SUCCESS){
+   \   00000010   0428               CMP      R0,#+4
+   \   00000012   2AD1               BNE.N    ??CH432_Interrupt_0
+    190          				if(!((InterruptStatus=ReadCH432Data(CH432_LSR_PORT)) & ( BIT_LSR_BREAKINT | BIT_LSR_FRAMEERR | BIT_LSR_PARERR))){    /* b1-b4无错误 */
+   \   00000014   0520               MOVS     R0,#+5
+   \   00000016   ........           BL       ReadCH432Data
+   \   0000001A   10F01C0F           TST      R0,#0x1C
+   \   0000001E   21D1               BNE.N    ??CH432_Interrupt_1
+    191          					while( ( ReadCH432Data( CH432_LSR_PORT ) & BIT_LSR_DATARDY ) == 0 );    /* 等待数据准备好 */
+   \                     ??CH432_Interrupt_2:
+   \   00000020   0520               MOVS     R0,#+5
+   \   00000022   ........           BL       ReadCH432Data
+   \   00000026   10F0010F           TST      R0,#0x1
+   \   0000002A   F9D0               BEQ.N    ??CH432_Interrupt_2
+    192          					
+    193          					RxBuffer[RxCount].msg = ReadCH432Data( CH432_RBR_PORT );    /* 从接收缓冲寄存器读出数据 */
+   \   0000002C   0020               MOVS     R0,#+0
+   \   0000002E   ........           BL       ReadCH432Data
+   \   00000032   284C               LDR.N    R4,??CH432_Interrupt_3  ;; RxBuffer
+   \   00000034   94F80021           LDRB     R2,[R4, #+256]
+   \   00000038   04EB4201           ADD      R1,R4,R2, LSL #+1
+   \   0000003C   4870               STRB     R0,[R1, #+1]
+    194          					RxBuffer[RxCount].id=COM4;
+   \   0000003E   0220               MOVS     R0,#+2
+   \   00000040   04F81200           STRB     R0,[R4, R2, LSL #+1]
+    195          					OSQPost(UartMsgQ,&RxBuffer[RxCount]);
+   \   00000044   2448               LDR.N    R0,??CH432_Interrupt_3+0x4  ;; UartMsgQ
+   \   00000046   0068               LDR      R0,[R0, #+0]
+   \   00000048   ........           BL       OSQPost
+    196          					RxCount++;
+   \   0000004C   94F80001           LDRB     R0,[R4, #+256]
+   \   00000050   401C               ADDS     R0,R0,#+1
+   \   00000052   84F80001           STRB     R0,[R4, #+256]
+    197          						
+    198          					if(RxCount>=UartMsgNum)
+   \   00000056   C0B2               UXTB     R0,R0
+   \   00000058   8028               CMP      R0,#+128
+   \   0000005A   06D3               BCC.N    ??CH432_Interrupt_0
+    199          						RxCount=0;  	
+   \   0000005C   0020               MOVS     R0,#+0
+   \   0000005E   84F80001           STRB     R0,[R4, #+256]
+   \   00000062   02E0               B.N      ??CH432_Interrupt_0
+    200          				}else 
+    201          				  	ReadCH432Data( CH432_RBR_PORT );    /* 有错误清除 */
+   \                     ??CH432_Interrupt_1:
+   \   00000064   0020               MOVS     R0,#+0
+   \   00000066   ........           BL       ReadCH432Data
+    202          				
+    203          				
+    204          		  }
+    205          	}
+    206          	
+    207          	InterruptStatus=ReadCH432Data(CH432_IIR1_PORT);
+   \                     ??CH432_Interrupt_0:
+   \   0000006A   0A20               MOVS     R0,#+10
+   \   0000006C   ........           BL       ReadCH432Data
+    208          	
+    209          	if((InterruptStatus & INT_NOINT) == 0x00){
+   \   00000070   0146               MOV      R1,R0
+   \   00000072   11F0010F           TST      R1,#0x1
+   \   00000076   2CD1               BNE.N    ??CH432_Interrupt_4
+    210          		  if(InterruptStatus==INT_RCV_SUCCESS){
+   \   00000078   0428               CMP      R0,#+4
+   \   0000007A   2AD1               BNE.N    ??CH432_Interrupt_4
+    211          				if(!((InterruptStatus=ReadCH432Data(CH432_LSR1_PORT)) & ( BIT_LSR_BREAKINT | BIT_LSR_FRAMEERR | BIT_LSR_PARERR))){    /* b1-b4无错误 */
+   \   0000007C   0D20               MOVS     R0,#+13
+   \   0000007E   ........           BL       ReadCH432Data
+   \   00000082   10F01C0F           TST      R0,#0x1C
+   \   00000086   21D1               BNE.N    ??CH432_Interrupt_5
+    212          					while( ( ReadCH432Data( CH432_LSR1_PORT ) & BIT_LSR_DATARDY ) == 0 );    /* 等待数据准备好 */
+   \                     ??CH432_Interrupt_6:
+   \   00000088   0D20               MOVS     R0,#+13
+   \   0000008A   ........           BL       ReadCH432Data
+   \   0000008E   10F0010F           TST      R0,#0x1
+   \   00000092   F9D0               BEQ.N    ??CH432_Interrupt_6
+    213          					
+    214          					RxBuffer[RxCount].msg = ReadCH432Data( CH432_RBR1_PORT );    /* 从接收缓冲寄存器读出数据 */
+   \   00000094   0820               MOVS     R0,#+8
+   \   00000096   ........           BL       ReadCH432Data
+   \   0000009A   0E4C               LDR.N    R4,??CH432_Interrupt_3  ;; RxBuffer
+   \   0000009C   94F80021           LDRB     R2,[R4, #+256]
+   \   000000A0   04EB4201           ADD      R1,R4,R2, LSL #+1
+   \   000000A4   4870               STRB     R0,[R1, #+1]
+    215          					RxBuffer[RxCount].id=COM5;
+   \   000000A6   0320               MOVS     R0,#+3
+   \   000000A8   04F81200           STRB     R0,[R4, R2, LSL #+1]
+    216          					OSQPost(UartMsgQ,&RxBuffer[RxCount]);
+   \   000000AC   0A48               LDR.N    R0,??CH432_Interrupt_3+0x4  ;; UartMsgQ
+   \   000000AE   0068               LDR      R0,[R0, #+0]
+   \   000000B0   ........           BL       OSQPost
+    217          					RxCount++;
+   \   000000B4   94F80001           LDRB     R0,[R4, #+256]
+   \   000000B8   401C               ADDS     R0,R0,#+1
+   \   000000BA   84F80001           STRB     R0,[R4, #+256]
+    218          						
+    219          					if(RxCount>=UartMsgNum)
+   \   000000BE   C0B2               UXTB     R0,R0
+   \   000000C0   8028               CMP      R0,#+128
+   \   000000C2   06D3               BCC.N    ??CH432_Interrupt_4
+    220          						RxCount=0;  	
+   \   000000C4   0020               MOVS     R0,#+0
+   \   000000C6   84F80001           STRB     R0,[R4, #+256]
+   \   000000CA   10BD               POP      {R4,PC}
+    221          				}else 
+    222          				  	ReadCH432Data( CH432_RBR1_PORT );    /* 有错误清除 */
+   \                     ??CH432_Interrupt_5:
+   \   000000CC   0820               MOVS     R0,#+8
+   \   000000CE   ........           BL       ReadCH432Data
+    223          		  }
+    224          	}
+    225          }
+   \                     ??CH432_Interrupt_4:
+   \   000000D2   10BD               POP      {R4,PC}          ;; return
+   \                     ??CH432_Interrupt_3:
+   \   000000D4   ........           DC32     RxBuffer
+   \   000000D8   ........           DC32     UartMsgQ
+
+   \                                 In section .text, align 4, keep-with-next
+    226          void CH432_USART_Init(const INT16U *BaudRate)
+    227          {
+   \                     CH432_USART_Init:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   0446               MOV      R4,R0
+    228            	INT16U div;
+    229              INT8U DLL, DLM;
+    230          	//static  u8 test;
+    231          	
+    232          	CH432_PORT_INIT();
+   \   00000004   ........           BL       CH432_PORT_INIT
+    233          /**************************************************************************
+    234                    设置CH432串口0的寄存器
+    235          
+    236          **************************************************************************/
+    237              div = (Fpclk>>4)/BaudRate[0];
+   \   00000008   4FF41645           MOV      R5,#+38400
+   \   0000000C   2088               LDRH     R0,[R4, #+0]
+   \   0000000E   95FBF0F6           SDIV     R6,R5,R0
+   \   00000012   B6B2               UXTH     R6,R6
+    238              DLM = div>>8;
+    239              DLL = div&0xff;
+    240          	
+    241          	WriteCH432Data( CH432_IER_PORT, BIT_IER_RESET );
+   \   00000014   8021               MOVS     R1,#+128
+   \   00000016   0120               MOVS     R0,#+1
+   \   00000018   ........           BL       WriteCH432Data
+    242          	WriteCH432Data( CH432_LCR_PORT, BIT_LCR_DLAB );    /* 设置DLAB为1 */
+   \   0000001C   8021               MOVS     R1,#+128
+   \   0000001E   0320               MOVS     R0,#+3
+   \   00000020   ........           BL       WriteCH432Data
+    243          	WriteCH432Data( CH432_DLL_PORT, DLL );    		   /* 设置波特率 */
+   \   00000024   3146               MOV      R1,R6
+   \   00000026   C9B2               UXTB     R1,R1
+   \   00000028   0020               MOVS     R0,#+0
+   \   0000002A   ........           BL       WriteCH432Data
+    244              WriteCH432Data( CH432_DLM_PORT, DLM );
+   \   0000002E   310A               LSRS     R1,R6,#+8
+   \   00000030   0120               MOVS     R0,#+1
+   \   00000032   ........           BL       WriteCH432Data
+    245              WriteCH432Data( CH432_LCR_PORT, BIT_LCR_WORDSZ1 | BIT_LCR_WORDSZ0 );    /* 字长8位,1停止位*/
+   \   00000036   0321               MOVS     R1,#+3
+   \   00000038   0846               MOV      R0,R1
+   \   0000003A   ........           BL       WriteCH432Data
+    246              WriteCH432Data( CH432_IER_PORT, BIT_IER_IERECV );  /* 使能中断 */
+   \   0000003E   0121               MOVS     R1,#+1
+   \   00000040   0846               MOV      R0,R1
+   \   00000042   ........           BL       WriteCH432Data
+    247          	WriteCH432Data( CH432_MCR_PORT, BIT_MCR_OUT2 | BIT_MCR_RTS);  /* 允许中断输出,RTS为1 */	
+   \   00000046   0A21               MOVS     R1,#+10
+   \   00000048   0420               MOVS     R0,#+4
+   \   0000004A   ........           BL       WriteCH432Data
+    248          	
+    249          /**************************************************************************
+    250                    设置CH432串口1的寄存器
+    251          
+    252          **************************************************************************/
+    253              div = ( Fpclk >> 4 )/BaudRate[1];;
+   \   0000004E   6088               LDRH     R0,[R4, #+2]
+   \   00000050   95FBF0F4           SDIV     R4,R5,R0
+   \   00000054   A4B2               UXTH     R4,R4
+    254              DLM = div >> 8;
+    255              DLL = div & 0xff;
+    256          	WriteCH432Data( CH432_IER1_PORT, BIT_IER_RESET );
+   \   00000056   8021               MOVS     R1,#+128
+   \   00000058   0920               MOVS     R0,#+9
+   \   0000005A   ........           BL       WriteCH432Data
+    257              WriteCH432Data( CH432_LCR1_PORT, BIT_LCR_DLAB );    /* 设置DLAB为1 */
+   \   0000005E   8021               MOVS     R1,#+128
+   \   00000060   0B20               MOVS     R0,#+11
+   \   00000062   ........           BL       WriteCH432Data
+    258              WriteCH432Data( CH432_DLL1_PORT, DLL );    /* 设置波特率 */
+   \   00000066   2146               MOV      R1,R4
+   \   00000068   C9B2               UXTB     R1,R1
+   \   0000006A   0820               MOVS     R0,#+8
+   \   0000006C   ........           BL       WriteCH432Data
+    259              WriteCH432Data( CH432_DLM1_PORT, DLM );
+   \   00000070   210A               LSRS     R1,R4,#+8
+   \   00000072   0920               MOVS     R0,#+9
+   \   00000074   ........           BL       WriteCH432Data
+    260              //iteCH432Data( CH432_FCR1_PORT, BIT_FCR_RECVTG1 | BIT_FCR_RECVTG0 | BIT_FCR_FIFOEN );    /* 设置FIFO模式，触发点为14 */
+    261              WriteCH432Data( CH432_LCR1_PORT, BIT_LCR_WORDSZ1 | BIT_LCR_WORDSZ0 );    /* 字长8位，1位停止位、奇校验 */
+   \   00000078   0321               MOVS     R1,#+3
+   \   0000007A   0B20               MOVS     R0,#+11
+   \   0000007C   ........           BL       WriteCH432Data
+    262              WriteCH432Data( CH432_IER1_PORT, BIT_IER_IERECV );    /* 使能中断 */
+   \   00000080   0121               MOVS     R1,#+1
+   \   00000082   0920               MOVS     R0,#+9
+   \   00000084   ........           BL       WriteCH432Data
+    263              WriteCH432Data( CH432_MCR1_PORT, BIT_MCR_OUT2 | BIT_MCR_RTS );    /* 允许中断输出，DTR,RTS为1 */
+   \   00000088   0A21               MOVS     R1,#+10
+   \   0000008A   0C20               MOVS     R0,#+12
+   \   0000008C   ........           BL       WriteCH432Data
+    264          	
+    265          	BSP_IntVectSet(BSP_INT_ID_EXTI9_5, EXTI9_5_IRQHandler);
+   \   00000090   0449               LDR.N    R1,??CH432_USART_Init_0  ;; EXTI9_5_IRQHandler
+   \   00000092   1720               MOVS     R0,#+23
+   \   00000094   ........           BL       BSP_IntVectSet
+    266            	BSP_IntEn(BSP_INT_ID_EXTI9_5);
+   \   00000098   1720               MOVS     R0,#+23
+   \   0000009A   BDE87040           POP      {R4-R6,LR}
+   \   0000009E   ........           B.W      BSP_IntEn
+   \   000000A2   00BF               Nop      
+   \                     ??CH432_USART_Init_0:
+   \   000000A4   ........           DC32     EXTI9_5_IRQHandler
+    267          	
+    268          	
+    269          }
+    270          
+
+   \                                 In section .text, align 2, keep-with-next
+    271          void CH432_USART1_SendByte(INT8U dat)
+    272          {
+   \                     CH432_USART1_SendByte:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+    273          #if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
+    274              OS_CPU_SR  cpu_sr = 0;
+    275          #endif	
+    276          	OS_ENTER_CRITICAL();
+   \   00000004   ........           BL       OS_CPU_SR_Save
+   \   00000008   0546               MOV      R5,R0
+    277            	while((ReadCH432Data( CH432_LSR_PORT ) & BIT_LSR_THRE ) == 0 );     /* 等待数据发送完毕 */
+   \                     ??CH432_USART1_SendByte_0:
+   \   0000000A   0520               MOVS     R0,#+5
+   \   0000000C   ........           BL       ReadCH432Data
+   \   00000010   10F0200F           TST      R0,#0x20
+   \   00000014   F9D0               BEQ.N    ??CH432_USART1_SendByte_0
+    278              WriteCH432Data(CH432_THR_PORT, dat);
+   \   00000016   2146               MOV      R1,R4
+   \   00000018   0020               MOVS     R0,#+0
+   \   0000001A   ........           BL       WriteCH432Data
+    279          	OS_EXIT_CRITICAL();
+   \   0000001E   2846               MOV      R0,R5
+   \   00000020   BDE83240           POP      {R1,R4,R5,LR}
+   \   00000024   ........           B.W      OS_CPU_SR_Restore
+    280          
+    281          }
+
+   \                                 In section .text, align 2, keep-with-next
+    282          void CH432_USART2_SendByte(INT8U dat)
+    283          {
+   \                     CH432_USART2_SendByte:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+    284          #if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
+    285              OS_CPU_SR  cpu_sr = 0;
+    286          #endif	
+    287          	OS_ENTER_CRITICAL();  
+   \   00000004   ........           BL       OS_CPU_SR_Save
+   \   00000008   0546               MOV      R5,R0
+    288            	while((ReadCH432Data( CH432_LSR1_PORT ) & BIT_LSR_THRE ) == 0 );     /* 等待数据发送完毕 */
+   \                     ??CH432_USART2_SendByte_0:
+   \   0000000A   0D20               MOVS     R0,#+13
+   \   0000000C   ........           BL       ReadCH432Data
+   \   00000010   10F0200F           TST      R0,#0x20
+   \   00000014   F9D0               BEQ.N    ??CH432_USART2_SendByte_0
+    289              WriteCH432Data(CH432_THR1_PORT, dat);
+   \   00000016   2146               MOV      R1,R4
+   \   00000018   0820               MOVS     R0,#+8
+   \   0000001A   ........           BL       WriteCH432Data
+    290          	OS_EXIT_CRITICAL();
+   \   0000001E   2846               MOV      R0,R5
+   \   00000020   BDE83240           POP      {R1,R4,R5,LR}
+   \   00000024   ........           B.W      OS_CPU_SR_Restore
+    291          }
+
+   \                                 In section .text, align 2, keep-with-next
+    292          void CH432_PORT_INIT(void)    /* 由于使用通用I/O模拟SPI读写时序,所以进行初始化 */
+    293          {
+   \                     CH432_PORT_INIT:
+   \   00000000   10B5               PUSH     {R4,LR}
+    294            	GPIO_SetBits(GPIOB, CH432_HLF);
+   \   00000002   ....               LDR.N    R4,??DataTable5  ;; 0x40010c00
+   \   00000004   4021               MOVS     R1,#+64
+   \   00000006   2046               MOV      R0,R4
+   \   00000008   ........           BL       GPIO_SetBits
+    295              GPIO_SetBits(GPIOB, CH432_CS);	//CH432_SPI_SCS = 1;
+   \   0000000C   4FF48051           MOV      R1,#+4096
+   \   00000010   2046               MOV      R0,R4
+   \   00000012   ........           BL       GPIO_SetBits
+    296              GPIO_SetBits(GPIOB, CH432_SCK);	//CH432_SPI_SCK = 1;
+   \   00000016   4FF40051           MOV      R1,#+8192
+   \   0000001A   2046               MOV      R0,R4
+   \   0000001C   BDE81040           POP      {R4,LR}
+   \   00000020   ........           B.W      GPIO_SetBits
+    297          }
+
+   \                                 In section .text, align 2, keep-with-next
+    298          void Spi432OutByte(INT8U d)    /* SPI输出8个位数据 */
+    299          {
+   \                     Spi432OutByte:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   0446               MOV      R4,R0
+    300              INT8U i;
+    301          	
+    302              for ( i = 0; i < 8; i ++ ){ 
+   \   00000004   0025               MOVS     R5,#+0
+   \   00000006   ....               LDR.N    R6,??DataTable5  ;; 0x40010c00
+   \   00000008   09E0               B.N      ??Spi432OutByte_0
+    303                  GPIO_ResetBits(GPIOB, CH432_SCK);		//CH432_SPI_SCK = 0;
+    304                  if ( d & 0x80 ) 
+    305          		  	GPIO_SetBits(GPIOB, CH432_MOSI);	//CH432_SPI_SDI = 1;
+    306                  else 
+    307          		  	GPIO_ResetBits(GPIOB, CH432_MOSI);	//CH432_SPI_SDI = 0;
+   \                     ??Spi432OutByte_1:
+   \   0000000A   ........           BL       GPIO_ResetBits
+    308                  d <<= 1;    /* 数据位是高位在前 */
+   \                     ??Spi432OutByte_2:
+   \   0000000E   6400               LSLS     R4,R4,#+1
+    309          		
+    310                  GPIO_SetBits(GPIOB, CH432_SCK);			//CH432_SPI_SCK = 1;    /* CH432在时钟上升沿采样输入 */
+   \   00000010   4FF40051           MOV      R1,#+8192
+   \   00000014   3046               MOV      R0,R6
+   \   00000016   ........           BL       GPIO_SetBits
+   \   0000001A   6D1C               ADDS     R5,R5,#+1
+   \   0000001C   EDB2               UXTB     R5,R5
+   \                     ??Spi432OutByte_0:
+   \   0000001E   2846               MOV      R0,R5
+   \   00000020   0828               CMP      R0,#+8
+   \   00000022   0DD2               BCS.N    ??Spi432OutByte_3
+   \   00000024   4FF40051           MOV      R1,#+8192
+   \   00000028   3046               MOV      R0,R6
+   \   0000002A   ........           BL       GPIO_ResetBits
+   \   0000002E   14F0800F           TST      R4,#0x80
+   \   00000032   4FF40041           MOV      R1,#+32768
+   \   00000036   3046               MOV      R0,R6
+   \   00000038   E7D0               BEQ.N    ??Spi432OutByte_1
+   \   0000003A   ........           BL       GPIO_SetBits
+   \   0000003E   E6E7               B.N      ??Spi432OutByte_2
+    311              }
+    312          }
+   \                     ??Spi432OutByte_3:
+   \   00000040   70BD               POP      {R4-R6,PC}       ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    313          INT8U Spi432InByte(void)    /* SPI输入8个位数据 */
+    314          {
+   \                     Spi432InByte:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+    315              INT8U i, d=0;
+   \   00000002   0024               MOVS     R4,#+0
+    316          
+    317          /* 如果SPI的SDO和SDI合用一个I/O引脚，那么必须在此设置该I/O方向为输入 */
+    318              for ( i = 0; i < 8; i ++ ){
+   \   00000004   2546               MOV      R5,R4
+   \   00000006   ....               LDR.N    R6,??DataTable5  ;; 0x40010c00
+   \   00000008   16E0               B.N      ??Spi432InByte_0
+    319                  GPIO_ResetBits(GPIOB, CH432_SCK);		//CH432_SPI_SCK = 0;      /* CH432在时钟下降沿输出 */
+   \                     ??Spi432InByte_1:
+   \   0000000A   4FF40051           MOV      R1,#+8192
+   \   0000000E   3046               MOV      R0,R6
+   \   00000010   ........           BL       GPIO_ResetBits
+    320                  d <<= 1;                				/* 数据位是高位在前 */
+   \   00000014   6400               LSLS     R4,R4,#+1
+   \   00000016   E4B2               UXTB     R4,R4
+    321                  if (GPIO_ReadInputDataBit(GPIOB,CH423_MISO))
+   \   00000018   4FF48041           MOV      R1,#+16384
+   \   0000001C   3046               MOV      R0,R6
+   \   0000001E   ........           BL       GPIO_ReadInputDataBit
+   \   00000022   0028               CMP      R0,#+0
+   \   00000024   01D0               BEQ.N    ??Spi432InByte_2
+    322          			d ++;
+   \   00000026   641C               ADDS     R4,R4,#+1
+   \   00000028   E4B2               UXTB     R4,R4
+    323                  GPIO_SetBits(GPIOB, CH432_SCK);			//CH432_SPI_SCK = 1;
+   \                     ??Spi432InByte_2:
+   \   0000002A   4FF40051           MOV      R1,#+8192
+   \   0000002E   3046               MOV      R0,R6
+   \   00000030   ........           BL       GPIO_SetBits
+    324              }
+   \   00000034   6D1C               ADDS     R5,R5,#+1
+   \   00000036   EDB2               UXTB     R5,R5
+   \                     ??Spi432InByte_0:
+   \   00000038   2846               MOV      R0,R5
+   \   0000003A   0828               CMP      R0,#+8
+   \   0000003C   E5D3               BCC.N    ??Spi432InByte_1
+    325              return( d );
+   \   0000003E   2046               MOV      R0,R4
+   \   00000040   70BD               POP      {R4-R6,PC}       ;; return
+    326          }
+
+   \                                 In section .text, align 2, keep-with-next
+    327          void Spi432Start( INT8U addr )    /* SPI开始 */
+    328          {
+   \                     Spi432Start:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    329          /* 对于双向I/O引脚模拟SPI接口,那么必须确保已经设置SPI_SCS,SPI_SCK,SPI_SDI为输出方向,SPI_SDO为输入方向 */
+    330              GPIO_ResetBits(GPIOB, CH432_CS);		//CH432_SPI_SCS = 0;    /* SPI片选有效 */
+   \   00000004   4FF48051           MOV      R1,#+4096
+   \   00000008   ....               LDR.N    R0,??DataTable5  ;; 0x40010c00
+   \   0000000A   ........           BL       GPIO_ResetBits
+    331              Spi432OutByte( addr );
+   \   0000000E   2046               MOV      R0,R4
+   \   00000010   BDE81040           POP      {R4,LR}
+   \   00000014   ....               B.N      Spi432OutByte
+    332          }
+    333          
+    334          #define Spi432Stop( )    { GPIO_SetBits(GPIOB, CH432_CS); }    /* SPI结束 */
+    335          
+
+   \                                 In section .text, align 2, keep-with-next
+    336          INT8U ReadCH432Data( INT8U mAddr )    /* 从指定寄存器读取数据 */
+    337          {
+   \                     ReadCH432Data:
+   \   00000000   10B5               PUSH     {R4,LR}
+    338              INT8U d;
+    339              Spi432Start( ( mAddr<<2 ) &0xFD );    /* 位5-2为当前操作地址，位1为0读操作 */
+   \   00000002   8000               LSLS     R0,R0,#+2
+   \   00000004   C0B2               UXTB     R0,R0
+   \   00000006   ........           BL       Spi432Start
+    340              d = Spi432InByte( );
+   \   0000000A   ........           BL       Spi432InByte
+   \   0000000E   0446               MOV      R4,R0
+    341              Spi432Stop( );
+   \   00000010   4FF48051           MOV      R1,#+4096
+   \   00000014   ....               LDR.N    R0,??DataTable5  ;; 0x40010c00
+   \   00000016   ........           BL       GPIO_SetBits
+    342              return( d );
+   \   0000001A   2046               MOV      R0,R4
+   \   0000001C   10BD               POP      {R4,PC}          ;; return
+    343          }
+    344          
+
+   \                                 In section .text, align 2, keep-with-next
+    345          void WriteCH432Data( INT8U mAddr, INT8U mData )    /* 向指定寄存器写入数据 */
+    346          {
+   \                     WriteCH432Data:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0C46               MOV      R4,R1
+    347              Spi432Start( ( mAddr<<2 ) | 0x02 );    /* 位5-2为当前操作地址，位1为1写操作 */
+   \   00000004   8000               LSLS     R0,R0,#+2
+   \   00000006   40F00200           ORR      R0,R0,#0x2
+   \   0000000A   C0B2               UXTB     R0,R0
+   \   0000000C   ........           BL       Spi432Start
+    348              Spi432OutByte( mData );
+   \   00000010   2046               MOV      R0,R4
+   \   00000012   ........           BL       Spi432OutByte
+    349              Spi432Stop( );
+   \   00000016   4FF48051           MOV      R1,#+4096
+   \   0000001A   ....               LDR.N    R0,??DataTable5  ;; 0x40010c00
+   \   0000001C   BDE81040           POP      {R4,LR}
+   \   00000020   ........           B.W      GPIO_SetBits
+    350          }
+
+   \                                 In section .text, align 2, keep-with-next
+    351          void Delay_us()
+    352          {
+    353            	for(INT8U i=0;i<255;i++);
+   \                     Delay_us:
+   \   00000000   0020               MOVS     R0,#+0
+   \   00000002   01E0               B.N      ??Delay_us_0
+   \                     ??Delay_us_1:
+   \   00000004   401C               ADDS     R0,R0,#+1
+   \   00000006   C0B2               UXTB     R0,R0
+   \                     ??Delay_us_0:
+   \   00000008   0146               MOV      R1,R0
+   \   0000000A   FF29               CMP      R1,#+255
+   \   0000000C   FAD1               BNE.N    ??Delay_us_1
+    354          }
+   \   0000000E   7047               BX       LR               ;; return
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5:
+   \   00000000   000C0140           DC32     0x40010c00
+
+   Maximum stack usage in bytes:
+
+     Function              .cstack
+     --------              -------
+     CH432_Interrupt            8
+     CH432_PORT_INIT            8
+     CH432_USART1_SendByte     16
+     CH432_USART2_SendByte     16
+     CH432_USART_Init          16
+     Delay_us                   0
+     ReadCH432Data              8
+     Spi432InByte              16
+     Spi432OutByte             16
+     Spi432Start                8
+     WriteCH432Data             8
+
+
+   Section sizes:
+
+     Function/Label        Bytes
+     --------------        -----
+     RxBuffer               257
+     RxCount
+     CH432_Interrupt        220
+     CH432_USART_Init       168
+     CH432_USART1_SendByte   40
+     CH432_USART2_SendByte   40
+     CH432_PORT_INIT         36
+     Spi432OutByte           66
+     Spi432InByte            66
+     Spi432Start             22
+     ReadCH432Data           30
+     WriteCH432Data          36
+     Delay_us                16
+     ??DataTable5             4
+
+ 
+ 257 bytes in section .bss
+ 744 bytes in section .text
+ 
+ 744 bytes of CODE memory
+ 257 bytes of DATA memory
+
+Errors: none
+Warnings: none

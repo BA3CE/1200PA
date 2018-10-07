@@ -1,0 +1,32 @@
+<Resource>
+    <pages>
+        <page name="Screen0" id="0" />
+    </pages>
+    <images>
+        <image id="0" url="e:\bd3mn\bd3mn\Images\BD3MN.png" width="800" height="480" crop="0" effect_left="0" effect_top="0" effect_width="800" effect_height="480" size="768000" />
+        <image id="1" url="e:\bd3mn\bd3mn\Images\6.bmp" width="95" height="38" crop="0" effect_left="0" effect_top="0" effect_width="95" effect_height="38" size="7220" />
+        <image id="2" url="e:\bd3mn\bd3mn\Images\10.bmp" width="95" height="38" crop="0" effect_left="0" effect_top="0" effect_width="95" effect_height="38" size="7220" />
+        <image id="3" url="e:\bd3mn\bd3mn\Images\7.bmp" width="95" height="38" crop="0" effect_left="0" effect_top="0" effect_width="95" effect_height="38" size="7220" />
+        <image id="4" url="e:\bd3mn\bd3mn\Images\11.bmp" width="95" height="38" crop="0" effect_left="0" effect_top="0" effect_width="95" effect_height="38" size="7220" />
+        <image id="5" url="e:\bd3mn\bd3mn\Images\8.bmp" width="95" height="38" crop="0" effect_left="0" effect_top="0" effect_width="95" effect_height="38" size="7220" />
+        <image id="6" url="e:\bd3mn\bd3mn\Images\12.bmp" width="95" height="38" crop="0" effect_left="0" effect_top="0" effect_width="95" effect_height="38" size="7220" />
+        <image id="7" url="e:\bd3mn\bd3mn\Images\9.bmp" width="95" height="38" crop="0" effect_left="0" effect_top="0" effect_width="95" effect_height="38" size="7220" />
+        <image id="8" url="e:\bd3mn\bd3mn\Images\13.bmp" width="95" height="38" crop="0" effect_left="0" effect_top="0" effect_width="95" effect_height="38" size="7220" />
+        <image id="9" url="e:\bd3mn\bd3mn\Images\16.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="10" url="e:\bd3mn\bd3mn\Images\16-1.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="11" url="e:\bd3mn\bd3mn\Images\17.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="12" url="e:\bd3mn\bd3mn\Images\17-1.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="13" url="e:\bd3mn\bd3mn\Images\18.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="14" url="e:\bd3mn\bd3mn\Images\18-1.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="15" url="e:\bd3mn\bd3mn\Images\19.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="16" url="e:\bd3mn\bd3mn\Images\19-1.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="17" url="e:\bd3mn\bd3mn\Images\20.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="18" url="e:\bd3mn\bd3mn\Images\20-1.bmp" width="70" height="52" crop="0" effect_left="0" effect_top="0" effect_width="70" effect_height="52" size="7280" />
+        <image id="19" url="e:\bd3mn\bd3mn\Images\LAMP3.ICON" width="6" height="11" crop="0" effect_left="0" effect_top="0" effect_width="6" effect_height="11" size="264" />
+        <image id="20" url="e:\bd3mn\bd3mn\Images\LAMP4.ICON" width="6" height="11" crop="0" effect_left="0" effect_top="0" effect_width="6" effect_height="11" size="264" />
+        <image id="21" url="e:\bd3mn\bd3mn\Images\LAMP1.ICON" width="12" height="21" crop="0" effect_left="0" effect_top="0" effect_width="12" effect_height="21" size="1008" />
+        <image id="22" url="e:\bd3mn\bd3mn\Images\LAMP2.ICON" width="12" height="21" crop="0" effect_left="0" effect_top="0" effect_width="12" effect_height="21" size="1008" />
+        <image id="23" url="e:\bd3mn\bd3mn\Images\LAMP.ICON" width="40" height="13" crop="0" effect_left="0" effect_top="0" effect_width="40" effect_height="13" size="4160" />
+    </images>
+    <waves />
+</Resource>

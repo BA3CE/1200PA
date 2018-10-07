@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Project>
+  <Desktop>
+    <Static>
+      <Debug-Log>
+        
+        
+      <PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Build</Factory></Window><Window><Factory>Find-in-Files</Factory></Window></Windows></PreferedWindows><ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1221</ColumnWidth1></Debug-Log>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>915</ColumnWidth1><ColumnWidth2>244</ColumnWidth2><ColumnWidth3>61</ColumnWidth3></Build>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>256</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Disassembly>
+        <PreferedWindows>
+          
+          
+          
+          
+        <Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows>
+        
+        
+        
+      <MixedMode>1</MixedMode><CodeCovShow>0</CodeCovShow><InstrProfShow>0</InstrProfShow></Disassembly>
+      <Watch>
+        <Format>
+          <struct_types><Fmt><Key>CANBUFF-Id</Key><Value>4</Value></Fmt><Fmt><Key>CanRxMsg-ExtId</Key><Value>4</Value></Fmt></struct_types>
+          <watch_formats>
+            
+          <Fmt><Key>{W}Watch-0:((Buffer-&gt;Id&gt;&gt;1)&amp;0x3ff)</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:(0x0281F800&gt;&gt;21)&amp;0x3f</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:(AlarmHeld^AlarmAck)</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:(Buffer-&gt;Id&gt;&gt;1)</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:(Buffer-&gt;Id&gt;&gt;1)&amp;0x3ff</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:(Buffer-&gt;Id&gt;&gt;1)&amp;0x3fff</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:(Buffer-&gt;Id&gt;&gt;11)</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:(Buffer-&gt;Id&gt;&gt;11)&amp;0x03FF</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:(Buffer-&gt;Id&gt;&gt;21)</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:(Buffer-&gt;Id&gt;&gt;21)&amp;0x03FF</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:(Buffer-&gt;Id&gt;&gt;7)&amp;0x03FF</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:(unsigned short)~noset</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:0x0000000014&lt;&lt;21</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:0x000000014&lt;&lt;21</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:0x14&lt;&lt;21</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:128</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:AlarmAck</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:AlarmHeld</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:AlarmHeld^~AlarmAck</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:AlarmSet</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:AlarmSet&amp;(~((unsigned)(Buffer-&gt;Data[2])&lt;&lt;8|Buffer-&gt;Data[1]))</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:Alarming</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:aaa</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:addr</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:alarm</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:alarmHold</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:buffer.Id&gt;&gt;1&amp;0x3f</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:comm_address</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:data</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:delay</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:enterDelay</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:exitDelay</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:i</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:j</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:noset</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:rxBuffer.Id&gt;&gt;17</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:rxBuffer.Id&gt;&gt;21</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:set</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:txBuffer.Id</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:zone</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:~((unsigned)(Buffer-&gt;Data[2])&lt;&lt;8|Buffer-&gt;Data[1])</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:~AlarmAck</Key><Value>1</Value></Fmt><Fmt><Key>{W}Watch-0:~noset</Key><Value>1</Value></Fmt></watch_formats>
+        </Format>
+        
+        
+        
+        
+      <PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Register</Factory></Window></Windows></PreferedWindows><Column0>129</Column0><Column1>202</Column1><Column2>100</Column2><Column3>100</Column3></Watch>
+      <Register>
+        <PreferedWindows>
+          
+          
+          
+          
+        <Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Watch</Factory></Window></Windows></PreferedWindows>
+      </Register>
+    <Find-in-Files><ColumnWidth0>440</ColumnWidth0><ColumnWidth1>62</ColumnWidth1><ColumnWidth2>754</ColumnWidth2></Find-in-Files><SymbolicMemory><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><Location>88</Location><Data>88</Data><Variable>120</Variable><Value>60</Value><Type>75</Type></SymbolicMemory><Memory><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><FindDirection>1</FindDirection><FindAsHex>0</FindAsHex></Memory></Static>
+    <Windows>
+      
+      
+      
+      
+    <Wnd0>
+        <Tabs>
+          
+          <Tab>
+            <Identity>TabID-16702-18319</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        <Tab><Identity>TabID-9615-29011</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab><Tab><Identity>TabID-12792-22666</Identity><TabName>Debug Log</TabName><Factory>Debug-Log</Factory><Session/></Tab></Tabs>
+        
+      <SelectedTab>2</SelectedTab></Wnd0><Wnd1>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-27973-18313</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>AlarmHost</ExpandedNode><ExpandedNode>AlarmHost/APP</ExpandedNode><ExpandedNode>AlarmHost/CAN</ExpandedNode><ExpandedNode>AlarmHost/EEPROM</ExpandedNode><ExpandedNode>AlarmHost/Interrupt</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd1><Wnd3><Tabs><Tab><Identity>TabID-22046-17491</Identity><TabName>Register</TabName><Factory>Register</Factory><Session><REG1>0</REG1><REG2>0</REG2><Group>5</Group><States>1</States><State0>GPIOB_IDR</State0></Session></Tab><Tab><Identity>TabID-12336-19556</Identity><TabName>Watch</TabName><Factory>Watch</Factory><Session><Expressions><Expression><Expression>armDelay</Expression></Expression></Expressions><TabId>0</TabId><Column0>129</Column0><Column1>202</Column1><Column2>100</Column2><Column3>100</Column3></Session></Tab></Tabs><SelectedTab>1</SelectedTab></Wnd3><Wnd4><Tabs><Tab><Identity>TabID-4848-10341</Identity><TabName>Disassembly</TabName><Factory>Disassembly</Factory><Session/></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd4></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>E:\MyProjects\Tjinc\AlarmHost\Boards\app.c</Filename><XPos>0</XPos><YPos>128</YPos><SelStart>5601</SelStart><SelEnd>5601</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\MyProjects\Tjinc\AlarmHost\FWLib\library\src\stm32f10x_can.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\MyProjects\Tjinc\AlarmHost\Boards\Can\STM32Can.c</Filename><XPos>0</XPos><YPos>52</YPos><SelStart>2324</SelStart><SelEnd>2324</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\MyProjects\Tjinc\AlarmHost\Boards\BSP\bsp.c</Filename><XPos>0</XPos><YPos>270</YPos><SelStart>8987</SelStart><SelEnd>10958</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\MyProjects\Tjinc\AlarmHost\FWLib\library\src\stm32f10x_dma.c</Filename><XPos>0</XPos><YPos>388</YPos><SelStart>17814</SelStart><SelEnd>17814</SelEnd></Tab><ActiveTab>4</ActiveTab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-01363b60><key>iaridepm.enu1</key></Toolbar-01363b60></Sizes></Row0><Row1><Sizes><Toolbar-0607c118><key>debuggergui.enu1</key></Toolbar-0607c118></Sizes></Row1></Top><Left><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>434</Bottom><Right>330</Right><x>-2</x><y>-2</y><xscreen>88129</xscreen><yscreen>177794</yscreen><sizeHorzCX>69066614</sizeHorzCX><sizeHorzCY>255451149</sizeHorzCY><sizeVertCX>260188</sizeVertCX><sizeVertCY>626437</sizeVertCY></Rect></Wnd1></Sizes></Row0></Left><Right><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>434</Bottom><Right>207</Right><x>-2</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>156740</sizeHorzCX><sizeHorzCY>287356</sizeHorzCY><sizeVertCX>163793</sizeVertCX><sizeVertCY>626437</sizeVertCY></Rect></Wnd3></Sizes></Row0><Row1><Sizes><Wnd4><Rect><Top>-2</Top><Left>205</Left><Bottom>434</Bottom><Right>404</Right><x>205</x><y>-2</y><xscreen>199</xscreen><yscreen>194</yscreen><sizeHorzCX>155956</sizeHorzCX><sizeHorzCY>278736</sizeHorzCY><sizeVertCX>155956</sizeVertCX><sizeVertCY>626437</sizeVertCY></Rect></Wnd4></Sizes></Row1></Right><Bottom><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>193</Bottom><Right>1278</Right><x>-2</x><y>-2</y><xscreen>1280</xscreen><yscreen>195</yscreen><sizeHorzCX>1003135</sizeHorzCX><sizeHorzCY>280172</sizeHorzCY><sizeVertCX>69066614</sizeVertCX><sizeVertCY>255451149</sizeVertCY></Rect></Wnd0></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Project>
+
+

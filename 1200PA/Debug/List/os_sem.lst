@@ -1,0 +1,1166 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  22:57:17 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\uCOS-II\Source\os_sem.c                               #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\os_sem.c" -D _DLIB_FILE_DESCRIPTOR     #
+#                    -lC "F:\MyProjects\Tjinc\CAN & Uart over                 #
+#                    IP\Debug\List\" -o "F:\MyProjects\Tjinc\CAN & Uart over  #
+#                    IP\Debug\Obj\" --no_unroll --no_inline --no_tbaa         #
+#                    --no_scheduling --debug --endian=little --cpu=Cortex-M3  #
+#                    -e --fpu=None --dlib_config "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4                           #
+#                    Kickstart\arm\INC\DLib_Config_Normal.h" -I               #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\os_sem.lst                                 #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\Obj\os_sem.o                                    #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\uCOS-II\Source\os_sem.c
+      1          /*
+      2          *********************************************************************************************************
+      3          *                                                uC/OS-II
+      4          *                                          The Real-Time Kernel
+      5          *                                          SEMAPHORE MANAGEMENT
+      6          *
+      7          *                              (c) Copyright 1992-2007, Micrium, Weston, FL
+      8          *                                           All Rights Reserved
+      9          *
+     10          * File    : OS_SEM.C
+     11          * By      : Jean J. Labrosse
+     12          * Version : V2.86
+     13          *
+     14          * LICENSING TERMS:
+     15          * ---------------
+     16          *   uC/OS-II is provided in source form for FREE evaluation, for educational use or for peaceful research.  
+     17          * If you plan on using  uC/OS-II  in a commercial product you need to contact Micriµm to properly license 
+     18          * its use in your product. We provide ALL the source code for your convenience and to help you experience 
+     19          * uC/OS-II.   The fact that the  source is provided does  NOT  mean that you can use it without  paying a 
+     20          * licensing fee.
+     21          *********************************************************************************************************
+     22          */
+     23          
+     24          #ifndef  OS_MASTER_FILE
+     25          #include "ucos_ii.h"
+     26          #endif
+     27          
+     28          #if OS_SEM_EN > 0
+     29          /*$PAGE*/
+     30          /*
+     31          *********************************************************************************************************
+     32          *                                           ACCEPT SEMAPHORE
+     33          *
+     34          * Description: This function checks the semaphore to see if a resource is available or, if an event
+     35          *              occurred.  Unlike OSSemPend(), OSSemAccept() does not suspend the calling task if the
+     36          *              resource is not available or the event did not occur.
+     37          *
+     38          * Arguments  : pevent     is a pointer to the event control block
+     39          *
+     40          * Returns    : >  0       if the resource is available or the event did not occur the semaphore is
+     41          *                         decremented to obtain the resource.
+     42          *              == 0       if the resource is not available or the event did not occur or,
+     43          *                         if 'pevent' is a NULL pointer or,
+     44          *                         if you didn't pass a pointer to a semaphore
+     45          *********************************************************************************************************
+     46          */
+     47          
+     48          #if OS_SEM_ACCEPT_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+     49          INT16U  OSSemAccept (OS_EVENT *pevent)
+     50          {
+   \                     OSSemAccept:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0400               MOVS     R4,R0
+     51              INT16U     cnt;
+     52          #if OS_CRITICAL_METHOD == 3                           /* Allocate storage for CPU status register      */
+     53              OS_CPU_SR  cpu_sr = 0;
+     54          #endif
+     55          
+     56          
+     57          
+     58          #if OS_ARG_CHK_EN > 0
+     59              if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+   \   00000004   01D1               BNE.N    ??OSSemAccept_0
+     60                  return (0);
+   \                     ??OSSemAccept_1:
+   \   00000006   0020               MOVS     R0,#+0
+   \   00000008   32BD               POP      {R1,R4,R5,PC}
+     61              }
+     62          #endif
+     63              if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+   \                     ??OSSemAccept_0:
+   \   0000000A   2078               LDRB     R0,[R4, #+0]
+   \   0000000C   0328               CMP      R0,#+3
+   \   0000000E   FAD1               BNE.N    ??OSSemAccept_1
+     64                  return (0);
+     65              }
+     66              OS_ENTER_CRITICAL();
+   \   00000010   ........           BL       OS_CPU_SR_Save
+     67              cnt = pevent->OSEventCnt;
+   \   00000014   2589               LDRH     R5,[R4, #+8]
+     68              if (cnt > 0) {                                    /* See if resource is available                  */
+   \   00000016   2900               MOVS     R1,R5
+   \   00000018   01D0               BEQ.N    ??OSSemAccept_2
+     69                  pevent->OSEventCnt--;                         /* Yes, decrement semaphore and notify caller    */
+   \   0000001A   491E               SUBS     R1,R1,#+1
+   \   0000001C   2181               STRH     R1,[R4, #+8]
+     70              }
+     71              OS_EXIT_CRITICAL();
+   \                     ??OSSemAccept_2:
+   \   0000001E   ........           BL       OS_CPU_SR_Restore
+     72              return (cnt);                                     /* Return semaphore count                        */
+   \   00000022   2846               MOV      R0,R5
+   \   00000024   32BD               POP      {R1,R4,R5,PC}    ;; return
+     73          }
+     74          #endif
+     75          
+     76          /*$PAGE*/
+     77          /*
+     78          *********************************************************************************************************
+     79          *                                           CREATE A SEMAPHORE
+     80          *
+     81          * Description: This function creates a semaphore.
+     82          *
+     83          * Arguments  : cnt           is the initial value for the semaphore.  If the value is 0, no resource is
+     84          *                            available (or no event has occurred).  You initialize the semaphore to a
+     85          *                            non-zero value to specify how many resources are available (e.g. if you have
+     86          *                            10 resources, you would initialize the semaphore to 10).
+     87          *
+     88          * Returns    : != (void *)0  is a pointer to the event control block (OS_EVENT) associated with the
+     89          *                            created semaphore
+     90          *              == (void *)0  if no event control blocks were available
+     91          *********************************************************************************************************
+     92          */
+     93          
+
+   \                                 In section .text, align 2, keep-with-next
+     94          OS_EVENT  *OSSemCreate (INT16U cnt)
+     95          {
+   \                     OSSemCreate:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+     96              OS_EVENT  *pevent;
+     97          #if OS_CRITICAL_METHOD == 3                                /* Allocate storage for CPU status register */
+     98              OS_CPU_SR  cpu_sr = 0;
+     99          #endif
+    100          
+    101          
+    102          
+    103              if (OSIntNesting > 0) {                                /* See if called from ISR ...               */
+   \   00000004   ....               LDR.N    R0,??DataTable5  ;; OSIntNesting
+   \   00000006   0078               LDRB     R0,[R0, #+0]
+   \   00000008   0028               CMP      R0,#+0
+   \   0000000A   01D0               BEQ.N    ??OSSemCreate_0
+    104                  return ((OS_EVENT *)0);                            /* ... can't CREATE from an ISR             */
+   \   0000000C   0020               MOVS     R0,#+0
+   \   0000000E   32BD               POP      {R1,R4,R5,PC}
+    105              }
+    106              OS_ENTER_CRITICAL();
+   \                     ??OSSemCreate_0:
+   \   00000010   ........           BL       OS_CPU_SR_Save
+    107              pevent = OSEventFreeList;                              /* Get next free event control block        */
+   \   00000014   ....               LDR.N    R1,??DataTable4  ;; OSEventFreeList
+   \   00000016   0A68               LDR      R2,[R1, #+0]
+   \   00000018   1500               MOVS     R5,R2
+    108              if (OSEventFreeList != (OS_EVENT *)0) {                /* See if pool of free ECB pool was empty   */
+   \   0000001A   01D0               BEQ.N    ??OSSemCreate_1
+    109                  OSEventFreeList = (OS_EVENT *)OSEventFreeList->OSEventPtr;
+   \   0000001C   5268               LDR      R2,[R2, #+4]
+   \   0000001E   0A60               STR      R2,[R1, #+0]
+    110              }
+    111              OS_EXIT_CRITICAL();
+   \                     ??OSSemCreate_1:
+   \   00000020   ........           BL       OS_CPU_SR_Restore
+    112              if (pevent != (OS_EVENT *)0) {                         /* Get an event control block               */
+   \   00000024   002D               CMP      R5,#+0
+   \   00000026   0BD0               BEQ.N    ??OSSemCreate_2
+    113                  pevent->OSEventType    = OS_EVENT_TYPE_SEM;
+   \   00000028   0320               MOVS     R0,#+3
+   \   0000002A   2870               STRB     R0,[R5, #+0]
+    114                  pevent->OSEventCnt     = cnt;                      /* Set semaphore value                      */
+   \   0000002C   2C81               STRH     R4,[R5, #+8]
+    115                  pevent->OSEventPtr     = (void *)0;                /* Unlink from ECB free list                */
+   \   0000002E   0020               MOVS     R0,#+0
+   \   00000030   6860               STR      R0,[R5, #+4]
+    116          #if OS_EVENT_NAME_SIZE > 1
+    117                  pevent->OSEventName[0] = '?';                      /* Unknown name                             */
+   \   00000032   3F20               MOVS     R0,#+63
+   \   00000034   E873               STRB     R0,[R5, #+15]
+    118                  pevent->OSEventName[1] = OS_ASCII_NUL;
+   \   00000036   0020               MOVS     R0,#+0
+   \   00000038   2874               STRB     R0,[R5, #+16]
+    119          #endif
+    120                  OS_EventWaitListInit(pevent);                      /* Initialize to 'nobody waiting' on sem.   */
+   \   0000003A   2846               MOV      R0,R5
+   \   0000003C   ........           BL       OS_EventWaitListInit
+    121              }
+    122              return (pevent);
+   \                     ??OSSemCreate_2:
+   \   00000040   2846               MOV      R0,R5
+   \   00000042   32BD               POP      {R1,R4,R5,PC}    ;; return
+    123          }
+    124          
+    125          /*$PAGE*/
+    126          /*
+    127          *********************************************************************************************************
+    128          *                                         DELETE A SEMAPHORE
+    129          *
+    130          * Description: This function deletes a semaphore and readies all tasks pending on the semaphore.
+    131          *
+    132          * Arguments  : pevent        is a pointer to the event control block associated with the desired
+    133          *                            semaphore.
+    134          *
+    135          *              opt           determines delete options as follows:
+    136          *                            opt == OS_DEL_NO_PEND   Delete semaphore ONLY if no task pending
+    137          *                            opt == OS_DEL_ALWAYS    Deletes the semaphore even if tasks are waiting.
+    138          *                                                    In this case, all the tasks pending will be readied.
+    139          *
+    140          *              perr          is a pointer to an error code that can contain one of the following values:
+    141          *                            OS_ERR_NONE             The call was successful and the semaphore was deleted
+    142          *                            OS_ERR_DEL_ISR          If you attempted to delete the semaphore from an ISR
+    143          *                            OS_ERR_INVALID_OPT      An invalid option was specified
+    144          *                            OS_ERR_TASK_WAITING     One or more tasks were waiting on the semaphore
+    145          *                            OS_ERR_EVENT_TYPE       If you didn't pass a pointer to a semaphore
+    146          *                            OS_ERR_PEVENT_NULL      If 'pevent' is a NULL pointer.
+    147          *
+    148          * Returns    : pevent        upon error
+    149          *              (OS_EVENT *)0 if the semaphore was successfully deleted.
+    150          *
+    151          * Note(s)    : 1) This function must be used with care.  Tasks that would normally expect the presence of
+    152          *                 the semaphore MUST check the return code of OSSemPend().
+    153          *              2) OSSemAccept() callers will not know that the intended semaphore has been deleted unless
+    154          *                 they check 'pevent' to see that it's a NULL pointer.
+    155          *              3) This call can potentially disable interrupts for a long time.  The interrupt disable
+    156          *                 time is directly proportional to the number of tasks waiting on the semaphore.
+    157          *              4) Because ALL tasks pending on the semaphore will be readied, you MUST be careful in
+    158          *                 applications where the semaphore is used for mutual exclusion because the resource(s)
+    159          *                 will no longer be guarded by the semaphore.
+    160          *********************************************************************************************************
+    161          */
+    162          
+    163          #if OS_SEM_DEL_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    164          OS_EVENT  *OSSemDel (OS_EVENT *pevent, INT8U opt, INT8U *perr)
+    165          {
+   \                     OSSemDel:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0446               MOV      R4,R0
+   \   00000006   8846               MOV      R8,R1
+   \   00000008   1500               MOVS     R5,R2
+    166              BOOLEAN    tasks_waiting;
+    167              OS_EVENT  *pevent_return;
+    168          #if OS_CRITICAL_METHOD == 3                                /* Allocate storage for CPU status register */
+    169              OS_CPU_SR  cpu_sr = 0;
+    170          #endif
+    171          
+    172          
+    173          
+    174          #if OS_ARG_CHK_EN > 0
+    175              if (perr == (INT8U *)0) {                              /* Validate 'perr'                          */
+   \   0000000A   67D0               BEQ.N    ??OSSemDel_0
+    176                  return (pevent);
+    177              }
+    178              if (pevent == (OS_EVENT *)0) {                         /* Validate 'pevent'                        */
+   \   0000000C   002C               CMP      R4,#+0
+   \   0000000E   04D1               BNE.N    ??OSSemDel_1
+    179                  *perr = OS_ERR_PEVENT_NULL;
+   \   00000010   0420               MOVS     R0,#+4
+   \   00000012   2870               STRB     R0,[R5, #+0]
+    180                  return (pevent);
+   \   00000014   0020               MOVS     R0,#+0
+   \   00000016   BDE8F081           POP      {R4-R8,PC}
+    181              }
+    182          #endif
+    183              if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {        /* Validate event block type                */
+   \                     ??OSSemDel_1:
+   \   0000001A   2078               LDRB     R0,[R4, #+0]
+   \   0000001C   0328               CMP      R0,#+3
+   \   0000001E   04D0               BEQ.N    ??OSSemDel_2
+    184                  *perr = OS_ERR_EVENT_TYPE;
+   \   00000020   0120               MOVS     R0,#+1
+   \   00000022   2870               STRB     R0,[R5, #+0]
+    185                  return (pevent);
+   \   00000024   2046               MOV      R0,R4
+   \   00000026   BDE8F081           POP      {R4-R8,PC}
+    186              }
+    187              if (OSIntNesting > 0) {                                /* See if called from ISR ...               */
+   \                     ??OSSemDel_2:
+   \   0000002A   ....               LDR.N    R0,??DataTable5  ;; OSIntNesting
+   \   0000002C   0078               LDRB     R0,[R0, #+0]
+   \   0000002E   0028               CMP      R0,#+0
+   \   00000030   04D0               BEQ.N    ??OSSemDel_3
+    188                  *perr = OS_ERR_DEL_ISR;                             /* ... can't DELETE from an ISR             */
+   \   00000032   0F20               MOVS     R0,#+15
+   \   00000034   2870               STRB     R0,[R5, #+0]
+    189                  return (pevent);
+   \   00000036   2046               MOV      R0,R4
+   \   00000038   BDE8F081           POP      {R4-R8,PC}
+    190              }
+    191              OS_ENTER_CRITICAL();
+   \                     ??OSSemDel_3:
+   \   0000003C   ........           BL       OS_CPU_SR_Save
+   \   00000040   0646               MOV      R6,R0
+    192              if (pevent->OSEventGrp != 0) {                         /* See if any tasks waiting on semaphore    */
+   \   00000042   A07A               LDRB     R0,[R4, #+10]
+   \   00000044   471E               SUBS     R7,R0,#+1
+   \   00000046   BF41               SBCS     R7,R7,R7
+   \   00000048   FF43               MVNS     R7,R7
+   \   0000004A   FF0F               LSRS     R7,R7,#+31
+    193                  tasks_waiting = OS_TRUE;                           /* Yes                                      */
+    194              } else {
+    195                  tasks_waiting = OS_FALSE;                          /* No                                       */
+    196              }
+    197              switch (opt) {
+   \   0000004C   B8F1000F           CMP      R8,#+0
+   \   00000050   03D0               BEQ.N    ??OSSemDel_4
+   \   00000052   B8F1010F           CMP      R8,#+1
+   \   00000056   22D0               BEQ.N    ??OSSemDel_5
+   \   00000058   3AE0               B.N      ??OSSemDel_6
+    198                  case OS_DEL_NO_PEND:                               /* Delete semaphore only if no task waiting */
+    199                       if (tasks_waiting == OS_FALSE) {
+   \                     ??OSSemDel_4:
+   \   0000005A   002F               CMP      R7,#+0
+   \   0000005C   11D1               BNE.N    ??OSSemDel_7
+    200          #if OS_EVENT_NAME_SIZE > 1
+    201                           pevent->OSEventName[0] = '?';             /* Unknown name                             */
+   \   0000005E   3F20               MOVS     R0,#+63
+   \   00000060   E073               STRB     R0,[R4, #+15]
+    202                           pevent->OSEventName[1] = OS_ASCII_NUL;
+   \   00000062   0020               MOVS     R0,#+0
+   \   00000064   2074               STRB     R0,[R4, #+16]
+    203          #endif
+    204                           pevent->OSEventType    = OS_EVENT_TYPE_UNUSED;
+   \   00000066   2070               STRB     R0,[R4, #+0]
+    205                           pevent->OSEventPtr     = OSEventFreeList; /* Return Event Control Block to free list  */
+   \   00000068   ....               LDR.N    R0,??DataTable4  ;; OSEventFreeList
+   \   0000006A   0168               LDR      R1,[R0, #+0]
+   \   0000006C   6160               STR      R1,[R4, #+4]
+    206                           pevent->OSEventCnt     = 0;
+   \   0000006E   0021               MOVS     R1,#+0
+   \   00000070   2181               STRH     R1,[R4, #+8]
+    207                           OSEventFreeList        = pevent;          /* Get next free event control block        */
+   \   00000072   0460               STR      R4,[R0, #+0]
+    208                           OS_EXIT_CRITICAL();
+   \   00000074   3046               MOV      R0,R6
+   \   00000076   ........           BL       OS_CPU_SR_Restore
+    209                           *perr                  = OS_ERR_NONE;
+   \   0000007A   0020               MOVS     R0,#+0
+   \   0000007C   2870               STRB     R0,[R5, #+0]
+    210                           pevent_return          = (OS_EVENT *)0;   /* Semaphore has been deleted               */
+   \   0000007E   BDE8F081           POP      {R4-R8,PC}
+    211                       } else {
+    212                           OS_EXIT_CRITICAL();
+   \                     ??OSSemDel_7:
+   \   00000082   3046               MOV      R0,R6
+   \   00000084   ........           BL       OS_CPU_SR_Restore
+    213                           *perr                  = OS_ERR_TASK_WAITING;
+   \   00000088   4920               MOVS     R0,#+73
+   \   0000008A   2870               STRB     R0,[R5, #+0]
+    214                           pevent_return          = pevent;
+   \   0000008C   2046               MOV      R0,R4
+   \   0000008E   BDE8F081           POP      {R4-R8,PC}
+    215                       }
+    216                       break;
+    217          
+    218                  case OS_DEL_ALWAYS:                                /* Always delete the semaphore              */
+    219                       while (pevent->OSEventGrp != 0) {             /* Ready ALL tasks waiting for semaphore    */
+    220                           (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_OK);
+   \                     ??OSSemDel_8:
+   \   00000092   0023               MOVS     R3,#+0
+   \   00000094   0122               MOVS     R2,#+1
+   \   00000096   1946               MOV      R1,R3
+   \   00000098   2046               MOV      R0,R4
+   \   0000009A   ........           BL       OS_EventTaskRdy
+    221                       }
+   \                     ??OSSemDel_5:
+   \   0000009E   A07A               LDRB     R0,[R4, #+10]
+   \   000000A0   0028               CMP      R0,#+0
+   \   000000A2   F6D1               BNE.N    ??OSSemDel_8
+    222          #if OS_EVENT_NAME_SIZE > 1
+    223                       pevent->OSEventName[0] = '?';                 /* Unknown name                             */
+   \   000000A4   3F20               MOVS     R0,#+63
+   \   000000A6   E073               STRB     R0,[R4, #+15]
+    224                       pevent->OSEventName[1] = OS_ASCII_NUL;
+   \   000000A8   0020               MOVS     R0,#+0
+   \   000000AA   2074               STRB     R0,[R4, #+16]
+    225          #endif
+    226                       pevent->OSEventType    = OS_EVENT_TYPE_UNUSED;
+   \   000000AC   2070               STRB     R0,[R4, #+0]
+    227                       pevent->OSEventPtr     = OSEventFreeList;     /* Return Event Control Block to free list  */
+   \   000000AE   ....               LDR.N    R0,??DataTable4  ;; OSEventFreeList
+   \   000000B0   0168               LDR      R1,[R0, #+0]
+   \   000000B2   6160               STR      R1,[R4, #+4]
+    228                       pevent->OSEventCnt     = 0;
+   \   000000B4   0021               MOVS     R1,#+0
+   \   000000B6   2181               STRH     R1,[R4, #+8]
+    229                       OSEventFreeList        = pevent;              /* Get next free event control block        */
+   \   000000B8   0460               STR      R4,[R0, #+0]
+    230                       OS_EXIT_CRITICAL();
+   \   000000BA   3046               MOV      R0,R6
+   \   000000BC   ........           BL       OS_CPU_SR_Restore
+    231                       if (tasks_waiting == OS_TRUE) {               /* Reschedule only if task(s) were waiting  */
+   \   000000C0   012F               CMP      R7,#+1
+   \   000000C2   01D1               BNE.N    ??OSSemDel_9
+    232                           OS_Sched();                               /* Find highest priority task ready to run  */
+   \   000000C4   ........           BL       OS_Sched
+    233                       }
+    234                       *perr                  = OS_ERR_NONE;
+   \                     ??OSSemDel_9:
+   \   000000C8   0020               MOVS     R0,#+0
+   \   000000CA   2870               STRB     R0,[R5, #+0]
+    235                       pevent_return          = (OS_EVENT *)0;       /* Semaphore has been deleted               */
+   \   000000CC   BDE8F081           POP      {R4-R8,PC}
+    236                       break;
+    237          
+    238                  default:
+    239                       OS_EXIT_CRITICAL();
+   \                     ??OSSemDel_6:
+   \   000000D0   3046               MOV      R0,R6
+   \   000000D2   ........           BL       OS_CPU_SR_Restore
+    240                       *perr                  = OS_ERR_INVALID_OPT;
+   \   000000D6   0720               MOVS     R0,#+7
+   \   000000D8   2870               STRB     R0,[R5, #+0]
+    241                       pevent_return          = pevent;
+   \   000000DA   2046               MOV      R0,R4
+    242                       break;
+    243              }
+    244              return (pevent_return);
+   \                     ??OSSemDel_0:
+   \   000000DC   BDE8F081           POP      {R4-R8,PC}       ;; return
+    245          }
+    246          #endif
+    247          
+    248          /*$PAGE*/
+    249          /*
+    250          *********************************************************************************************************
+    251          *                                           PEND ON SEMAPHORE
+    252          *
+    253          * Description: This function waits for a semaphore.
+    254          *
+    255          * Arguments  : pevent        is a pointer to the event control block associated with the desired
+    256          *                            semaphore.
+    257          *
+    258          *              timeout       is an optional timeout period (in clock ticks).  If non-zero, your task will
+    259          *                            wait for the resource up to the amount of time specified by this argument.
+    260          *                            If you specify 0, however, your task will wait forever at the specified
+    261          *                            semaphore or, until the resource becomes available (or the event occurs).
+    262          *
+    263          *              perr          is a pointer to where an error message will be deposited.  Possible error
+    264          *                            messages are:
+    265          *
+    266          *                            OS_ERR_NONE         The call was successful and your task owns the resource
+    267          *                                                or, the event you are waiting for occurred.
+    268          *                            OS_ERR_TIMEOUT      The semaphore was not received within the specified
+    269          *                                                'timeout'.
+    270          *                            OS_ERR_PEND_ABORT   The wait on the semaphore was aborted.
+    271          *                            OS_ERR_EVENT_TYPE   If you didn't pass a pointer to a semaphore.
+    272          *                            OS_ERR_PEND_ISR     If you called this function from an ISR and the result
+    273          *                                                would lead to a suspension.
+    274          *                            OS_ERR_PEVENT_NULL  If 'pevent' is a NULL pointer.
+    275          *                            OS_ERR_PEND_LOCKED  If you called this function when the scheduler is locked
+    276          *
+    277          * Returns    : none
+    278          *********************************************************************************************************
+    279          */
+    280          /*$PAGE*/
+
+   \                                 In section .text, align 4, keep-with-next
+    281          void  OSSemPend (OS_EVENT *pevent, INT16U timeout, INT8U *perr)
+    282          {
+   \                     OSSemPend:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0646               MOV      R6,R0
+   \   00000006   0D46               MOV      R5,R1
+   \   00000008   1400               MOVS     R4,R2
+    283          #if OS_CRITICAL_METHOD == 3                           /* Allocate storage for CPU status register      */
+    284              OS_CPU_SR  cpu_sr = 0;
+    285          #endif
+    286          
+    287          
+    288          
+    289          #if OS_ARG_CHK_EN > 0
+    290              if (perr == (INT8U *)0) {                         /* Validate 'perr'                               */
+   \   0000000A   6ED0               BEQ.N    ??OSSemPend_0
+    291                  return;
+    292              }
+    293              if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+   \   0000000C   002E               CMP      R6,#+0
+   \   0000000E   03D1               BNE.N    ??OSSemPend_1
+    294                  *perr = OS_ERR_PEVENT_NULL;
+   \   00000010   0420               MOVS     R0,#+4
+   \   00000012   2070               STRB     R0,[R4, #+0]
+    295                  return;
+   \   00000014   BDE8F081           POP      {R4-R8,PC}
+    296              }
+    297          #endif
+    298              if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+   \                     ??OSSemPend_1:
+   \   00000018   3078               LDRB     R0,[R6, #+0]
+   \   0000001A   0328               CMP      R0,#+3
+   \   0000001C   03D0               BEQ.N    ??OSSemPend_2
+    299                  *perr = OS_ERR_EVENT_TYPE;
+   \   0000001E   0120               MOVS     R0,#+1
+   \   00000020   2070               STRB     R0,[R4, #+0]
+    300                  return;
+   \   00000022   BDE8F081           POP      {R4-R8,PC}
+    301              }
+    302              if (OSIntNesting > 0) {                           /* See if called from ISR ...                    */
+   \                     ??OSSemPend_2:
+   \   00000026   ....               LDR.N    R0,??DataTable5  ;; OSIntNesting
+   \   00000028   0078               LDRB     R0,[R0, #+0]
+   \   0000002A   0028               CMP      R0,#+0
+   \   0000002C   03D0               BEQ.N    ??OSSemPend_3
+    303                  *perr = OS_ERR_PEND_ISR;                      /* ... can't PEND from an ISR                    */
+   \   0000002E   0220               MOVS     R0,#+2
+   \   00000030   2070               STRB     R0,[R4, #+0]
+    304                  return;
+   \   00000032   BDE8F081           POP      {R4-R8,PC}
+    305              }
+    306              if (OSLockNesting > 0) {                          /* See if called with scheduler locked ...       */
+   \                     ??OSSemPend_3:
+   \   00000036   2E48               LDR.N    R0,??OSSemPend_4  ;; OSLockNesting
+   \   00000038   0078               LDRB     R0,[R0, #+0]
+   \   0000003A   0028               CMP      R0,#+0
+   \   0000003C   03D0               BEQ.N    ??OSSemPend_5
+    307                  *perr = OS_ERR_PEND_LOCKED;                   /* ... can't PEND when locked                    */
+   \   0000003E   0D20               MOVS     R0,#+13
+   \   00000040   2070               STRB     R0,[R4, #+0]
+    308                  return;
+   \   00000042   BDE8F081           POP      {R4-R8,PC}
+    309              }
+    310              OS_ENTER_CRITICAL();
+   \                     ??OSSemPend_5:
+   \   00000046   ........           BL       OS_CPU_SR_Save
+   \   0000004A   0746               MOV      R7,R0
+    311              if (pevent->OSEventCnt > 0) {                     /* If sem. is positive, resource available ...   */
+   \   0000004C   3089               LDRH     R0,[R6, #+8]
+   \   0000004E   0028               CMP      R0,#+0
+   \   00000050   08D0               BEQ.N    ??OSSemPend_6
+    312                  pevent->OSEventCnt--;                         /* ... decrement semaphore only if positive.     */
+   \   00000052   401E               SUBS     R0,R0,#+1
+   \   00000054   3081               STRH     R0,[R6, #+8]
+    313                  OS_EXIT_CRITICAL();
+   \   00000056   3846               MOV      R0,R7
+   \   00000058   ........           BL       OS_CPU_SR_Restore
+    314                  *perr = OS_ERR_NONE;
+   \   0000005C   0020               MOVS     R0,#+0
+   \   0000005E   2070               STRB     R0,[R4, #+0]
+    315                  return;
+   \   00000060   BDE8F081           POP      {R4-R8,PC}
+    316              }
+    317                                                                /* Otherwise, must wait until event occurs       */
+    318              OSTCBCur->OSTCBStat     |= OS_STAT_SEM;           /* Resource not available, pend on semaphore     */
+   \                     ??OSSemPend_6:
+   \   00000064   DFF88C80           LDR.W    R8,??OSSemPend_4+0x4  ;; OSTCBCur
+   \   00000068   D8F80000           LDR      R0,[R8, #+0]
+   \   0000006C   90F83010           LDRB     R1,[R0, #+48]
+   \   00000070   41F00101           ORR      R1,R1,#0x1
+   \   00000074   80F83010           STRB     R1,[R0, #+48]
+    319              OSTCBCur->OSTCBStatPend  = OS_STAT_PEND_OK;
+   \   00000078   D8F80000           LDR      R0,[R8, #+0]
+   \   0000007C   0021               MOVS     R1,#+0
+   \   0000007E   80F83110           STRB     R1,[R0, #+49]
+    320              OSTCBCur->OSTCBDly       = timeout;               /* Store pend timeout in TCB                     */
+   \   00000082   D8F80000           LDR      R0,[R8, #+0]
+   \   00000086   C585               STRH     R5,[R0, #+46]
+    321              OS_EventTaskWait(pevent);                         /* Suspend task until event or timeout occurs    */
+   \   00000088   3046               MOV      R0,R6
+   \   0000008A   ........           BL       OS_EventTaskWait
+    322              OS_EXIT_CRITICAL();
+   \   0000008E   3846               MOV      R0,R7
+   \   00000090   ........           BL       OS_CPU_SR_Restore
+    323              OS_Sched();                                       /* Find next highest priority task ready         */
+   \   00000094   ........           BL       OS_Sched
+    324              OS_ENTER_CRITICAL();
+   \   00000098   ........           BL       OS_CPU_SR_Save
+   \   0000009C   0746               MOV      R7,R0
+    325              switch (OSTCBCur->OSTCBStatPend) {                /* See if we timed-out or aborted                */
+   \   0000009E   D8F80000           LDR      R0,[R8, #+0]
+   \   000000A2   90F83110           LDRB     R1,[R0, #+49]
+   \   000000A6   0029               CMP      R1,#+0
+   \   000000A8   02D0               BEQ.N    ??OSSemPend_7
+   \   000000AA   0229               CMP      R1,#+2
+   \   000000AC   03D0               BEQ.N    ??OSSemPend_8
+   \   000000AE   05E0               B.N      ??OSSemPend_9
+    326                  case OS_STAT_PEND_OK:
+    327                       *perr = OS_ERR_NONE;
+   \                     ??OSSemPend_7:
+   \   000000B0   0020               MOVS     R0,#+0
+   \   000000B2   2070               STRB     R0,[R4, #+0]
+   \   000000B4   07E0               B.N      ??OSSemPend_10
+    328                       break;
+    329          
+    330                  case OS_STAT_PEND_ABORT:
+    331                       *perr = OS_ERR_PEND_ABORT;               /* Indicate that we aborted                      */
+   \                     ??OSSemPend_8:
+   \   000000B6   0E20               MOVS     R0,#+14
+   \   000000B8   2070               STRB     R0,[R4, #+0]
+   \   000000BA   04E0               B.N      ??OSSemPend_10
+    332                       break;
+    333          
+    334                  case OS_STAT_PEND_TO:
+    335                  default:        
+    336                       OS_EventTaskRemove(OSTCBCur, pevent);
+   \                     ??OSSemPend_9:
+   \   000000BC   3146               MOV      R1,R6
+   \   000000BE   ........           BL       OS_EventTaskRemove
+    337                       *perr = OS_ERR_TIMEOUT;                  /* Indicate that we didn't get event within TO   */
+   \   000000C2   0A20               MOVS     R0,#+10
+   \   000000C4   2070               STRB     R0,[R4, #+0]
+    338                       break;
+    339              }
+    340              OSTCBCur->OSTCBStat          =  OS_STAT_RDY;      /* Set   task  status to ready                   */
+   \                     ??OSSemPend_10:
+   \   000000C6   D8F80000           LDR      R0,[R8, #+0]
+   \   000000CA   0021               MOVS     R1,#+0
+   \   000000CC   80F83010           STRB     R1,[R0, #+48]
+    341              OSTCBCur->OSTCBStatPend      =  OS_STAT_PEND_OK;  /* Clear pend  status                            */
+   \   000000D0   D8F80000           LDR      R0,[R8, #+0]
+   \   000000D4   80F83110           STRB     R1,[R0, #+49]
+    342              OSTCBCur->OSTCBEventPtr      = (OS_EVENT  *)0;    /* Clear event pointers                          */
+   \   000000D8   D8F80000           LDR      R0,[R8, #+0]
+   \   000000DC   C161               STR      R1,[R0, #+28]
+    343          #if (OS_EVENT_MULTI_EN > 0)
+    344              OSTCBCur->OSTCBEventMultiPtr = (OS_EVENT **)0;
+   \   000000DE   D8F80000           LDR      R0,[R8, #+0]
+   \   000000E2   0162               STR      R1,[R0, #+32]
+    345          #endif
+    346              OS_EXIT_CRITICAL();
+   \   000000E4   3846               MOV      R0,R7
+   \   000000E6   ........           BL       OS_CPU_SR_Restore
+    347          }
+   \                     ??OSSemPend_0:
+   \   000000EA   BDE8F081           POP      {R4-R8,PC}       ;; return
+   \   000000EE   00BF               Nop      
+   \                     ??OSSemPend_4:
+   \   000000F0   ........           DC32     OSLockNesting
+   \   000000F4   ........           DC32     OSTCBCur
+    348          
+    349          /*$PAGE*/
+    350          /*
+    351          *********************************************************************************************************
+    352          *                                      ABORT WAITING ON A SEMAPHORE
+    353          *
+    354          * Description: This function aborts & readies any tasks currently waiting on a semaphore.  This function 
+    355          *              should be used to fault-abort the wait on the semaphore, rather than to normally signal
+    356          *              the semaphore via OSSemPost().
+    357          *
+    358          * Arguments  : pevent        is a pointer to the event control block associated with the desired
+    359          *                            semaphore.
+    360          *
+    361          *              opt           determines the type of ABORT performed:
+    362          *                            OS_PEND_OPT_NONE         ABORT wait for a single task (HPT) waiting on the
+    363          *                                                     semaphore
+    364          *                            OS_PEND_OPT_BROADCAST    ABORT wait for ALL tasks that are  waiting on the
+    365          *                                                     semaphore
+    366          *
+    367          *              perr          is a pointer to where an error message will be deposited.  Possible error
+    368          *                            messages are:
+    369          *
+    370          *                            OS_ERR_NONE         No tasks were     waiting on the semaphore.
+    371          *                            OS_ERR_PEND_ABORT   At least one task waiting on the semaphore was readied
+    372          *                                                and informed of the aborted wait; check return value 
+    373          *                                                for the number of tasks whose wait on the semaphore 
+    374          *                                                was aborted.
+    375          *                            OS_ERR_EVENT_TYPE   If you didn't pass a pointer to a semaphore.
+    376          *                            OS_ERR_PEVENT_NULL  If 'pevent' is a NULL pointer.
+    377          *
+    378          * Returns    : == 0          if no tasks were waiting on the semaphore, or upon error.
+    379          *              >  0          if one or more tasks waiting on the semaphore are now readied and informed.
+    380          *********************************************************************************************************
+    381          */
+    382          
+    383          #if OS_SEM_PEND_ABORT_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    384          INT8U  OSSemPendAbort (OS_EVENT *pevent, INT8U opt, INT8U *perr)
+    385          {
+   \                     OSSemPendAbort:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0446               MOV      R4,R0
+   \   00000006   8846               MOV      R8,R1
+   \   00000008   1500               MOVS     R5,R2
+    386              INT8U      nbr_tasks;
+    387          #if OS_CRITICAL_METHOD == 3                           /* Allocate storage for CPU status register      */
+    388              OS_CPU_SR  cpu_sr = 0;
+    389          #endif
+    390          
+    391          
+    392          
+    393          #if OS_ARG_CHK_EN > 0
+    394              if (perr == (INT8U *)0) {                         /* Validate 'perr'                               */
+   \   0000000A   02D1               BNE.N    ??OSSemPendAbort_0
+    395                  return (0);
+   \   0000000C   0020               MOVS     R0,#+0
+   \   0000000E   BDE8F081           POP      {R4-R8,PC}
+    396              }
+    397              if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+   \                     ??OSSemPendAbort_0:
+   \   00000012   002C               CMP      R4,#+0
+   \   00000014   04D1               BNE.N    ??OSSemPendAbort_1
+    398                  *perr = OS_ERR_PEVENT_NULL;
+   \   00000016   0420               MOVS     R0,#+4
+   \   00000018   2870               STRB     R0,[R5, #+0]
+    399                  return (0);
+   \   0000001A   0020               MOVS     R0,#+0
+   \   0000001C   BDE8F081           POP      {R4-R8,PC}
+    400              }
+    401          #endif
+    402              if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+   \                     ??OSSemPendAbort_1:
+   \   00000020   2078               LDRB     R0,[R4, #+0]
+   \   00000022   0328               CMP      R0,#+3
+   \   00000024   04D0               BEQ.N    ??OSSemPendAbort_2
+    403                  *perr = OS_ERR_EVENT_TYPE;
+   \   00000026   0120               MOVS     R0,#+1
+   \   00000028   2870               STRB     R0,[R5, #+0]
+    404                  return (0);
+   \   0000002A   0020               MOVS     R0,#+0
+   \   0000002C   BDE8F081           POP      {R4-R8,PC}
+    405              }
+    406              OS_ENTER_CRITICAL();
+   \                     ??OSSemPendAbort_2:
+   \   00000030   ........           BL       OS_CPU_SR_Save
+   \   00000034   0646               MOV      R6,R0
+    407              if (pevent->OSEventGrp != 0) {                    /* See if any task waiting on semaphore?         */
+   \   00000036   A07A               LDRB     R0,[R4, #+10]
+   \   00000038   0028               CMP      R0,#+0
+   \   0000003A   20D0               BEQ.N    ??OSSemPendAbort_3
+    408                  nbr_tasks = 0;
+   \   0000003C   0027               MOVS     R7,#+0
+    409                  switch (opt) {
+   \   0000003E   B8F1010F           CMP      R8,#+1
+   \   00000042   0BD1               BNE.N    ??OSSemPendAbort_4
+    410                      case OS_PEND_OPT_BROADCAST:               /* Do we need to abort ALL waiting tasks?        */
+    411                           while (pevent->OSEventGrp != 0) {    /* Yes, ready ALL tasks waiting on semaphore     */
+   \                     ??OSSemPendAbort_5:
+   \   00000044   A07A               LDRB     R0,[R4, #+10]
+   \   00000046   0028               CMP      R0,#+0
+   \   00000048   0FD0               BEQ.N    ??OSSemPendAbort_6
+    412                               (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_ABORT);
+   \   0000004A   0223               MOVS     R3,#+2
+   \   0000004C   0122               MOVS     R2,#+1
+   \   0000004E   0021               MOVS     R1,#+0
+   \   00000050   2046               MOV      R0,R4
+   \   00000052   ........           BL       OS_EventTaskRdy
+    413                               nbr_tasks++;
+   \   00000056   7F1C               ADDS     R7,R7,#+1
+   \   00000058   FFB2               UXTB     R7,R7
+   \   0000005A   F3E7               B.N      ??OSSemPendAbort_5
+    414                           }
+    415                           break;
+    416                           
+    417                      case OS_PEND_OPT_NONE:
+    418                      default:                                  /* No,  ready HPT       waiting on semaphore     */
+    419                           (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_ABORT);
+   \                     ??OSSemPendAbort_4:
+   \   0000005C   0223               MOVS     R3,#+2
+   \   0000005E   0122               MOVS     R2,#+1
+   \   00000060   3946               MOV      R1,R7
+   \   00000062   2046               MOV      R0,R4
+   \   00000064   ........           BL       OS_EventTaskRdy
+    420                           nbr_tasks++;
+   \   00000068   0127               MOVS     R7,#+1
+    421                           break;
+    422                  }
+    423                  OS_EXIT_CRITICAL();
+   \                     ??OSSemPendAbort_6:
+   \   0000006A   3046               MOV      R0,R6
+   \   0000006C   ........           BL       OS_CPU_SR_Restore
+    424                  OS_Sched();                                   /* Find HPT ready to run                         */
+   \   00000070   ........           BL       OS_Sched
+    425                  *perr = OS_ERR_PEND_ABORT;
+   \   00000074   0E20               MOVS     R0,#+14
+   \   00000076   2870               STRB     R0,[R5, #+0]
+    426                  return (nbr_tasks);
+   \   00000078   3846               MOV      R0,R7
+   \   0000007A   BDE8F081           POP      {R4-R8,PC}
+    427              }
+    428              OS_EXIT_CRITICAL();
+   \                     ??OSSemPendAbort_3:
+   \   0000007E   3046               MOV      R0,R6
+   \   00000080   ........           BL       OS_CPU_SR_Restore
+    429              *perr = OS_ERR_NONE;
+   \   00000084   0020               MOVS     R0,#+0
+   \   00000086   2870               STRB     R0,[R5, #+0]
+    430              return (0);                                       /* No tasks waiting on semaphore                 */
+   \   00000088   BDE8F081           POP      {R4-R8,PC}       ;; return
+    431          }
+    432          #endif
+    433          
+    434          /*$PAGE*/
+    435          /*
+    436          *********************************************************************************************************
+    437          *                                         POST TO A SEMAPHORE
+    438          *
+    439          * Description: This function signals a semaphore
+    440          *
+    441          * Arguments  : pevent        is a pointer to the event control block associated with the desired
+    442          *                            semaphore.
+    443          *
+    444          * Returns    : OS_ERR_NONE         The call was successful and the semaphore was signaled.
+    445          *              OS_ERR_SEM_OVF      If the semaphore count exceeded its limit.  In other words, you have
+    446          *                                  signalled the semaphore more often than you waited on it with either
+    447          *                                  OSSemAccept() or OSSemPend().
+    448          *              OS_ERR_EVENT_TYPE   If you didn't pass a pointer to a semaphore
+    449          *              OS_ERR_PEVENT_NULL  If 'pevent' is a NULL pointer.
+    450          *********************************************************************************************************
+    451          */
+    452          
+
+   \                                 In section .text, align 2, keep-with-next
+    453          INT8U  OSSemPost (OS_EVENT *pevent)
+    454          {
+   \                     OSSemPost:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0400               MOVS     R4,R0
+    455          #if OS_CRITICAL_METHOD == 3                           /* Allocate storage for CPU status register      */
+    456              OS_CPU_SR  cpu_sr = 0;
+    457          #endif
+    458          
+    459          
+    460          
+    461          #if OS_ARG_CHK_EN > 0
+    462              if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+   \   00000004   01D1               BNE.N    ??OSSemPost_0
+    463                  return (OS_ERR_PEVENT_NULL);
+   \   00000006   0420               MOVS     R0,#+4
+   \   00000008   32BD               POP      {R1,R4,R5,PC}
+    464              }
+    465          #endif
+    466              if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+   \                     ??OSSemPost_0:
+   \   0000000A   2078               LDRB     R0,[R4, #+0]
+   \   0000000C   0328               CMP      R0,#+3
+   \   0000000E   01D0               BEQ.N    ??OSSemPost_1
+    467                  return (OS_ERR_EVENT_TYPE);
+   \   00000010   0120               MOVS     R0,#+1
+   \   00000012   32BD               POP      {R1,R4,R5,PC}
+    468              }
+    469              OS_ENTER_CRITICAL();
+   \                     ??OSSemPost_1:
+   \   00000014   ........           BL       OS_CPU_SR_Save
+   \   00000018   0546               MOV      R5,R0
+    470              if (pevent->OSEventGrp != 0) {                    /* See if any task waiting for semaphore         */
+   \   0000001A   A07A               LDRB     R0,[R4, #+10]
+   \   0000001C   0028               CMP      R0,#+0
+   \   0000001E   0CD0               BEQ.N    ??OSSemPost_2
+    471                                                                /* Ready HPT waiting on event                    */
+    472                  (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_OK);
+   \   00000020   0023               MOVS     R3,#+0
+   \   00000022   0122               MOVS     R2,#+1
+   \   00000024   1946               MOV      R1,R3
+   \   00000026   2046               MOV      R0,R4
+   \   00000028   ........           BL       OS_EventTaskRdy
+    473                  OS_EXIT_CRITICAL();
+   \   0000002C   2846               MOV      R0,R5
+   \   0000002E   ........           BL       OS_CPU_SR_Restore
+    474                  OS_Sched();                                   /* Find HPT ready to run                         */
+   \   00000032   ........           BL       OS_Sched
+    475                  return (OS_ERR_NONE);
+   \   00000036   0020               MOVS     R0,#+0
+   \   00000038   32BD               POP      {R1,R4,R5,PC}
+    476              }
+    477              if (pevent->OSEventCnt < 65535u) {                /* Make sure semaphore will not overflow         */
+   \                     ??OSSemPost_2:
+   \   0000003A   2089               LDRH     R0,[R4, #+8]
+   \   0000003C   4FF6FF71           MOVW     R1,#+65535
+   \   00000040   8842               CMP      R0,R1
+   \   00000042   06D0               BEQ.N    ??OSSemPost_3
+    478                  pevent->OSEventCnt++;                         /* Increment semaphore count to register event   */
+   \   00000044   401C               ADDS     R0,R0,#+1
+   \   00000046   2081               STRH     R0,[R4, #+8]
+    479                  OS_EXIT_CRITICAL();
+   \   00000048   2846               MOV      R0,R5
+   \   0000004A   ........           BL       OS_CPU_SR_Restore
+    480                  return (OS_ERR_NONE);
+   \   0000004E   0020               MOVS     R0,#+0
+   \   00000050   32BD               POP      {R1,R4,R5,PC}
+    481              }
+    482              OS_EXIT_CRITICAL();                               /* Semaphore value has reached its maximum       */
+   \                     ??OSSemPost_3:
+   \   00000052   2846               MOV      R0,R5
+   \   00000054   ........           BL       OS_CPU_SR_Restore
+    483              return (OS_ERR_SEM_OVF);
+   \   00000058   3220               MOVS     R0,#+50
+   \   0000005A   32BD               POP      {R1,R4,R5,PC}    ;; return
+    484          }
+    485          
+    486          /*$PAGE*/
+    487          /*
+    488          *********************************************************************************************************
+    489          *                                          QUERY A SEMAPHORE
+    490          *
+    491          * Description: This function obtains information about a semaphore
+    492          *
+    493          * Arguments  : pevent        is a pointer to the event control block associated with the desired
+    494          *                            semaphore
+    495          *
+    496          *              p_sem_data    is a pointer to a structure that will contain information about the
+    497          *                            semaphore.
+    498          *
+    499          * Returns    : OS_ERR_NONE         The call was successful and the message was sent
+    500          *              OS_ERR_EVENT_TYPE   If you are attempting to obtain data from a non semaphore.
+    501          *              OS_ERR_PEVENT_NULL  If 'pevent'     is a NULL pointer.
+    502          *              OS_ERR_PDATA_NULL   If 'p_sem_data' is a NULL pointer
+    503          *********************************************************************************************************
+    504          */
+    505          
+    506          #if OS_SEM_QUERY_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    507          INT8U  OSSemQuery (OS_EVENT *pevent, OS_SEM_DATA *p_sem_data)
+    508          {
+   \                     OSSemQuery:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   0546               MOV      R5,R0
+   \   00000004   0C46               MOV      R4,R1
+    509          #if OS_LOWEST_PRIO <= 63
+    510              INT8U     *psrc;
+    511              INT8U     *pdest;
+    512          #else
+    513              INT16U    *psrc;
+    514              INT16U    *pdest;
+    515          #endif
+    516              INT8U      i;
+    517          #if OS_CRITICAL_METHOD == 3                                /* Allocate storage for CPU status register */
+    518              OS_CPU_SR  cpu_sr = 0;
+    519          #endif
+    520          
+    521          
+    522          
+    523          #if OS_ARG_CHK_EN > 0
+    524              if (pevent == (OS_EVENT *)0) {                         /* Validate 'pevent'                        */
+   \   00000006   002D               CMP      R5,#+0
+   \   00000008   01D1               BNE.N    ??OSSemQuery_0
+    525                  return (OS_ERR_PEVENT_NULL);
+   \   0000000A   0420               MOVS     R0,#+4
+   \   0000000C   70BD               POP      {R4-R6,PC}
+    526              }
+    527              if (p_sem_data == (OS_SEM_DATA *)0) {                  /* Validate 'p_sem_data'                    */
+   \                     ??OSSemQuery_0:
+   \   0000000E   002C               CMP      R4,#+0
+   \   00000010   01D1               BNE.N    ??OSSemQuery_1
+    528                  return (OS_ERR_PDATA_NULL);
+   \   00000012   0920               MOVS     R0,#+9
+   \   00000014   70BD               POP      {R4-R6,PC}
+    529              }
+    530          #endif
+    531              if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {        /* Validate event block type                */
+   \                     ??OSSemQuery_1:
+   \   00000016   2878               LDRB     R0,[R5, #+0]
+   \   00000018   0328               CMP      R0,#+3
+   \   0000001A   01D0               BEQ.N    ??OSSemQuery_2
+    532                  return (OS_ERR_EVENT_TYPE);
+   \   0000001C   0120               MOVS     R0,#+1
+   \   0000001E   70BD               POP      {R4-R6,PC}
+    533              }
+    534              OS_ENTER_CRITICAL();
+   \                     ??OSSemQuery_2:
+   \   00000020   ........           BL       OS_CPU_SR_Save
+    535              p_sem_data->OSEventGrp = pevent->OSEventGrp;           /* Copy message mailbox wait list           */
+   \   00000024   A97A               LDRB     R1,[R5, #+10]
+   \   00000026   A171               STRB     R1,[R4, #+6]
+    536              psrc                   = &pevent->OSEventTbl[0];
+   \   00000028   05F10B01           ADD      R1,R5,#+11
+    537              pdest                  = &p_sem_data->OSEventTbl[0];
+   \   0000002C   A21C               ADDS     R2,R4,#+2
+    538              for (i = 0; i < OS_EVENT_TBL_SIZE; i++) {
+   \   0000002E   0023               MOVS     R3,#+0
+   \   00000030   05E0               B.N      ??OSSemQuery_3
+    539                  *pdest++ = *psrc++;
+   \                     ??OSSemQuery_4:
+   \   00000032   11F8016B           LDRB     R6,[R1], #+1
+   \   00000036   02F8016B           STRB     R6,[R2], #+1
+    540              }
+   \   0000003A   5B1C               ADDS     R3,R3,#+1
+   \   0000003C   DBB2               UXTB     R3,R3
+   \                     ??OSSemQuery_3:
+   \   0000003E   1E46               MOV      R6,R3
+   \   00000040   042E               CMP      R6,#+4
+   \   00000042   F6D3               BCC.N    ??OSSemQuery_4
+    541              p_sem_data->OSCnt = pevent->OSEventCnt;                /* Get semaphore count                      */
+   \   00000044   2989               LDRH     R1,[R5, #+8]
+   \   00000046   2180               STRH     R1,[R4, #+0]
+    542              OS_EXIT_CRITICAL();
+   \   00000048   ........           BL       OS_CPU_SR_Restore
+    543              return (OS_ERR_NONE);
+   \   0000004C   0020               MOVS     R0,#+0
+   \   0000004E   70BD               POP      {R4-R6,PC}       ;; return
+    544          }
+    545          #endif                                                     /* OS_SEM_QUERY_EN                          */
+    546          
+    547          /*$PAGE*/
+    548          /*
+    549          *********************************************************************************************************
+    550          *                                              SET SEMAPHORE
+    551          *
+    552          * Description: This function sets the semaphore count to the value specified as an argument.  Typically,
+    553          *              this value would be 0.
+    554          *
+    555          *              You would typically use this function when a semaphore is used as a signaling mechanism
+    556          *              and, you want to reset the count value.
+    557          *
+    558          * Arguments  : pevent     is a pointer to the event control block
+    559          *
+    560          *              cnt        is the new value for the semaphore count.  You would pass 0 to reset the
+    561          *                         semaphore count.
+    562          *
+    563          *              perr       is a pointer to an error code returned by the function as follows:
+    564          *
+    565          *                            OS_ERR_NONE          The call was successful and the semaphore value was set.
+    566          *                            OS_ERR_EVENT_TYPE    If you didn't pass a pointer to a semaphore.
+    567          *                            OS_ERR_PEVENT_NULL   If 'pevent' is a NULL pointer.
+    568          *                            OS_ERR_TASK_WAITING  If tasks are waiting on the semaphore.
+    569          *********************************************************************************************************
+    570          */
+    571          
+    572          #if OS_SEM_SET_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    573          void  OSSemSet (OS_EVENT *pevent, INT16U cnt, INT8U *perr)
+    574          {
+   \                     OSSemSet:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   0646               MOV      R6,R0
+   \   00000004   0C46               MOV      R4,R1
+   \   00000006   1500               MOVS     R5,R2
+    575          #if OS_CRITICAL_METHOD == 3                           /* Allocate storage for CPU status register      */
+    576              OS_CPU_SR  cpu_sr = 0;
+    577          #endif
+    578          
+    579          
+    580          
+    581          #if OS_ARG_CHK_EN > 0
+    582              if (perr == (INT8U *)0) {                         /* Validate 'perr'                               */
+   \   00000008   1CD0               BEQ.N    ??OSSemSet_0
+    583                  return;
+    584              }
+    585              if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+   \   0000000A   002E               CMP      R6,#+0
+   \   0000000C   02D1               BNE.N    ??OSSemSet_1
+    586                  *perr = OS_ERR_PEVENT_NULL;
+   \   0000000E   0420               MOVS     R0,#+4
+   \   00000010   2870               STRB     R0,[R5, #+0]
+    587                  return;
+   \   00000012   70BD               POP      {R4-R6,PC}
+    588              }
+    589          #endif
+    590              if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+   \                     ??OSSemSet_1:
+   \   00000014   3078               LDRB     R0,[R6, #+0]
+   \   00000016   0328               CMP      R0,#+3
+   \   00000018   02D0               BEQ.N    ??OSSemSet_2
+    591                  *perr = OS_ERR_EVENT_TYPE;
+   \   0000001A   0120               MOVS     R0,#+1
+   \   0000001C   2870               STRB     R0,[R5, #+0]
+    592                  return;
+   \   0000001E   70BD               POP      {R4-R6,PC}
+    593              }
+    594              OS_ENTER_CRITICAL();
+   \                     ??OSSemSet_2:
+   \   00000020   ........           BL       OS_CPU_SR_Save
+    595              *perr = OS_ERR_NONE;
+   \   00000024   0021               MOVS     R1,#+0
+   \   00000026   2970               STRB     R1,[R5, #+0]
+    596              if (pevent->OSEventCnt > 0) {                     /* See if semaphore already has a count          */
+   \   00000028   3189               LDRH     R1,[R6, #+8]
+   \   0000002A   0029               CMP      R1,#+0
+   \   0000002C   01D0               BEQ.N    ??OSSemSet_3
+    597                  pevent->OSEventCnt = cnt;                     /* Yes, set it to the new value specified.       */
+   \   0000002E   3481               STRH     R4,[R6, #+8]
+   \   00000030   06E0               B.N      ??OSSemSet_4
+    598              } else {                                          /* No                                            */
+    599                  if (pevent->OSEventGrp == 0) {                /*      See if task(s) waiting?                  */
+   \                     ??OSSemSet_3:
+   \   00000032   B17A               LDRB     R1,[R6, #+10]
+   \   00000034   0029               CMP      R1,#+0
+   \   00000036   01D1               BNE.N    ??OSSemSet_5
+    600                      pevent->OSEventCnt = cnt;                 /*      No, OK to set the value                  */
+   \   00000038   3481               STRH     R4,[R6, #+8]
+   \   0000003A   01E0               B.N      ??OSSemSet_4
+    601                  } else {
+    602                      *perr              = OS_ERR_TASK_WAITING;
+   \                     ??OSSemSet_5:
+   \   0000003C   4921               MOVS     R1,#+73
+   \   0000003E   2970               STRB     R1,[R5, #+0]
+    603                  }
+    604              }
+    605              OS_EXIT_CRITICAL();
+   \                     ??OSSemSet_4:
+   \   00000040   ........           BL       OS_CPU_SR_Restore
+    606          }
+   \                     ??OSSemSet_0:
+   \   00000044   70BD               POP      {R4-R6,PC}       ;; return
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable4:
+   \   00000000   ........           DC32     OSEventFreeList
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5:
+   \   00000000   ........           DC32     OSIntNesting
+    607          #endif
+    608          
+    609          #endif                                                /* OS_SEM_EN                                     */
+
+   Maximum stack usage in bytes:
+
+     Function       .cstack
+     --------       -------
+     OSSemAccept        16
+     OSSemCreate        16
+     OSSemDel           24
+     OSSemPend          24
+     OSSemPendAbort     24
+     OSSemPost          16
+     OSSemQuery         16
+     OSSemSet           16
+
+
+   Section sizes:
+
+     Function/Label Bytes
+     -------------- -----
+     OSSemAccept      38
+     OSSemCreate      68
+     OSSemDel        224
+     OSSemPend       248
+     OSSemPendAbort  140
+     OSSemPost        92
+     OSSemQuery       80
+     OSSemSet         70
+     ??DataTable4      4
+     ??DataTable5      4
+
+ 
+ 968 bytes in section .text
+ 
+ 968 bytes of CODE memory
+
+Errors: none
+Warnings: none

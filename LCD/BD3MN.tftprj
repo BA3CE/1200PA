@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VisualTFT Name="BD3MN" OutputDirectory="output\" StartupPage="Screen0" StartupAction="" StartupActionLoop="1" DeviceType="12007" DeviceEnableControl="1" DeviceEnableTouchPane="1" DeviceEnableBuzzer="2" DeviceEnableCRC="0" DeviceBaudRate="3" DeviceCoordinateUpdateMode="4" DeviceControlNotify="2" DeviceScreenNotify="0" DeviceScreenRvs="0" DeviceBacklightAutoControl="0" DeviceBacklightTime="10" DeviceBacklightOn="200" DeviceBacklightOff="50" DeviceBacklightNotify="0" DeviceLockConfig="1" DeviceStartupVoice="0" DeviceVoiceVolume="100" CompatibleScreenRotate="1" AddResourceFloder="1" Version="1.0" DeviceEnableSlidingScreen="0" BacklightAutoControl="0" BacklightNotify="0" StandbyPage="">
+	<Pages><Page RelativePath="Screen0.tft"/></Pages>
+	<Images/>
+	<Waves/>
+</VisualTFT>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+  <CurrentConfigs><Project>BD3MN/Debug</Project></CurrentConfigs></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>389</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>980</ColumnWidth1><ColumnWidth2>261</ColumnWidth2><ColumnWidth3>65</ColumnWidth3></Build>
+      <Debug-Log>
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1307</ColumnWidth1></Debug-Log>
+    <TerminalIO/></Static>
+    <Windows>
+      
+      
+    <Wnd0>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-11258-3198</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>BD3MN</ExpandedNode><ExpandedNode>BD3MN/APP</ExpandedNode><ExpandedNode>BD3MN/BSP</ExpandedNode><ExpandedNode>BD3MN/BSP/bsp.c</ExpandedNode><ExpandedNode>BD3MN/FWLib</ExpandedNode><ExpandedNode>BD3MN/FWLib/stm32f10x_exti.c</ExpandedNode><ExpandedNode>BD3MN/FWLib/stm32f10x_gpio.c</ExpandedNode><ExpandedNode>BD3MN/Interrupt</ExpandedNode><ExpandedNode>BD3MN/SPI</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd0><Wnd1>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-30225-5503</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+          <Tab>
+            <Identity>TabID-22216-6267</Identity>
+            <TabName>Debug Log</TabName>
+            <Factory>Debug-Log</Factory>
+            <Session/>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>1</SelectedTab></Wnd1></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Interrupt\stm32f10x_it.c</Filename><XPos>0</XPos><YPos>405</YPos><SelStart>14837</SelStart><SelEnd>14837</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\BSP\bsp.c</Filename><XPos>0</XPos><YPos>414</YPos><SelStart>15144</SelStart><SelEnd>15144</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\BSP\bsp.h</Filename><XPos>0</XPos><YPos>24</YPos><SelStart>2200</SelStart><SelEnd>2200</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\const.c</Filename><XPos>0</XPos><YPos>138</YPos><SelStart>66355</SelStart><SelEnd>66355</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\app.c</Filename><XPos>0</XPos><YPos>394</YPos><SelStart>13984</SelStart><SelEnd>13984</SelEnd></Tab><ActiveTab>4</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\const.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>623</SelStart><SelEnd>623</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-05d55500><key>iaridepm.enu1</key></Toolbar-05d55500></Sizes></Row0></Top><Left><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>663</Bottom><Right>480</Right><x>-2</x><y>-2</y><xscreen>281</xscreen><yscreen>291</yscreen><sizeHorzCX>146354</sizeHorzCX><sizeHorzCY>291876</sizeHorzCY><sizeVertCX>251042</sizeVertCX><sizeVertCY>667001</sizeVertCY></Rect></Wnd0></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>289</Bottom><Right>1922</Right><x>-2</x><y>-2</y><xscreen>1924</xscreen><yscreen>291</yscreen><sizeHorzCX>1002083</sizeHorzCX><sizeHorzCY>291876</sizeHorzCY><sizeVertCX>146354</sizeVertCX><sizeVertCY>291876</sizeVertCY></Rect></Wnd1></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+

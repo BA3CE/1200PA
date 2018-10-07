@@ -1,0 +1,1378 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  22:57:18 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Boards\EEPROM\at24c64.c                               #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\Boards\EEPROM\at24c64.c" -D _DLIB_FILE_DESCRIPTOR     #
+#                    -lC "F:\MyProjects\Tjinc\CAN & Uart over                 #
+#                    IP\Debug\List\" -o "F:\MyProjects\Tjinc\CAN & Uart over  #
+#                    IP\Debug\Obj\" --no_unroll --no_inline --no_tbaa         #
+#                    --no_scheduling --debug --endian=little --cpu=Cortex-M3  #
+#                    -e --fpu=None --dlib_config "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4                           #
+#                    Kickstart\arm\INC\DLib_Config_Normal.h" -I               #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\at24c64.lst                                #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\Obj\at24c64.o                                   #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\EEPROM\at24c64.c
+      1          /* Includes ------------------------------------------------------------------*/
+      2          #include <intrinsics.h>
+      3          
+      4          #include "bsp.h"
+      5          #include "can/stm32can.h"
+      6          #include "NetWork/w5100_inter.h"
+      7          /* Private value -----------------------------------------------------------*/
+
+   \                                 In section .bss, align 4
+      8          OS_EVENT *ReadWriteAT24C64Sem;
+   \                     ReadWriteAT24C64Sem:
+   \   00000000                      DS8 4
+      9          void AT24C64WP_enable(unsigned char wp);
+     10          /* Private typedef -----------------------------------------------------------*/
+     11          /* Private define ------------------------------------------------------------*/
+     12          #define MAC		0x00
+     13          #define SIP		0x10
+     14          #define GWIP	0x14
+     15          #define NETMASK	0x18
+     16          #define DNSIP	0x1C
+     17          #define PORT	0x20
+     18          #define DESTIP	0x30	
+     19          #define DESTPORT	0x50	
+     20          #define UARTBAUDRATE	0xA0	
+     21          #define CANBAUDRATE		0x100	
+     22          
+     23          #define EEPROM_SLAVE_ADDRESS   0xA0
+     24          
+     25          #define I2C_DELAY()	__no_operation();	\
+     26          					__no_operation();	\
+     27          					__no_operation(); 	\
+     28          					__no_operation();	\
+     29          					__no_operation()
+     30          
+
+   \                                 In section .bss, align 1
+     31          u8 ack;
+   \                     ack:
+   \   00000000                      DS8 1
+     32          
+
+   \                                 In section .text, align 4, keep-with-next
+     33          void AT24C64_Init(void)
+     34          {
+   \                     AT24C64_Init:
+   \   00000000   80B5               PUSH     {R7,LR}
+     35            	ReadWriteAT24C64Sem=OSSemCreate(1);
+   \   00000002   0120               MOVS     R0,#+1
+   \   00000004   ........           BL       OSSemCreate
+   \   00000008   ........           LDR.W    R1,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   0000000C   0860               STR      R0,[R1, #+0]
+     36          	
+     37          	AT24C64WP_enable(1);
+   \   0000000E   0120               MOVS     R0,#+1
+   \   00000010   BDE80240           POP      {R1,LR}
+   \   00000014                      REQUIRE AT24C64WP_enable
+   \   00000014                      ;; // Fall through to label AT24C64WP_enable
+     38          }
+     39          
+
+   \                                 In section .text, align 4, keep-with-next
+     40          void AT24C64WP_enable(unsigned char wp)
+     41          {
+     42          	if(wp)
+   \                     AT24C64WP_enable:
+   \   00000000   044A               LDR.N    R2,??AT24C64WP_enable_0  ;; 0x40011000
+   \   00000002   0028               CMP      R0,#+0
+   \   00000004   4FF40051           MOV      R1,#+8192
+   \   00000008   1046               MOV      R0,R2
+   \   0000000A   01D0               BEQ.N    ??AT24C64WP_enable_1
+     43          		GPIO_SetBits(GPIOC, AT24C64WP);
+   \   0000000C   ........           B.W      GPIO_SetBits
+     44          	else
+     45          		GPIO_ResetBits(GPIOC, AT24C64WP);  
+   \                     ??AT24C64WP_enable_1:
+   \   00000010   ........           B.W      GPIO_ResetBits
+   \                     ??AT24C64WP_enable_0:
+   \   00000014   00100140           DC32     0x40011000
+     46          }
+     47          
+     48          /*******************************************************************
+     49                               起动总线函数               
+     50          函数原型: void  Start_I2c();  
+     51          功能:       启动I2C总线,即发送I2C起始条件.
+     52            
+     53          ********************************************************************/
+
+   \                                 In section .text, align 2, keep-with-next
+     54          void Start_I2c(void)
+     55          {
+   \                     Start_I2c:
+   \   00000000   10B5               PUSH     {R4,LR}
+     56            	GPIO_SetBits(GPIOB, SDA);		/*发送起始条件的数据信号*/
+   \   00000002   ........           LDR.W    R4,??DataTable6  ;; 0x40010c00
+   \   00000006   4FF40071           MOV      R1,#+512
+   \   0000000A   2046               MOV      R0,R4
+   \   0000000C   ........           BL       GPIO_SetBits
+     57           	I2C_DELAY();
+   \   00000010   00BF               Nop      
+   \   00000012   00BF               Nop      
+   \   00000014   00BF               Nop      
+   \   00000016   00BF               Nop      
+   \   00000018   00BF               Nop      
+     58            	GPIO_SetBits(GPIOB, SCL);
+   \   0000001A   4FF48071           MOV      R1,#+256
+   \   0000001E   2046               MOV      R0,R4
+   \   00000020   ........           BL       GPIO_SetBits
+     59          	I2C_DELAY();    				/*起始条件建立时间大于4.7us,延时*/
+   \   00000024   00BF               Nop      
+   \   00000026   00BF               Nop      
+   \   00000028   00BF               Nop      
+   \   0000002A   00BF               Nop      
+   \   0000002C   00BF               Nop      
+     60          	I2C_DELAY();
+   \   0000002E   00BF               Nop      
+   \   00000030   00BF               Nop      
+   \   00000032   00BF               Nop      
+   \   00000034   00BF               Nop      
+   \   00000036   00BF               Nop      
+     61          	I2C_DELAY();
+   \   00000038   00BF               Nop      
+   \   0000003A   00BF               Nop      
+   \   0000003C   00BF               Nop      
+   \   0000003E   00BF               Nop      
+   \   00000040   00BF               Nop      
+     62          	I2C_DELAY();
+   \   00000042   00BF               Nop      
+   \   00000044   00BF               Nop      
+   \   00000046   00BF               Nop      
+   \   00000048   00BF               Nop      
+   \   0000004A   00BF               Nop      
+     63          	I2C_DELAY(); 
+   \   0000004C   00BF               Nop      
+   \   0000004E   00BF               Nop      
+   \   00000050   00BF               Nop      
+   \   00000052   00BF               Nop      
+   \   00000054   00BF               Nop      
+     64          	GPIO_ResetBits(GPIOB, SDA); 	/*发送起始信号*/ 
+   \   00000056   4FF40071           MOV      R1,#+512
+   \   0000005A   2046               MOV      R0,R4
+   \   0000005C   ........           BL       GPIO_ResetBits
+     65            	I2C_DELAY();		   			/* 起始条件锁定时间大于4μs*/
+   \   00000060   00BF               Nop      
+   \   00000062   00BF               Nop      
+   \   00000064   00BF               Nop      
+   \   00000066   00BF               Nop      
+   \   00000068   00BF               Nop      
+     66            	I2C_DELAY();
+   \   0000006A   00BF               Nop      
+   \   0000006C   00BF               Nop      
+   \   0000006E   00BF               Nop      
+   \   00000070   00BF               Nop      
+   \   00000072   00BF               Nop      
+     67            	I2C_DELAY();
+   \   00000074   00BF               Nop      
+   \   00000076   00BF               Nop      
+   \   00000078   00BF               Nop      
+   \   0000007A   00BF               Nop      
+   \   0000007C   00BF               Nop      
+     68            	I2C_DELAY();
+   \   0000007E   00BF               Nop      
+   \   00000080   00BF               Nop      
+   \   00000082   00BF               Nop      
+   \   00000084   00BF               Nop      
+   \   00000086   00BF               Nop      
+     69            	I2C_DELAY();      
+   \   00000088   00BF               Nop      
+   \   0000008A   00BF               Nop      
+   \   0000008C   00BF               Nop      
+   \   0000008E   00BF               Nop      
+   \   00000090   00BF               Nop      
+     70            	GPIO_ResetBits(GPIOB, SCL);   	/*钳住I2C总线，准备发送或接收数据 */
+   \   00000092   4FF48071           MOV      R1,#+256
+   \   00000096   2046               MOV      R0,R4
+   \   00000098   ........           BL       GPIO_ResetBits
+     71            	I2C_DELAY();
+   \   0000009C   00BF               Nop      
+   \   0000009E   00BF               Nop      
+   \   000000A0   00BF               Nop      
+   \   000000A2   00BF               Nop      
+   \   000000A4   00BF               Nop      
+     72            	I2C_DELAY();
+   \   000000A6   00BF               Nop      
+   \   000000A8   00BF               Nop      
+   \   000000AA   00BF               Nop      
+   \   000000AC   00BF               Nop      
+   \   000000AE   00BF               Nop      
+     73            	I2C_DELAY();
+   \   000000B0   00BF               Nop      
+   \   000000B2   00BF               Nop      
+   \   000000B4   00BF               Nop      
+   \   000000B6   00BF               Nop      
+   \   000000B8   00BF               Nop      
+     74          	I2C_DELAY();
+   \   000000BA   00BF               Nop      
+   \   000000BC   00BF               Nop      
+   \   000000BE   00BF               Nop      
+   \   000000C0   00BF               Nop      
+   \   000000C2   00BF               Nop      
+     75            	I2C_DELAY();   
+   \   000000C4   00BF               Nop      
+   \   000000C6   00BF               Nop      
+   \   000000C8   00BF               Nop      
+   \   000000CA   00BF               Nop      
+   \   000000CC   00BF               Nop      
+     76          }
+   \   000000CE   10BD               POP      {R4,PC}          ;; return
+     77          /*******************************************************************
+     78                                结束总线函数               
+     79          函数原型: void  Stop_I2c();  
+     80          功能:       结束I2C总线,即发送I2C结束条件.
+     81            
+     82          ********************************************************************/
+
+   \                                 In section .text, align 2, keep-with-next
+     83          void Stop_I2c(void)
+     84          {
+   \                     Stop_I2c:
+   \   00000000   10B5               PUSH     {R4,LR}
+     85          	GPIO_ResetBits(GPIOB, SDA);   /*发送结束条件的数据信号*/
+   \   00000002   ....               LDR.N    R4,??DataTable6  ;; 0x40010c00
+   \   00000004   4FF40071           MOV      R1,#+512
+   \   00000008   2046               MOV      R0,R4
+   \   0000000A   ........           BL       GPIO_ResetBits
+     86            	I2C_DELAY();				  /*发送结束条件的时钟信号*/
+   \   0000000E   00BF               Nop      
+   \   00000010   00BF               Nop      
+   \   00000012   00BF               Nop      
+   \   00000014   00BF               Nop      
+   \   00000016   00BF               Nop      
+     87            	GPIO_SetBits(GPIOB, SCL);;    /*结束条件建立时间大于4μs*/
+   \   00000018   4FF48071           MOV      R1,#+256
+   \   0000001C   2046               MOV      R0,R4
+   \   0000001E   ........           BL       GPIO_SetBits
+     88            	I2C_DELAY();
+   \   00000022   00BF               Nop      
+   \   00000024   00BF               Nop      
+   \   00000026   00BF               Nop      
+   \   00000028   00BF               Nop      
+   \   0000002A   00BF               Nop      
+     89            	I2C_DELAY();
+   \   0000002C   00BF               Nop      
+   \   0000002E   00BF               Nop      
+   \   00000030   00BF               Nop      
+   \   00000032   00BF               Nop      
+   \   00000034   00BF               Nop      
+     90            	I2C_DELAY();
+   \   00000036   00BF               Nop      
+   \   00000038   00BF               Nop      
+   \   0000003A   00BF               Nop      
+   \   0000003C   00BF               Nop      
+   \   0000003E   00BF               Nop      
+     91          	I2C_DELAY();
+   \   00000040   00BF               Nop      
+   \   00000042   00BF               Nop      
+   \   00000044   00BF               Nop      
+   \   00000046   00BF               Nop      
+   \   00000048   00BF               Nop      
+     92            	I2C_DELAY();
+   \   0000004A   00BF               Nop      
+   \   0000004C   00BF               Nop      
+   \   0000004E   00BF               Nop      
+   \   00000050   00BF               Nop      
+   \   00000052   00BF               Nop      
+     93            	GPIO_SetBits(GPIOB, SDA);	 /*发送I2C总线结束信号*/
+   \   00000054   4FF40071           MOV      R1,#+512
+   \   00000058   2046               MOV      R0,R4
+   \   0000005A   ........           BL       GPIO_SetBits
+     94            	I2C_DELAY();
+   \   0000005E   00BF               Nop      
+   \   00000060   00BF               Nop      
+   \   00000062   00BF               Nop      
+   \   00000064   00BF               Nop      
+   \   00000066   00BF               Nop      
+     95            	I2C_DELAY();
+   \   00000068   00BF               Nop      
+   \   0000006A   00BF               Nop      
+   \   0000006C   00BF               Nop      
+   \   0000006E   00BF               Nop      
+   \   00000070   00BF               Nop      
+     96            	I2C_DELAY();
+   \   00000072   00BF               Nop      
+   \   00000074   00BF               Nop      
+   \   00000076   00BF               Nop      
+   \   00000078   00BF               Nop      
+   \   0000007A   00BF               Nop      
+     97          	I2C_DELAY();
+   \   0000007C   00BF               Nop      
+   \   0000007E   00BF               Nop      
+   \   00000080   00BF               Nop      
+   \   00000082   00BF               Nop      
+   \   00000084   00BF               Nop      
+     98            	I2C_DELAY();
+   \   00000086   00BF               Nop      
+   \   00000088   00BF               Nop      
+   \   0000008A   00BF               Nop      
+   \   0000008C   00BF               Nop      
+   \   0000008E   00BF               Nop      
+     99          }
+   \   00000090   10BD               POP      {R4,PC}          ;; return
+    100          /*******************************************************************
+    101                           字节数据传送函数               
+    102          函数原型: void  SendByte(uchar c);
+    103          功能:  将数据c发送出去,可以是地址,也可以是数据,发完后等待应答,并对
+    104               此状态位进行操作.(不应答或非应答都使ack=0 假)     
+    105               发送数据正常，ack=1; ack=0表示被控器无应答或损坏。
+    106          ********************************************************************/
+
+   \                                 In section .text, align 2, keep-with-next
+    107          void SendByte(u8 c)
+    108          {
+   \                     SendByte:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   0546               MOV      R5,R0
+    109          	u8 BitCnt;
+    110           
+    111           	for(BitCnt=0;BitCnt<8;BitCnt++){  /*要传送的数据长度为8位*/
+   \   00000004   0026               MOVS     R6,#+0
+   \   00000006   ....               LDR.N    R4,??DataTable6  ;; 0x40010c00
+   \   00000008   2BE0               B.N      ??SendByte_0
+    112          	    if((c<<BitCnt)&0x80)	 /*判断发送位*/
+    113          			GPIO_SetBits(GPIOB, SDA);  
+    114                 	else  
+    115          		  	GPIO_ResetBits(GPIOB, SDA);                
+   \                     ??SendByte_1:
+   \   0000000A   ........           BL       GPIO_ResetBits
+    116               	I2C_DELAY();
+   \                     ??SendByte_2:
+   \   0000000E   00BF               Nop      
+   \   00000010   00BF               Nop      
+   \   00000012   00BF               Nop      
+   \   00000014   00BF               Nop      
+   \   00000016   00BF               Nop      
+    117               	GPIO_SetBits(GPIOB, SCL);               /*置时钟线为高，通知被控器开始接收数据位*/
+   \   00000018   4FF48071           MOV      R1,#+256
+   \   0000001C   2046               MOV      R0,R4
+   \   0000001E   ........           BL       GPIO_SetBits
+    118                	I2C_DELAY();
+   \   00000022   00BF               Nop      
+   \   00000024   00BF               Nop      
+   \   00000026   00BF               Nop      
+   \   00000028   00BF               Nop      
+   \   0000002A   00BF               Nop      
+    119          		I2C_DELAY();
+   \   0000002C   00BF               Nop      
+   \   0000002E   00BF               Nop      
+   \   00000030   00BF               Nop      
+   \   00000032   00BF               Nop      
+   \   00000034   00BF               Nop      
+    120          		I2C_DELAY();
+   \   00000036   00BF               Nop      
+   \   00000038   00BF               Nop      
+   \   0000003A   00BF               Nop      
+   \   0000003C   00BF               Nop      
+   \   0000003E   00BF               Nop      
+    121          		I2C_DELAY();
+   \   00000040   00BF               Nop      
+   \   00000042   00BF               Nop      
+   \   00000044   00BF               Nop      
+   \   00000046   00BF               Nop      
+   \   00000048   00BF               Nop      
+    122          		I2C_DELAY();         
+   \   0000004A   00BF               Nop      
+   \   0000004C   00BF               Nop      
+   \   0000004E   00BF               Nop      
+   \   00000050   00BF               Nop      
+   \   00000052   00BF               Nop      
+    123               	GPIO_ResetBits(GPIOB, SCL); 
+   \   00000054   4FF48071           MOV      R1,#+256
+   \   00000058   2046               MOV      R0,R4
+   \   0000005A   ........           BL       GPIO_ResetBits
+   \   0000005E   761C               ADDS     R6,R6,#+1
+   \   00000060   F6B2               UXTB     R6,R6
+   \                     ??SendByte_0:
+   \   00000062   3046               MOV      R0,R6
+   \   00000064   0828               CMP      R0,#+8
+   \   00000066   0AD2               BCS.N    ??SendByte_3
+   \   00000068   05FA00F0           LSL      R0,R5,R0
+   \   0000006C   10F0800F           TST      R0,#0x80
+   \   00000070   4FF40071           MOV      R1,#+512
+   \   00000074   2046               MOV      R0,R4
+   \   00000076   C8D0               BEQ.N    ??SendByte_1
+   \   00000078   ........           BL       GPIO_SetBits
+   \   0000007C   C7E7               B.N      ??SendByte_2
+    124              }
+    125             	I2C_DELAY();
+   \                     ??SendByte_3:
+   \   0000007E   00BF               Nop      
+   \   00000080   00BF               Nop      
+   \   00000082   00BF               Nop      
+   \   00000084   00BF               Nop      
+   \   00000086   00BF               Nop      
+    126          	I2C_DELAY();
+   \   00000088   00BF               Nop      
+   \   0000008A   00BF               Nop      
+   \   0000008C   00BF               Nop      
+   \   0000008E   00BF               Nop      
+   \   00000090   00BF               Nop      
+    127          	I2C_DELAY();
+   \   00000092   00BF               Nop      
+   \   00000094   00BF               Nop      
+   \   00000096   00BF               Nop      
+   \   00000098   00BF               Nop      
+   \   0000009A   00BF               Nop      
+    128          	I2C_DELAY();
+   \   0000009C   00BF               Nop      
+   \   0000009E   00BF               Nop      
+   \   000000A0   00BF               Nop      
+   \   000000A2   00BF               Nop      
+   \   000000A4   00BF               Nop      
+    129          	I2C_DELAY();  
+   \   000000A6   00BF               Nop      
+   \   000000A8   00BF               Nop      
+   \   000000AA   00BF               Nop      
+   \   000000AC   00BF               Nop      
+   \   000000AE   00BF               Nop      
+    130              GPIO_SetBits(GPIOB, SDA);               /*8位发送完后释放数据线，准备接收应答位*/
+   \   000000B0   4FF40071           MOV      R1,#+512
+   \   000000B4   2046               MOV      R0,R4
+   \   000000B6   ........           BL       GPIO_SetBits
+    131              I2C_DELAY();
+   \   000000BA   00BF               Nop      
+   \   000000BC   00BF               Nop      
+   \   000000BE   00BF               Nop      
+   \   000000C0   00BF               Nop      
+   \   000000C2   00BF               Nop      
+    132          	I2C_DELAY();
+   \   000000C4   00BF               Nop      
+   \   000000C6   00BF               Nop      
+   \   000000C8   00BF               Nop      
+   \   000000CA   00BF               Nop      
+   \   000000CC   00BF               Nop      
+    133          	I2C_DELAY();
+   \   000000CE   00BF               Nop      
+   \   000000D0   00BF               Nop      
+   \   000000D2   00BF               Nop      
+   \   000000D4   00BF               Nop      
+   \   000000D6   00BF               Nop      
+    134          	I2C_DELAY();
+   \   000000D8   00BF               Nop      
+   \   000000DA   00BF               Nop      
+   \   000000DC   00BF               Nop      
+   \   000000DE   00BF               Nop      
+   \   000000E0   00BF               Nop      
+    135          	I2C_DELAY();   
+   \   000000E2   00BF               Nop      
+   \   000000E4   00BF               Nop      
+   \   000000E6   00BF               Nop      
+   \   000000E8   00BF               Nop      
+   \   000000EA   00BF               Nop      
+    136              GPIO_SetBits(GPIOB, SCL);
+   \   000000EC   4FF48071           MOV      R1,#+256
+   \   000000F0   2046               MOV      R0,R4
+   \   000000F2   ........           BL       GPIO_SetBits
+    137              I2C_DELAY(); 
+   \   000000F6   00BF               Nop      
+   \   000000F8   00BF               Nop      
+   \   000000FA   00BF               Nop      
+   \   000000FC   00BF               Nop      
+   \   000000FE   00BF               Nop      
+    138          	
+    139              if(GPIO_ReadInputDataBit(GPIOB, SDA)==1)
+   \   00000100   ....               LDR.N    R5,??DataTable8  ;; ack
+   \   00000102   4FF40071           MOV      R1,#+512
+   \   00000106   2046               MOV      R0,R4
+   \   00000108   ........           BL       GPIO_ReadInputDataBit
+   \   0000010C   0128               CMP      R0,#+1
+   \   0000010E   02D1               BNE.N    ??SendByte_4
+    140          		ack=0;     
+   \   00000110   0020               MOVS     R0,#+0
+   \   00000112   2870               STRB     R0,[R5, #+0]
+   \   00000114   01E0               B.N      ??SendByte_5
+    141              else 
+    142          	  	ack=1;        /*判断是否接收到应答信号*/
+   \                     ??SendByte_4:
+   \   00000116   0120               MOVS     R0,#+1
+   \   00000118   2870               STRB     R0,[R5, #+0]
+    143              GPIO_ResetBits(GPIOB, SCL); 
+   \                     ??SendByte_5:
+   \   0000011A   4FF48071           MOV      R1,#+256
+   \   0000011E   2046               MOV      R0,R4
+   \   00000120   ........           BL       GPIO_ResetBits
+    144              I2C_DELAY(); 
+   \   00000124   00BF               Nop      
+   \   00000126   00BF               Nop      
+   \   00000128   00BF               Nop      
+   \   0000012A   00BF               Nop      
+   \   0000012C   00BF               Nop      
+    145              I2C_DELAY(); 
+   \   0000012E   00BF               Nop      
+   \   00000130   00BF               Nop      
+   \   00000132   00BF               Nop      
+   \   00000134   00BF               Nop      
+   \   00000136   00BF               Nop      
+    146          }
+   \   00000138   70BD               POP      {R4-R6,PC}       ;; return
+    147          /*******************************************************************
+    148                           字节数据传送函数               
+    149          函数原型: uchar  RcvByte();
+    150          功能:  用来接收从器件传来的数据,并判断总线错误(不发应答信号)，
+    151               发完后请用应答函数。  
+    152          ********************************************************************/	
+
+   \                                 In section .text, align 2, keep-with-next
+    153          u8 RcvByte(void)
+    154          {
+   \                     RcvByte:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+    155          	u8 retc=0;
+   \   00000002   0024               MOVS     R4,#+0
+    156            	u8 BitCnt;
+    157            
+    158            	GPIO_SetBits(GPIOB, SDA);               /*置数据线为输入方式*/
+   \   00000004   ....               LDR.N    R5,??DataTable6  ;; 0x40010c00
+   \   00000006   4FF40071           MOV      R1,#+512
+   \   0000000A   2846               MOV      R0,R5
+   \   0000000C   ........           BL       GPIO_SetBits
+    159            	for(BitCnt=0;BitCnt<8;BitCnt++){
+   \   00000010   2646               MOV      R6,R4
+   \   00000012   48E0               B.N      ??RcvByte_0
+    160          		I2C_DELAY();
+   \                     ??RcvByte_1:
+   \   00000014   00BF               Nop      
+   \   00000016   00BF               Nop      
+   \   00000018   00BF               Nop      
+   \   0000001A   00BF               Nop      
+   \   0000001C   00BF               Nop      
+    161                  GPIO_ResetBits(GPIOB, SCL);        /*置时钟线为低，准备接收数据位*/
+   \   0000001E   4FF48071           MOV      R1,#+256
+   \   00000022   2846               MOV      R0,R5
+   \   00000024   ........           BL       GPIO_ResetBits
+    162                  I2C_DELAY();
+   \   00000028   00BF               Nop      
+   \   0000002A   00BF               Nop      
+   \   0000002C   00BF               Nop      
+   \   0000002E   00BF               Nop      
+   \   00000030   00BF               Nop      
+    163          		I2C_DELAY();
+   \   00000032   00BF               Nop      
+   \   00000034   00BF               Nop      
+   \   00000036   00BF               Nop      
+   \   00000038   00BF               Nop      
+   \   0000003A   00BF               Nop      
+    164          		I2C_DELAY();
+   \   0000003C   00BF               Nop      
+   \   0000003E   00BF               Nop      
+   \   00000040   00BF               Nop      
+   \   00000042   00BF               Nop      
+   \   00000044   00BF               Nop      
+    165          		I2C_DELAY();
+   \   00000046   00BF               Nop      
+   \   00000048   00BF               Nop      
+   \   0000004A   00BF               Nop      
+   \   0000004C   00BF               Nop      
+   \   0000004E   00BF               Nop      
+    166          		I2C_DELAY();   
+   \   00000050   00BF               Nop      
+   \   00000052   00BF               Nop      
+   \   00000054   00BF               Nop      
+   \   00000056   00BF               Nop      
+   \   00000058   00BF               Nop      
+    167                  GPIO_SetBits(GPIOB, SCL);        /*置时钟线为高使数据线上数据有效*/
+   \   0000005A   4FF48071           MOV      R1,#+256
+   \   0000005E   2846               MOV      R0,R5
+   \   00000060   ........           BL       GPIO_SetBits
+    168                  I2C_DELAY();
+   \   00000064   00BF               Nop      
+   \   00000066   00BF               Nop      
+   \   00000068   00BF               Nop      
+   \   0000006A   00BF               Nop      
+   \   0000006C   00BF               Nop      
+    169          		I2C_DELAY(); 
+   \   0000006E   00BF               Nop      
+   \   00000070   00BF               Nop      
+   \   00000072   00BF               Nop      
+   \   00000074   00BF               Nop      
+   \   00000076   00BF               Nop      
+    170                  retc=retc<<1;
+   \   00000078   6400               LSLS     R4,R4,#+1
+   \   0000007A   E4B2               UXTB     R4,R4
+    171                  if(GPIO_ReadInputDataBit(GPIOB, SDA)==1)
+   \   0000007C   4FF40071           MOV      R1,#+512
+   \   00000080   2846               MOV      R0,R5
+   \   00000082   ........           BL       GPIO_ReadInputDataBit
+   \   00000086   0128               CMP      R0,#+1
+   \   00000088   01D1               BNE.N    ??RcvByte_2
+    172          			retc=retc+1; /*读数据位,接收的数据位放入retc中 */
+   \   0000008A   641C               ADDS     R4,R4,#+1
+   \   0000008C   E4B2               UXTB     R4,R4
+    173                  I2C_DELAY();
+   \                     ??RcvByte_2:
+   \   0000008E   00BF               Nop      
+   \   00000090   00BF               Nop      
+   \   00000092   00BF               Nop      
+   \   00000094   00BF               Nop      
+   \   00000096   00BF               Nop      
+    174          		I2C_DELAY(); 
+   \   00000098   00BF               Nop      
+   \   0000009A   00BF               Nop      
+   \   0000009C   00BF               Nop      
+   \   0000009E   00BF               Nop      
+   \   000000A0   00BF               Nop      
+    175              }
+   \   000000A2   761C               ADDS     R6,R6,#+1
+   \   000000A4   F6B2               UXTB     R6,R6
+   \                     ??RcvByte_0:
+   \   000000A6   3046               MOV      R0,R6
+   \   000000A8   0828               CMP      R0,#+8
+   \   000000AA   B3D3               BCC.N    ??RcvByte_1
+    176            	GPIO_ResetBits(GPIOB, SCL);  
+   \   000000AC   4FF48071           MOV      R1,#+256
+   \   000000B0   2846               MOV      R0,R5
+   \   000000B2   ........           BL       GPIO_ResetBits
+    177            	I2C_DELAY();
+   \   000000B6   00BF               Nop      
+   \   000000B8   00BF               Nop      
+   \   000000BA   00BF               Nop      
+   \   000000BC   00BF               Nop      
+   \   000000BE   00BF               Nop      
+    178          	I2C_DELAY(); 
+   \   000000C0   00BF               Nop      
+   \   000000C2   00BF               Nop      
+   \   000000C4   00BF               Nop      
+   \   000000C6   00BF               Nop      
+   \   000000C8   00BF               Nop      
+    179            	return(retc);
+   \   000000CA   2046               MOV      R0,R4
+   \   000000CC   70BD               POP      {R4-R6,PC}       ;; return
+    180          }
+    181          
+    182          /********************************************************************
+    183                               应答子函数
+    184          原型:  void Ack_I2c(bit a);
+    185           
+    186          功能:主控器进行应答信号,(可以是应答或非应答信号)
+    187          ********************************************************************/
+
+   \                                 In section .text, align 2, keep-with-next
+    188          void Ack_I2c(u8 a)
+    189          {
+   \                     Ack_I2c:
+   \   00000000   10B5               PUSH     {R4,LR}
+    190            
+    191          	if(a==0)
+   \   00000002   ....               LDR.N    R4,??DataTable6  ;; 0x40010c00
+   \   00000004   0028               CMP      R0,#+0
+   \   00000006   4FF40071           MOV      R1,#+512
+   \   0000000A   2046               MOV      R0,R4
+   \   0000000C   02D1               BNE.N    ??Ack_I2c_0
+    192          		GPIO_ResetBits(GPIOB, SDA);     /*在此发出应答或非应答信号 */
+   \   0000000E   ........           BL       GPIO_ResetBits
+   \   00000012   01E0               B.N      ??Ack_I2c_1
+    193              else 
+    194          	  	GPIO_SetBits(GPIOB, SDA);
+   \                     ??Ack_I2c_0:
+   \   00000014   ........           BL       GPIO_SetBits
+    195            	I2C_DELAY();
+   \                     ??Ack_I2c_1:
+   \   00000018   00BF               Nop      
+   \   0000001A   00BF               Nop      
+   \   0000001C   00BF               Nop      
+   \   0000001E   00BF               Nop      
+   \   00000020   00BF               Nop      
+    196          	I2C_DELAY(); 
+   \   00000022   00BF               Nop      
+   \   00000024   00BF               Nop      
+   \   00000026   00BF               Nop      
+   \   00000028   00BF               Nop      
+   \   0000002A   00BF               Nop      
+    197          	I2C_DELAY(); 
+   \   0000002C   00BF               Nop      
+   \   0000002E   00BF               Nop      
+   \   00000030   00BF               Nop      
+   \   00000032   00BF               Nop      
+   \   00000034   00BF               Nop      
+    198            	GPIO_SetBits(GPIOB, SCL);
+   \   00000036   4FF48071           MOV      R1,#+256
+   \   0000003A   2046               MOV      R0,R4
+   \   0000003C   ........           BL       GPIO_SetBits
+    199              I2C_DELAY();
+   \   00000040   00BF               Nop      
+   \   00000042   00BF               Nop      
+   \   00000044   00BF               Nop      
+   \   00000046   00BF               Nop      
+   \   00000048   00BF               Nop      
+    200          	I2C_DELAY(); 
+   \   0000004A   00BF               Nop      
+   \   0000004C   00BF               Nop      
+   \   0000004E   00BF               Nop      
+   \   00000050   00BF               Nop      
+   \   00000052   00BF               Nop      
+    201          	I2C_DELAY(); 
+   \   00000054   00BF               Nop      
+   \   00000056   00BF               Nop      
+   \   00000058   00BF               Nop      
+   \   0000005A   00BF               Nop      
+   \   0000005C   00BF               Nop      
+    202          	I2C_DELAY();
+   \   0000005E   00BF               Nop      
+   \   00000060   00BF               Nop      
+   \   00000062   00BF               Nop      
+   \   00000064   00BF               Nop      
+   \   00000066   00BF               Nop      
+    203          	I2C_DELAY(); 
+   \   00000068   00BF               Nop      
+   \   0000006A   00BF               Nop      
+   \   0000006C   00BF               Nop      
+   \   0000006E   00BF               Nop      
+   \   00000070   00BF               Nop      
+    204           	GPIO_ResetBits(GPIOB, SCL);         /*清时钟线，钳住I2C总线以便继续接收*/
+   \   00000072   4FF48071           MOV      R1,#+256
+   \   00000076   2046               MOV      R0,R4
+   \   00000078   ........           BL       GPIO_ResetBits
+    205              I2C_DELAY(); 
+   \   0000007C   00BF               Nop      
+   \   0000007E   00BF               Nop      
+   \   00000080   00BF               Nop      
+   \   00000082   00BF               Nop      
+   \   00000084   00BF               Nop      
+    206          	I2C_DELAY();  
+   \   00000086   00BF               Nop      
+   \   00000088   00BF               Nop      
+   \   0000008A   00BF               Nop      
+   \   0000008C   00BF               Nop      
+   \   0000008E   00BF               Nop      
+    207          }
+   \   00000090   10BD               POP      {R4,PC}          ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    208          u8 I2C_EE_BufferWrite(u8 *buff,u16 suba,u8 len)
+    209          {
+   \                     I2C_EE_BufferWrite:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0646               MOV      R6,R0
+   \   00000006   0C46               MOV      R4,R1
+   \   00000008   1546               MOV      R5,R2
+    210          	u8 i;
+    211             	u8 suba_h;
+    212             	u8 suba_l;
+    213             	suba_h=suba>>8;
+    214             	suba_l=suba;
+   \   0000000A   A046               MOV      R8,R4
+   \   0000000C   5FFA88F8           UXTB     R8,R8
+    215             	Start_I2c();               /*启动总线*/
+   \   00000010   ........           BL       Start_I2c
+    216             	SendByte(EEPROM_SLAVE_ADDRESS);            /*发送器件地址*/
+   \   00000014   A020               MOVS     R0,#+160
+   \   00000016   ........           BL       SendByte
+    217              if(ack==0)
+   \   0000001A   ....               LDR.N    R7,??DataTable8  ;; ack
+   \   0000001C   3878               LDRB     R0,[R7, #+0]
+   \   0000001E   0028               CMP      R0,#+0
+   \   00000020   02D1               BNE.N    ??I2C_EE_BufferWrite_0
+    218          		return	0;
+   \                     ??I2C_EE_BufferWrite_1:
+   \   00000022   0020               MOVS     R0,#+0
+   \   00000024   BDE8F081           POP      {R4-R8,PC}
+    219             	SendByte(suba_h);            /*发送器件子地址*/
+   \                     ??I2C_EE_BufferWrite_0:
+   \   00000028   200A               LSRS     R0,R4,#+8
+   \   0000002A   ........           BL       SendByte
+    220              if(ack==0)
+   \   0000002E   3878               LDRB     R0,[R7, #+0]
+   \   00000030   0028               CMP      R0,#+0
+   \   00000032   F6D0               BEQ.N    ??I2C_EE_BufferWrite_1
+    221          		return	0;
+    222             	SendByte(suba_l);            /*发送器件子地址*/
+   \   00000034   4046               MOV      R0,R8
+   \   00000036   ........           BL       SendByte
+    223              if(ack==0)
+   \   0000003A   3878               LDRB     R0,[R7, #+0]
+   \   0000003C   0028               CMP      R0,#+0
+   \   0000003E   F0D0               BEQ.N    ??I2C_EE_BufferWrite_1
+    224          		return	0;  
+    225          	for(i=0;i<len;i++){
+   \   00000040   0024               MOVS     R4,#+0
+   \   00000042   08E0               B.N      ??I2C_EE_BufferWrite_2
+    226              	SendByte(*buff);               /*发送数据*/
+   \                     ??I2C_EE_BufferWrite_3:
+   \   00000044   3078               LDRB     R0,[R6, #+0]
+   \   00000046   ........           BL       SendByte
+    227                 	if(ack==0)
+   \   0000004A   3878               LDRB     R0,[R7, #+0]
+   \   0000004C   0028               CMP      R0,#+0
+   \   0000004E   E8D0               BEQ.N    ??I2C_EE_BufferWrite_1
+    228          			return 0;
+    229               	buff++;
+   \   00000050   761C               ADDS     R6,R6,#+1
+    230              } 
+   \   00000052   641C               ADDS     R4,R4,#+1
+   \   00000054   E4B2               UXTB     R4,R4
+   \                     ??I2C_EE_BufferWrite_2:
+   \   00000056   2046               MOV      R0,R4
+   \   00000058   A842               CMP      R0,R5
+   \   0000005A   F3D3               BCC.N    ??I2C_EE_BufferWrite_3
+    231           	Stop_I2c();                 /*结束总线*/ 
+   \   0000005C   ........           BL       Stop_I2c
+    232            	return	1;
+   \   00000060   0120               MOVS     R0,#+1
+   \   00000062   BDE8F081           POP      {R4-R8,PC}       ;; return
+    233          }
+
+   \                                 In section .text, align 2, keep-with-next
+    234          u8 I2C_EE_BufferRead(u8 *buff,unsigned suba,u8 len)
+    235          {
+   \                     I2C_EE_BufferRead:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0646               MOV      R6,R0
+   \   00000006   0C46               MOV      R4,R1
+   \   00000008   1546               MOV      R5,R2
+    236          	u8 i;
+    237             	u8 suba_h;
+    238             	u8 suba_l;
+    239             	suba_h=suba>>8;
+    240             	suba_l=suba;
+   \   0000000A   A046               MOV      R8,R4
+   \   0000000C   5FFA88F8           UXTB     R8,R8
+    241             	Start_I2c();                 	/*启动总线*/
+   \   00000010   ........           BL       Start_I2c
+    242             	SendByte(EEPROM_SLAVE_ADDRESS);	/*发送器件地址*/
+   \   00000014   A020               MOVS     R0,#+160
+   \   00000016   ........           BL       SendByte
+    243              if(ack==0)
+   \   0000001A   ....               LDR.N    R7,??DataTable8  ;; ack
+   \   0000001C   3878               LDRB     R0,[R7, #+0]
+   \   0000001E   0028               CMP      R0,#+0
+   \   00000020   02D1               BNE.N    ??I2C_EE_BufferRead_0
+    244          		return 0;
+   \                     ??I2C_EE_BufferRead_1:
+   \   00000022   0020               MOVS     R0,#+0
+   \   00000024   BDE8F081           POP      {R4-R8,PC}
+    245             	SendByte(suba_h);            /*发送器件子地址*/
+   \                     ??I2C_EE_BufferRead_0:
+   \   00000028   200A               LSRS     R0,R4,#+8
+   \   0000002A   C0B2               UXTB     R0,R0
+   \   0000002C   ........           BL       SendByte
+    246              if(ack==0)
+   \   00000030   3878               LDRB     R0,[R7, #+0]
+   \   00000032   0028               CMP      R0,#+0
+   \   00000034   F5D0               BEQ.N    ??I2C_EE_BufferRead_1
+    247          		return 0;
+    248             	SendByte(suba_l);            /*发送器件子地址*/
+   \   00000036   4046               MOV      R0,R8
+   \   00000038   ........           BL       SendByte
+    249             	if(ack==0)
+   \   0000003C   3878               LDRB     R0,[R7, #+0]
+   \   0000003E   0028               CMP      R0,#+0
+   \   00000040   EFD0               BEQ.N    ??I2C_EE_BufferRead_1
+    250          		return 0;  
+    251          
+    252             	Start_I2c();
+   \   00000042   ........           BL       Start_I2c
+    253             	SendByte(EEPROM_SLAVE_ADDRESS+1);
+   \   00000046   A120               MOVS     R0,#+161
+   \   00000048   ........           BL       SendByte
+    254              if(ack==0)
+   \   0000004C   3878               LDRB     R0,[R7, #+0]
+   \   0000004E   0028               CMP      R0,#+0
+   \   00000050   E7D0               BEQ.N    ??I2C_EE_BufferRead_1
+    255          		return	0;
+    256          
+    257             	for(i=0;i<len-1;i++){
+   \   00000052   0024               MOVS     R4,#+0
+   \   00000054   08E0               B.N      ??I2C_EE_BufferRead_2
+    258              	*buff=RcvByte();               /*发送数据*/
+   \                     ??I2C_EE_BufferRead_3:
+   \   00000056   ........           BL       RcvByte
+   \   0000005A   06F8010B           STRB     R0,[R6], #+1
+    259                	Ack_I2c(0);                	/*发送就答位*/  
+   \   0000005E   0020               MOVS     R0,#+0
+   \   00000060   ........           BL       Ack_I2c
+    260               	buff++;
+    261              } 
+   \   00000064   641C               ADDS     R4,R4,#+1
+   \   00000066   E4B2               UXTB     R4,R4
+   \                     ??I2C_EE_BufferRead_2:
+   \   00000068   2046               MOV      R0,R4
+   \   0000006A   691E               SUBS     R1,R5,#+1
+   \   0000006C   8842               CMP      R0,R1
+   \   0000006E   F2DB               BLT.N    ??I2C_EE_BufferRead_3
+    262             	*buff=RcvByte();
+   \   00000070   ........           BL       RcvByte
+   \   00000074   3070               STRB     R0,[R6, #+0]
+    263              Ack_I2c(1);                 	/*发送非应位*/
+   \   00000076   0120               MOVS     R0,#+1
+   \   00000078   ........           BL       Ack_I2c
+    264           	Stop_I2c();                    	/*结束总线*/ 
+   \   0000007C   ........           BL       Stop_I2c
+    265            	return 1;
+   \   00000080   0120               MOVS     R0,#+1
+   \   00000082   BDE8F081           POP      {R4-R8,PC}       ;; return
+    266          }
+
+   \                                 In section .text, align 2, keep-with-next
+    267          void get_netconf(NETCONF *NetConf)
+    268          {
+   \                     get_netconf:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+    269            	OSSemPend(ReadWriteAT24C64Sem,0,NULL);
+   \   00000004   ....               LDR.N    R5,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   00000006   0022               MOVS     R2,#+0
+   \   00000008   1146               MOV      R1,R2
+   \   0000000A   2868               LDR      R0,[R5, #+0]
+   \   0000000C   ........           BL       OSSemPend
+    270            	I2C_EE_BufferRead(NetConf->mac, MAC, sizeof(NetConf->mac));
+   \   00000010   0622               MOVS     R2,#+6
+   \   00000012   0021               MOVS     R1,#+0
+   \   00000014   2046               MOV      R0,R4
+   \   00000016   ........           BL       I2C_EE_BufferRead
+    271          	I2C_EE_BufferRead((u8 *)(&(NetConf->sip)), SIP, sizeof(NetConf->sip));
+   \   0000001A   0422               MOVS     R2,#+4
+   \   0000001C   1021               MOVS     R1,#+16
+   \   0000001E   04F10800           ADD      R0,R4,#+8
+   \   00000022   ........           BL       I2C_EE_BufferRead
+    272          	I2C_EE_BufferRead((u8 *)(&(NetConf->gwip)), GWIP, sizeof(NetConf->gwip));
+   \   00000026   0422               MOVS     R2,#+4
+   \   00000028   1421               MOVS     R1,#+20
+   \   0000002A   04F10C00           ADD      R0,R4,#+12
+   \   0000002E   ........           BL       I2C_EE_BufferRead
+    273          	I2C_EE_BufferRead((u8 *)(&(NetConf->sn)), NETMASK, sizeof(NetConf->sn));
+   \   00000032   0422               MOVS     R2,#+4
+   \   00000034   1821               MOVS     R1,#+24
+   \   00000036   04F11000           ADD      R0,R4,#+16
+   \   0000003A   ........           BL       I2C_EE_BufferRead
+    274          	I2C_EE_BufferRead((u8 *)(&(NetConf->dns)), DNSIP, sizeof(NetConf->dns));
+   \   0000003E   0422               MOVS     R2,#+4
+   \   00000040   1C21               MOVS     R1,#+28
+   \   00000042   04F11400           ADD      R0,R4,#+20
+   \   00000046   ........           BL       I2C_EE_BufferRead
+    275          	I2C_EE_BufferRead((u8 *)(&(NetConf->port)), PORT, sizeof(NetConf->port));
+   \   0000004A   0822               MOVS     R2,#+8
+   \   0000004C   2021               MOVS     R1,#+32
+   \   0000004E   04F11A00           ADD      R0,R4,#+26
+   \   00000052   ........           BL       I2C_EE_BufferRead
+    276          	OSSemPost(ReadWriteAT24C64Sem);
+   \   00000056   2868               LDR      R0,[R5, #+0]
+   \   00000058   BDE83240           POP      {R1,R4,R5,LR}
+   \   0000005C   ........           B.W      OSSemPost
+    277          }
+    278           
+
+   \                                 In section .text, align 2, keep-with-next
+    279          void set_netconf(NETCONF NetConf)
+    280          {
+   \                     set_netconf:
+   \   00000000   0FB4               PUSH     {R0-R3}
+   \   00000002   10B5               PUSH     {R4,LR}
+    281            	OSSemPend(ReadWriteAT24C64Sem,0,NULL);
+   \   00000004   ....               LDR.N    R4,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   00000006   0022               MOVS     R2,#+0
+   \   00000008   1146               MOV      R1,R2
+   \   0000000A   2068               LDR      R0,[R4, #+0]
+   \   0000000C   ........           BL       OSSemPend
+    282          	AT24C64WP_enable(0);
+   \   00000010   0020               MOVS     R0,#+0
+   \   00000012   ........           BL       AT24C64WP_enable
+    283          	I2C_EE_BufferWrite((u8 *)(&(NetConf.sip)), SIP, sizeof(NetConf.sip));
+   \   00000016   0422               MOVS     R2,#+4
+   \   00000018   1021               MOVS     R1,#+16
+   \   0000001A   04A8               ADD      R0,SP,#+16
+   \   0000001C   ........           BL       I2C_EE_BufferWrite
+    284          	OSTimeDlyHMSM(0, 0, 0, 5);
+   \   00000020   0523               MOVS     R3,#+5
+   \   00000022   0022               MOVS     R2,#+0
+   \   00000024   1146               MOV      R1,R2
+   \   00000026   0846               MOV      R0,R1
+   \   00000028   ........           BL       OSTimeDlyHMSM
+    285          	I2C_EE_BufferWrite((u8 *)(&(NetConf.gwip)), GWIP, sizeof(NetConf.gwip));
+   \   0000002C   0422               MOVS     R2,#+4
+   \   0000002E   1421               MOVS     R1,#+20
+   \   00000030   05A8               ADD      R0,SP,#+20
+   \   00000032   ........           BL       I2C_EE_BufferWrite
+    286          	OSTimeDlyHMSM(0, 0, 0, 5);
+   \   00000036   0523               MOVS     R3,#+5
+   \   00000038   0022               MOVS     R2,#+0
+   \   0000003A   1146               MOV      R1,R2
+   \   0000003C   0846               MOV      R0,R1
+   \   0000003E   ........           BL       OSTimeDlyHMSM
+    287          	I2C_EE_BufferWrite((u8 *)(&(NetConf.sn)), NETMASK, sizeof(NetConf.sn));
+   \   00000042   0422               MOVS     R2,#+4
+   \   00000044   1821               MOVS     R1,#+24
+   \   00000046   06A8               ADD      R0,SP,#+24
+   \   00000048   ........           BL       I2C_EE_BufferWrite
+    288          	OSTimeDlyHMSM(0, 0, 0, 5);
+   \   0000004C   0523               MOVS     R3,#+5
+   \   0000004E   0022               MOVS     R2,#+0
+   \   00000050   1146               MOV      R1,R2
+   \   00000052   0846               MOV      R0,R1
+   \   00000054   ........           BL       OSTimeDlyHMSM
+    289          	I2C_EE_BufferWrite((u8 *)(&(NetConf.dns)), DNSIP, sizeof(NetConf.dns));
+   \   00000058   0422               MOVS     R2,#+4
+   \   0000005A   1C21               MOVS     R1,#+28
+   \   0000005C   07A8               ADD      R0,SP,#+28
+   \   0000005E   ........           BL       I2C_EE_BufferWrite
+    290          	OSTimeDlyHMSM(0, 0, 0, 5);
+   \   00000062   0523               MOVS     R3,#+5
+   \   00000064   0022               MOVS     R2,#+0
+   \   00000066   1146               MOV      R1,R2
+   \   00000068   0846               MOV      R0,R1
+   \   0000006A   ........           BL       OSTimeDlyHMSM
+    291          	I2C_EE_BufferWrite((u8 *)(&(NetConf.port)), PORT, sizeof(NetConf.port));
+   \   0000006E   0822               MOVS     R2,#+8
+   \   00000070   2021               MOVS     R1,#+32
+   \   00000072   0DF12200           ADD      R0,SP,#+34
+   \   00000076   ........           BL       I2C_EE_BufferWrite
+    292          	OSTimeDlyHMSM(0, 0, 0, 5);
+   \   0000007A   0523               MOVS     R3,#+5
+   \   0000007C   0022               MOVS     R2,#+0
+   \   0000007E   1146               MOV      R1,R2
+   \   00000080   0846               MOV      R0,R1
+   \   00000082   ........           BL       OSTimeDlyHMSM
+    293          	AT24C64WP_enable(1);
+   \   00000086   0120               MOVS     R0,#+1
+   \   00000088   ........           BL       AT24C64WP_enable
+    294          	OSSemPost(ReadWriteAT24C64Sem);
+   \   0000008C   2068               LDR      R0,[R4, #+0]
+   \   0000008E   ........           BL       OSSemPost
+    295          }
+   \   00000092   10BC               POP      {R4}
+   \   00000094   5DF814FB           LDR      PC,[SP], #+20    ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    296          void get_chconf(CHCONF ChConf[])
+    297          {
+   \                     get_chconf:
+   \   00000000   F8B5               PUSH     {R3-R7,LR}
+   \   00000002   0446               MOV      R4,R0
+    298          	OSSemPend(ReadWriteAT24C64Sem,0,NULL); 
+   \   00000004   ....               LDR.N    R5,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   00000006   0022               MOVS     R2,#+0
+   \   00000008   1146               MOV      R1,R2
+   \   0000000A   2868               LDR      R0,[R5, #+0]
+   \   0000000C   ........           BL       OSSemPend
+    299          
+    300          	for(u8 i=0;i<COMMPORTNUM;i++){
+   \   00000010   0026               MOVS     R6,#+0
+   \   00000012   11E0               B.N      ??get_chconf_0
+   \                     ??get_chconf_1:
+   \   00000014   04EBC007           ADD      R7,R4,R0, LSL #+3
+   \   00000018   0422               MOVS     R2,#+4
+   \   0000001A   B000               LSLS     R0,R6,#+2
+   \   0000001C   00F13001           ADD      R1,R0,#+48
+   \   00000020   3846               MOV      R0,R7
+    301          		I2C_EE_BufferRead((u8 *)(&(ChConf[i].destip)), DESTIP+sizeof(ChConf[i].destip)*i, sizeof(ChConf[i].destip));
+   \   00000022   ........           BL       I2C_EE_BufferRead
+    302          		I2C_EE_BufferRead((u8 *)(&(ChConf[i].port)), DESTPORT+sizeof(ChConf[i].port)*i, sizeof(ChConf[i].port));
+   \   00000026   0222               MOVS     R2,#+2
+   \   00000028   7000               LSLS     R0,R6,#+1
+   \   0000002A   00F15001           ADD      R1,R0,#+80
+   \   0000002E   381D               ADDS     R0,R7,#+4
+   \   00000030   ........           BL       I2C_EE_BufferRead
+    303          	}
+   \   00000034   761C               ADDS     R6,R6,#+1
+   \   00000036   F6B2               UXTB     R6,R6
+   \                     ??get_chconf_0:
+   \   00000038   3046               MOV      R0,R6
+   \   0000003A   0528               CMP      R0,#+5
+   \   0000003C   EAD3               BCC.N    ??get_chconf_1
+    304          	
+    305          	OSSemPost(ReadWriteAT24C64Sem);
+   \   0000003E   2868               LDR      R0,[R5, #+0]
+   \   00000040   BDE8F240           POP      {R1,R4-R7,LR}
+   \   00000044   ........           B.W      OSSemPost
+    306          }
+
+   \                                 In section .text, align 2, keep-with-next
+    307          void set_chconf(const CHCONF ChConf[])
+    308          {
+   \                     set_chconf:
+   \   00000000   F8B5               PUSH     {R3-R7,LR}
+   \   00000002   0446               MOV      R4,R0
+    309            	
+    310          	OSSemPend(ReadWriteAT24C64Sem,0,NULL); 
+   \   00000004   ....               LDR.N    R5,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   00000006   0022               MOVS     R2,#+0
+   \   00000008   1146               MOV      R1,R2
+   \   0000000A   2868               LDR      R0,[R5, #+0]
+   \   0000000C   ........           BL       OSSemPend
+    311          	AT24C64WP_enable(0);
+   \   00000010   0020               MOVS     R0,#+0
+   \   00000012   ........           BL       AT24C64WP_enable
+    312          
+    313          	for(u8 i=0;i<COMMPORTNUM;i++){
+   \   00000016   0026               MOVS     R6,#+0
+   \   00000018   1FE0               B.N      ??set_chconf_0
+   \                     ??set_chconf_1:
+   \   0000001A   04EBC007           ADD      R7,R4,R0, LSL #+3
+   \   0000001E   0422               MOVS     R2,#+4
+   \   00000020   B000               LSLS     R0,R6,#+2
+   \   00000022   00F13001           ADD      R1,R0,#+48
+   \   00000026   89B2               UXTH     R1,R1
+   \   00000028   3846               MOV      R0,R7
+    314          		I2C_EE_BufferWrite((u8 *)(&(ChConf[i].destip)), DESTIP+sizeof(ChConf[i].destip)*i, sizeof(ChConf[i].destip));
+   \   0000002A   ........           BL       I2C_EE_BufferWrite
+    315          		OSTimeDlyHMSM(0, 0, 0, 5);
+   \   0000002E   0523               MOVS     R3,#+5
+   \   00000030   0022               MOVS     R2,#+0
+   \   00000032   1146               MOV      R1,R2
+   \   00000034   0846               MOV      R0,R1
+   \   00000036   ........           BL       OSTimeDlyHMSM
+    316          		I2C_EE_BufferWrite((u8 *)(&(ChConf[i].port)), DESTPORT+sizeof(ChConf[i].port)*i, sizeof(ChConf[i].port));
+   \   0000003A   0222               MOVS     R2,#+2
+   \   0000003C   7000               LSLS     R0,R6,#+1
+   \   0000003E   00F15001           ADD      R1,R0,#+80
+   \   00000042   89B2               UXTH     R1,R1
+   \   00000044   381D               ADDS     R0,R7,#+4
+   \   00000046   ........           BL       I2C_EE_BufferWrite
+    317          		OSTimeDlyHMSM(0, 0, 0, 5);
+   \   0000004A   0523               MOVS     R3,#+5
+   \   0000004C   0022               MOVS     R2,#+0
+   \   0000004E   1146               MOV      R1,R2
+   \   00000050   0846               MOV      R0,R1
+   \   00000052   ........           BL       OSTimeDlyHMSM
+    318          	}
+   \   00000056   761C               ADDS     R6,R6,#+1
+   \   00000058   F6B2               UXTB     R6,R6
+   \                     ??set_chconf_0:
+   \   0000005A   3046               MOV      R0,R6
+   \   0000005C   0528               CMP      R0,#+5
+   \   0000005E   DCD3               BCC.N    ??set_chconf_1
+    319          	
+    320          	AT24C64WP_enable(1);
+   \   00000060   0120               MOVS     R0,#+1
+   \   00000062   ........           BL       AT24C64WP_enable
+    321          	OSSemPost(ReadWriteAT24C64Sem);
+   \   00000066   2868               LDR      R0,[R5, #+0]
+   \   00000068   BDE8F240           POP      {R1,R4-R7,LR}
+   \   0000006C   ........           B.W      OSSemPost
+    322          }
+
+   \                                 In section .text, align 2, keep-with-next
+    323          void get_commport(INT16U BaudRate[])
+    324          {
+   \                     get_commport:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+    325            	
+    326          	OSSemPend(ReadWriteAT24C64Sem,0,NULL); 
+   \   00000004   ....               LDR.N    R5,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   00000006   0022               MOVS     R2,#+0
+   \   00000008   1146               MOV      R1,R2
+   \   0000000A   2868               LDR      R0,[R5, #+0]
+   \   0000000C   ........           BL       OSSemPend
+    327          	
+    328          	
+    329          	I2C_EE_BufferRead((u8 *)BaudRate, UARTBAUDRATE, sizeof(INT16U)*4);
+   \   00000010   0822               MOVS     R2,#+8
+   \   00000012   A021               MOVS     R1,#+160
+   \   00000014   2046               MOV      R0,R4
+   \   00000016   ........           BL       I2C_EE_BufferRead
+    330          	
+    331          
+    332          	OSSemPost(ReadWriteAT24C64Sem);
+   \   0000001A   2868               LDR      R0,[R5, #+0]
+   \   0000001C   BDE83240           POP      {R1,R4,R5,LR}
+   \   00000020   ........           B.W      OSSemPost
+    333          }
+
+   \                                 In section .text, align 2, keep-with-next
+    334          void set_commport(const INT16U BaudRate[])
+    335          {
+   \                     set_commport:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+    336          	OSSemPend(ReadWriteAT24C64Sem,0,NULL);
+   \   00000004   ....               LDR.N    R5,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   00000006   0022               MOVS     R2,#+0
+   \   00000008   1146               MOV      R1,R2
+   \   0000000A   2868               LDR      R0,[R5, #+0]
+   \   0000000C   ........           BL       OSSemPend
+    337          	
+    338          	AT24C64WP_enable(0);
+   \   00000010   0020               MOVS     R0,#+0
+   \   00000012   ........           BL       AT24C64WP_enable
+    339          	
+    340          	I2C_EE_BufferWrite((u8 *)BaudRate, UARTBAUDRATE, sizeof(INT16U)*4);
+   \   00000016   0822               MOVS     R2,#+8
+   \   00000018   A021               MOVS     R1,#+160
+   \   0000001A   2046               MOV      R0,R4
+   \   0000001C   ........           BL       I2C_EE_BufferWrite
+    341          	
+    342          	OSTimeDlyHMSM(0, 0, 0, 20);
+   \   00000020   1423               MOVS     R3,#+20
+   \   00000022   0022               MOVS     R2,#+0
+   \   00000024   1146               MOV      R1,R2
+   \   00000026   0846               MOV      R0,R1
+   \   00000028   ........           BL       OSTimeDlyHMSM
+    343          	
+    344          	AT24C64WP_enable(1);
+   \   0000002C   0120               MOVS     R0,#+1
+   \   0000002E   ........           BL       AT24C64WP_enable
+    345          	
+    346          	OSSemPost(ReadWriteAT24C64Sem);
+   \   00000032   2868               LDR      R0,[R5, #+0]
+   \   00000034   BDE83240           POP      {R1,R4,R5,LR}
+   \   00000038   ........           B.W      OSSemPost
+    347          }
+
+   \                                 In section .text, align 2, keep-with-next
+    348          void get_canbus(CANCONF *CanConf)
+    349          {
+   \                     get_canbus:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+    350            	OSSemPend(ReadWriteAT24C64Sem,0,NULL); 
+   \   00000004   ....               LDR.N    R5,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   00000006   0022               MOVS     R2,#+0
+   \   00000008   1146               MOV      R1,R2
+   \   0000000A   2868               LDR      R0,[R5, #+0]
+   \   0000000C   ........           BL       OSSemPend
+    351          	
+    352          	
+    353          	I2C_EE_BufferRead((u8 *)CanConf, CANBAUDRATE, sizeof(CANCONF));
+   \   00000010   0422               MOVS     R2,#+4
+   \   00000012   4FF48071           MOV      R1,#+256
+   \   00000016   2046               MOV      R0,R4
+   \   00000018   ........           BL       I2C_EE_BufferRead
+    354          	
+    355          
+    356          	OSSemPost(ReadWriteAT24C64Sem);
+   \   0000001C   2868               LDR      R0,[R5, #+0]
+   \   0000001E   BDE83240           POP      {R1,R4,R5,LR}
+   \   00000022   ........           B.W      OSSemPost
+    357          }
+
+   \                                 In section .text, align 2, keep-with-next
+    358          void set_canbus(CANCONF CanConf)
+    359          {
+   \                     set_canbus:
+   \   00000000   11B5               PUSH     {R0,R4,LR}
+   \   00000002   81B0               SUB      SP,SP,#+4
+    360            	OSSemPend(ReadWriteAT24C64Sem,0,NULL);
+   \   00000004   ....               LDR.N    R4,??DataTable16  ;; ReadWriteAT24C64Sem
+   \   00000006   0022               MOVS     R2,#+0
+   \   00000008   1146               MOV      R1,R2
+   \   0000000A   2068               LDR      R0,[R4, #+0]
+   \   0000000C   ........           BL       OSSemPend
+    361          	
+    362          	AT24C64WP_enable(0);
+   \   00000010   0020               MOVS     R0,#+0
+   \   00000012   ........           BL       AT24C64WP_enable
+    363          	
+    364          	I2C_EE_BufferWrite((u8 *)&CanConf, CANBAUDRATE, sizeof(CANCONF));
+   \   00000016   0422               MOVS     R2,#+4
+   \   00000018   4FF48071           MOV      R1,#+256
+   \   0000001C   01A8               ADD      R0,SP,#+4
+   \   0000001E   ........           BL       I2C_EE_BufferWrite
+    365          	
+    366          	OSTimeDlyHMSM(0, 0, 0, 20);
+   \   00000022   1423               MOVS     R3,#+20
+   \   00000024   0022               MOVS     R2,#+0
+   \   00000026   1146               MOV      R1,R2
+   \   00000028   0846               MOV      R0,R1
+   \   0000002A   ........           BL       OSTimeDlyHMSM
+    367          	
+    368          	AT24C64WP_enable(1);
+   \   0000002E   0120               MOVS     R0,#+1
+   \   00000030   ........           BL       AT24C64WP_enable
+    369          	
+    370          	OSSemPost(ReadWriteAT24C64Sem);
+   \   00000034   2068               LDR      R0,[R4, #+0]
+   \   00000036   ........           BL       OSSemPost
+    371          }
+   \   0000003A   13BD               POP      {R0,R1,R4,PC}    ;; return
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6:
+   \   00000000   000C0140           DC32     0x40010c00
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable8:
+   \   00000000   ........           DC32     ack
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable16:
+   \   00000000   ........           DC32     ReadWriteAT24C64Sem
+
+   Maximum stack usage in bytes:
+
+     Function           .cstack
+     --------           -------
+     AT24C64WP_enable        8
+     AT24C64_Init            8
+     Ack_I2c                 8
+     I2C_EE_BufferRead      24
+     I2C_EE_BufferWrite     24
+     RcvByte                16
+     SendByte               16
+     Start_I2c               8
+     Stop_I2c                8
+     get_canbus             16
+     get_chconf             24
+     get_commport           16
+     get_netconf            16
+     set_canbus             16
+     set_chconf             24
+     set_commport           16
+     set_netconf            24
+
+
+   Section sizes:
+
+     Function/Label      Bytes
+     --------------      -----
+     ReadWriteAT24C64Sem    4
+     ack                    1
+     AT24C64_Init          20
+     AT24C64WP_enable      24
+     Start_I2c            208
+     Stop_I2c             146
+     SendByte             314
+     RcvByte              206
+     Ack_I2c              146
+     I2C_EE_BufferWrite   102
+     I2C_EE_BufferRead    134
+     get_netconf           96
+     set_netconf          152
+     get_chconf            72
+     set_chconf           112
+     get_commport          36
+     set_commport          60
+     get_canbus            38
+     set_canbus            60
+     ??DataTable6           4
+     ??DataTable8           4
+     ??DataTable16          4
+
+ 
+     5 bytes in section .bss
+ 1 938 bytes in section .text
+ 
+ 1 938 bytes of CODE memory
+     5 bytes of DATA memory
+
+Errors: none
+Warnings: none

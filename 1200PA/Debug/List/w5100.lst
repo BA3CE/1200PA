@@ -1,0 +1,1899 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  22:57:24 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Boards\NetWork\w5100\w5100.c                          #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\Boards\NetWork\w5100\w5100.c" -D                      #
+#                    _DLIB_FILE_DESCRIPTOR -lC "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Debug\List\" -o "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Debug\Obj\" --no_unroll --no_inline         #
+#                    --no_tbaa --no_scheduling --debug --endian=little        #
+#                    --cpu=Cortex-M3 -e --fpu=None --dlib_config "D:\Program  #
+#                    Files\IAR Systems\Embedded Workbench 5.4                 #
+#                    Kickstart\arm\INC\DLib_Config_Normal.h" -I               #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\w5100.lst                                  #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over IP\Debug\Obj\w5100.o #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\NetWork\w5100\w5100.c
+      1          #include <stdio.h>
+      2          #include <string.h>
+      3          
+      4          #include "bsp.h"
+      5          #include "socket.h"
+      6          #include "w5100.h"
+      7          #include "NetWork/w5100_inter.h"
+      8          
+
+   \                                 In section .bss, align 4
+      9          static INT8U I_STATUS[MAX_SOCK_NUM];
+   \                     I_STATUS:
+   \   00000000                      DS8 4
+
+   \                                 In section .bss, align 4
+     10          static INT16U SMASK[MAX_SOCK_NUM]; /**< Variable for Tx buffer MASK in each channel */
+   \                     SMASK:
+   \   00000000                      DS8 8
+   \   00000008                      DS8 8
+   \   00000010                      DS8 8
+   \   00000018                      DS8 8
+   \   00000020                      DS8 8
+   \   00000028                      DS8 8
+     11          static INT16U RMASK[MAX_SOCK_NUM]; /**< Variable for Rx buffer MASK in each channel */
+     12          static INT16U SSIZE[MAX_SOCK_NUM]; /**< Max Tx buffer size by each channel */
+     13          static INT16U RSIZE[MAX_SOCK_NUM]; /**< Max Rx buffer size by each channel */
+     14          static INT16U SBUFBASEADDRESS[MAX_SOCK_NUM]; /**< Tx buffer base address by each channel */
+     15          static INT16U RBUFBASEADDRESS[MAX_SOCK_NUM]; /**< Rx buffer base address by each channel */
+     16          
+     17          void wait_1us(unsigned int cnt);
+     18          void SPI1Write(char ch);
+     19          char SPI1Read(void);
+     20          void W5100CSon(void);
+     21          void W5100CSoff(void);
+     22          
+
+   \                                 In section .text, align 2, keep-with-next
+     23          INT8U getISR(INT8U s)
+     24          {
+     25              return I_STATUS[s];
+   \                     getISR:
+   \   00000000   ....               LDR.N    R1,??DataTable1  ;; I_STATUS
+   \   00000002   405C               LDRB     R0,[R0, R1]
+   \   00000004   7047               BX       LR               ;; return
+     26          }
+     27          
+
+   \                                 In section .text, align 2, keep-with-next
+     28          void putISR(INT8U s, INT8U val)
+     29          {
+     30              I_STATUS[s] = val;
+   \                     putISR:
+   \   00000000   ....               LDR.N    R2,??DataTable1  ;; I_STATUS
+   \   00000002   8154               STRB     R1,[R0, R2]
+     31          }
+   \   00000004   7047               BX       LR               ;; return
+     32          
+
+   \                                 In section .text, align 2, keep-with-next
+     33          INT16U getIINCHIP_RxMAX(INT8U s)
+     34          {
+     35              return RSIZE[s];
+   \                     getIINCHIP_RxMAX:
+   \   00000000   ....               LDR.N    R1,??DataTable9  ;; SMASK
+   \   00000002   01EB4000           ADD      R0,R1,R0, LSL #+1
+   \   00000006   008B               LDRH     R0,[R0, #+24]
+   \   00000008   7047               BX       LR               ;; return
+     36          }
+
+   \                                 In section .text, align 2, keep-with-next
+     37          INT16U getIINCHIP_TxMAX(INT8U s)
+     38          {
+     39              return SSIZE[s];
+   \                     getIINCHIP_TxMAX:
+   \   00000000   ....               LDR.N    R1,??DataTable9  ;; SMASK
+   \   00000002   01EB4000           ADD      R0,R1,R0, LSL #+1
+   \   00000006   008A               LDRH     R0,[R0, #+16]
+   \   00000008   7047               BX       LR               ;; return
+     40          }
+
+   \                                 In section .text, align 2, keep-with-next
+     41          INT16U getIINCHIP_RxMASK(INT8U s)
+     42          {
+     43              return RMASK[s];
+   \                     getIINCHIP_RxMASK:
+   \   00000000   ....               LDR.N    R1,??DataTable9  ;; SMASK
+   \   00000002   01EB4000           ADD      R0,R1,R0, LSL #+1
+   \   00000006   0089               LDRH     R0,[R0, #+8]
+   \   00000008   7047               BX       LR               ;; return
+     44          }
+
+   \                                 In section .text, align 2, keep-with-next
+     45          INT16U getIINCHIP_TxMASK(INT8U s)
+     46          {
+     47              return SMASK[s];
+   \                     getIINCHIP_TxMASK:
+   \   00000000   ....               LDR.N    R1,??DataTable9  ;; SMASK
+   \   00000002   31F81000           LDRH     R0,[R1, R0, LSL #+1]
+   \   00000006   7047               BX       LR               ;; return
+     48          }
+
+   \                                 In section .text, align 2, keep-with-next
+     49          INT16U getIINCHIP_RxBASE(INT8U s)
+     50          {
+     51              return RBUFBASEADDRESS[s];
+   \                     getIINCHIP_RxBASE:
+   \   00000000   ....               LDR.N    R1,??DataTable9  ;; SMASK
+   \   00000002   01EB4000           ADD      R0,R1,R0, LSL #+1
+   \   00000006   008D               LDRH     R0,[R0, #+40]
+   \   00000008   7047               BX       LR               ;; return
+     52          }
+
+   \                                 In section .text, align 2, keep-with-next
+     53          INT16U getIINCHIP_TxBASE(INT8U s)
+     54          {
+     55              return SBUFBASEADDRESS[s];
+   \                     getIINCHIP_TxBASE:
+   \   00000000   ....               LDR.N    R1,??DataTable9  ;; SMASK
+   \   00000002   01EB4000           ADD      R0,R1,R0, LSL #+1
+   \   00000006   008C               LDRH     R0,[R0, #+32]
+   \   00000008   7047               BX       LR               ;; return
+     56          }
+     57          
+     58           /**
+     59          @brief	This function writes the data into W5100 registers.
+     60          */
+
+   \                                 In section .text, align 2, keep-with-next
+     61          INT8U IINCHIP_WRITE(INT16U addr,INT8U data)
+     62          {
+   \                     IINCHIP_WRITE:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   0546               MOV      R5,R0
+   \   00000004   0C46               MOV      R4,R1
+     63          #if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
+     64              OS_CPU_SR  cpu_sr = 0;
+     65          #endif  	
+     66          	OS_ENTER_CRITICAL();
+   \   00000006   ........           BL       OS_CPU_SR_Save
+   \   0000000A   0646               MOV      R6,R0
+     67          	//SPI MODE I/F
+     68              W5100CSoff();                             // CS=0, SPI start
+   \   0000000C   ........           BL       W5100CSoff
+     69          
+     70              SPI1Write(0xF0);
+   \   00000010   F020               MOVS     R0,#+240
+   \   00000012   ........           BL       SPI1Write
+     71              SPI1Write((addr & 0xFF00) >> 8);
+   \   00000016   280A               LSRS     R0,R5,#+8
+   \   00000018   ........           BL       SPI1Write
+     72              SPI1Write(addr & 0x00FF);
+   \   0000001C   2846               MOV      R0,R5
+   \   0000001E   C0B2               UXTB     R0,R0
+   \   00000020   ........           BL       SPI1Write
+     73              SPI1Write(data);
+   \   00000024   2046               MOV      R0,R4
+   \   00000026   ........           BL       SPI1Write
+     74          
+     75              W5100CSon();    
+   \   0000002A   ........           BL       W5100CSon
+     76          
+     77          	OS_EXIT_CRITICAL();
+   \   0000002E   3046               MOV      R0,R6
+   \   00000030   ........           BL       OS_CPU_SR_Restore
+     78                
+     79              return 1;
+   \   00000034   0120               MOVS     R0,#+1
+   \   00000036   70BD               POP      {R4-R6,PC}       ;; return
+     80          }
+     81          
+     82          
+     83          /**
+     84          @brief	This function reads the value from W5100 registers.
+     85          */
+
+   \                                 In section .text, align 2, keep-with-next
+     86          INT8U IINCHIP_READ(INT16U addr)
+     87          {
+   \                     IINCHIP_READ:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+     88              INT8U data;
+     89          #if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
+     90              OS_CPU_SR  cpu_sr = 0;
+     91          #endif	
+     92            	OS_ENTER_CRITICAL();
+   \   00000004   ........           BL       OS_CPU_SR_Save
+   \   00000008   0546               MOV      R5,R0
+     93          	
+     94              W5100CSoff();                              // CS=0, SPI start
+   \   0000000A   ........           BL       W5100CSoff
+     95          
+     96              SPI1Write(0x0F);
+   \   0000000E   0F20               MOVS     R0,#+15
+   \   00000010   ........           BL       SPI1Write
+     97              SPI1Write((addr & 0xFF00) >> 8);
+   \   00000014   200A               LSRS     R0,R4,#+8
+   \   00000016   ........           BL       SPI1Write
+     98              SPI1Write(addr & 0x00FF);
+   \   0000001A   2046               MOV      R0,R4
+   \   0000001C   C0B2               UXTB     R0,R0
+   \   0000001E   ........           BL       SPI1Write
+     99          	
+    100              SPI1Read();//读出前面的数据，舍弃
+   \   00000022   ........           BL       SPI1Read
+    101                 
+    102              SPI1Write(0);
+   \   00000026   0020               MOVS     R0,#+0
+   \   00000028   ........           BL       SPI1Write
+    103              data = SPI1Read();
+   \   0000002C   ........           BL       SPI1Read
+   \   00000030   0446               MOV      R4,R0
+    104          
+    105              W5100CSon();                          	// SPI end
+   \   00000032   ........           BL       W5100CSon
+    106          
+    107          	OS_EXIT_CRITICAL();
+   \   00000036   2846               MOV      R0,R5
+   \   00000038   ........           BL       OS_CPU_SR_Restore
+    108          	
+    109              return data;
+   \   0000003C   2046               MOV      R0,R4
+   \   0000003E   32BD               POP      {R1,R4,R5,PC}    ;; return
+    110          }
+    111          
+    112          
+    113          /**
+    114          @brief	This function writes into W5100 memory(Buffer)
+    115          */ 
+
+   \                                 In section .text, align 2, keep-with-next
+    116          INT16U wiz_write_buf(INT16U addr,INT8U* buf,INT16U len)
+    117          {
+   \                     wiz_write_buf:
+   \   00000000   2DE9F843           PUSH     {R3-R9,LR}
+   \   00000004   0646               MOV      R6,R0
+   \   00000006   0C46               MOV      R4,R1
+   \   00000008   1546               MOV      R5,R2
+    118              INT16U idx = 0;
+    119          #if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
+    120              OS_CPU_SR  cpu_sr = 0;
+    121          #endif	
+    122              OS_ENTER_CRITICAL();
+   \   0000000A   ........           BL       OS_CPU_SR_Save
+   \   0000000E   0746               MOV      R7,R0
+    123          
+    124              for(idx=0;idx<len;idx++){
+   \   00000010   4FF00008           MOV      R8,#+0
+   \   00000014   1AE0               B.N      ??wiz_write_buf_0
+    125                  W5100CSoff();                           // CS=0, SPI start 
+   \                     ??wiz_write_buf_1:
+   \   00000016   ........           BL       W5100CSoff
+    126          		SPI1Write(0xF0);
+   \   0000001A   F020               MOVS     R0,#+240
+   \   0000001C   ........           BL       SPI1Write
+    127          		SPI1Write(((addr+idx) & 0xFF00) >> 8);
+   \   00000020   C146               MOV      R9,R8
+   \   00000022   09EB0600           ADD      R0,R9,R6
+   \   00000026   0012               ASRS     R0,R0,#+8
+   \   00000028   C0B2               UXTB     R0,R0
+   \   0000002A   ........           BL       SPI1Write
+    128          		SPI1Write((addr+idx) & 0x00FF);
+   \   0000002E   08EB0600           ADD      R0,R8,R6
+   \   00000032   C0B2               UXTB     R0,R0
+   \   00000034   ........           BL       SPI1Write
+    129          		SPI1Write(buf[idx]);
+   \   00000038   19F80400           LDRB     R0,[R9, R4]
+   \   0000003C   ........           BL       SPI1Write
+    130          		W5100CSon();                             // CS=0, SPI end 
+   \   00000040   ........           BL       W5100CSon
+    131              }
+   \   00000044   08F10108           ADD      R8,R8,#+1
+   \   00000048   1FFA88F8           UXTH     R8,R8
+   \                     ??wiz_write_buf_0:
+   \   0000004C   4046               MOV      R0,R8
+   \   0000004E   A842               CMP      R0,R5
+   \   00000050   E1D3               BCC.N    ??wiz_write_buf_1
+    132          
+    133              OS_EXIT_CRITICAL(); 
+   \   00000052   3846               MOV      R0,R7
+   \   00000054   ........           BL       OS_CPU_SR_Restore
+    134          
+    135              return len;
+   \   00000058   2846               MOV      R0,R5
+   \   0000005A   BDE8F283           POP      {R1,R4-R9,PC}    ;; return
+    136          }
+    137          
+    138          
+    139          /**
+    140          @brief	This function reads into W5100 memory(Buffer)
+    141          */ 
+
+   \                                 In section .text, align 2, keep-with-next
+    142          INT16U wiz_read_buf(INT16U addr, INT8U* buf,INT16U len)
+    143          {
+   \                     wiz_read_buf:
+   \   00000000   2DE9F843           PUSH     {R3-R9,LR}
+   \   00000004   0646               MOV      R6,R0
+   \   00000006   0C46               MOV      R4,R1
+   \   00000008   1546               MOV      R5,R2
+    144              INT16U idx = 0;
+    145          #if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
+    146              OS_CPU_SR  cpu_sr = 0;
+    147          #endif	
+    148              OS_ENTER_CRITICAL();
+   \   0000000A   ........           BL       OS_CPU_SR_Save
+   \   0000000E   0746               MOV      R7,R0
+    149             
+    150              for (idx=0; idx<len; idx++){
+   \   00000010   4FF00008           MOV      R8,#+0
+   \   00000014   1FE0               B.N      ??wiz_read_buf_0
+    151          	W5100CSoff();                             // CS=0, SPI start 
+   \                     ??wiz_read_buf_1:
+   \   00000016   ........           BL       W5100CSoff
+    152          	SPI1Write(0x0F);
+   \   0000001A   0F20               MOVS     R0,#+15
+   \   0000001C   ........           BL       SPI1Write
+    153          	SPI1Write(((addr+idx) & 0xFF00) >> 8);
+   \   00000020   C146               MOV      R9,R8
+   \   00000022   09EB0600           ADD      R0,R9,R6
+   \   00000026   0012               ASRS     R0,R0,#+8
+   \   00000028   C0B2               UXTB     R0,R0
+   \   0000002A   ........           BL       SPI1Write
+    154          	SPI1Write((addr+idx) & 0x00FF);
+   \   0000002E   08EB0600           ADD      R0,R8,R6
+   \   00000032   C0B2               UXTB     R0,R0
+   \   00000034   ........           BL       SPI1Write
+    155                  SPI1Read();//读出前面的数据，舍弃
+   \   00000038   ........           BL       SPI1Read
+    156          	SPI1Write(0);
+   \   0000003C   0020               MOVS     R0,#+0
+   \   0000003E   ........           BL       SPI1Write
+    157          	buf[idx] = SPI1Read();
+   \   00000042   ........           BL       SPI1Read
+   \   00000046   09F80400           STRB     R0,[R9, R4]
+    158          	W5100CSon();                             // CS=0, SPI end 	   
+   \   0000004A   ........           BL       W5100CSon
+    159              }
+   \   0000004E   08F10108           ADD      R8,R8,#+1
+   \   00000052   1FFA88F8           UXTH     R8,R8
+   \                     ??wiz_read_buf_0:
+   \   00000056   4046               MOV      R0,R8
+   \   00000058   A842               CMP      R0,R5
+   \   0000005A   DCD3               BCC.N    ??wiz_read_buf_1
+    160              OS_EXIT_CRITICAL();
+   \   0000005C   3846               MOV      R0,R7
+   \   0000005E   ........           BL       OS_CPU_SR_Restore
+    161              return len;
+   \   00000062   2846               MOV      R0,R5
+   \   00000064   BDE8F283           POP      {R1,R4-R9,PC}    ;; return
+    162          }
+    163          
+
+   \                                 In section .text, align 2, keep-with-next
+    164          void ResetW5100(void)
+    165          {
+   \                     ResetW5100:
+   \   00000000   10B5               PUSH     {R4,LR}
+    166          	GPIO_ResetBits(GPIOA, W5100_RESET);
+   \   00000002   ........           LDR.W    R4,??DataTable13  ;; 0x40010800
+   \   00000006   0221               MOVS     R1,#+2
+   \   00000008   2046               MOV      R0,R4
+   \   0000000A   ........           BL       GPIO_ResetBits
+    167              OSTimeDlyHMSM(0, 0, 1, 0);
+   \   0000000E   0023               MOVS     R3,#+0
+   \   00000010   0122               MOVS     R2,#+1
+   \   00000012   1946               MOV      R1,R3
+   \   00000014   0846               MOV      R0,R1
+   \   00000016   ........           BL       OSTimeDlyHMSM
+    168              GPIO_SetBits(GPIOA, W5100_RESET);  
+   \   0000001A   0221               MOVS     R1,#+2
+   \   0000001C   2046               MOV      R0,R4
+   \   0000001E   BDE81040           POP      {R4,LR}
+   \   00000022   ........           B.W      GPIO_SetBits
+    169          }
+    170          /**
+    171          @brief	This function is for resetting of the iinchip. Initializes the iinchip to work in whether DIRECT or INDIRECT mode
+    172          */ 
+
+   \                                 In section .text, align 2, keep-with-next
+    173          void iinchip_init(void)
+    174          {	
+    175              setMR( MR_RST );
+   \                     iinchip_init:
+   \   00000000   8020               MOVS     R0,#+128
+   \   00000002   ....               B.N      setMR
+    176          }
+    177          /**
+    178          @brief	This function set the transmit & receive buffer size as per the channels is used
+    179          
+    180          Note for TMSR and RMSR bits are as follows\n
+    181          bit 1-0 : memory size of channel #0 \n
+    182          bit 3-2 : memory size of channel #1 \n
+    183          bit 5-4 : memory size of channel #2 \n
+    184          bit 7-6 : memory size of channel #3 \n\n
+    185          Maximum memory size for Tx, Rx in the W5100 is 8K Bytes,\n
+    186          In the range of 8KBytes, the memory size could be allocated dynamically by each channel.\n
+    187          Be attentive to sum of memory size shouldn't exceed 8Kbytes\n
+    188          and to data transmission and receiption from non-allocated channel may cause some problems.\n
+    189          If the 8KBytes memory is already  assigned to centain channel, \n
+    190          other 3 channels couldn't be used, for there's no available memory.\n
+    191          If two 4KBytes memory are assigned to two each channels, \n
+    192          other 2 channels couldn't be used, for there's no available memory.\n
+    193          */  	
+    194          
+    195          /**< tx_size Tx memory size (00 - 1KByte, 01- 2KBtye, 10 - 4KByte, 11 - 8KByte) */
+    196          /**< rx_size Rx memory size (00 - 1KByte, 01- 2KBtye, 10 - 4KByte, 11 - 8KByte) */
+
+   \                                 In section .text, align 2, keep-with-next
+    197          void sysinit(INT8U tx_size,INT8U rx_size)
+    198          {
+   \                     sysinit:
+   \   00000000   F8B5               PUSH     {R3-R7,LR}
+   \   00000002   0446               MOV      R4,R0
+   \   00000004   0D46               MOV      R5,R1
+    199              short i;
+    200              short ssum,rsum;
+    201          
+    202              ssum = 0;
+   \   00000006   0026               MOVS     R6,#+0
+    203              rsum = 0;
+   \   00000008   3746               MOV      R7,R6
+    204          	
+    205              IINCHIP_WRITE(TMSR,tx_size); /* Set Tx memory size for each channel */
+   \   0000000A   2146               MOV      R1,R4
+   \   0000000C   1B20               MOVS     R0,#+27
+   \   0000000E   ........           BL       IINCHIP_WRITE
+    206              IINCHIP_WRITE(RMSR,rx_size);	 /* Set Rx memory size for each channel */
+   \   00000012   2946               MOV      R1,R5
+   \   00000014   1A20               MOVS     R0,#+26
+   \   00000016   ........           BL       IINCHIP_WRITE
+    207          
+    208              SBUFBASEADDRESS[0] = (INT16U)(__DEF_IINCHIP_MAP_TXBUF__);		/* Set base address of Tx memory for channel #0 */
+   \   0000001A   ....               LDR.N    R0,??DataTable9  ;; SMASK
+   \   0000001C   4FF48041           MOV      R1,#+16384
+   \   00000020   0184               STRH     R1,[R0, #+32]
+    209              RBUFBASEADDRESS[0] = (INT16U)(__DEF_IINCHIP_MAP_RXBUF__);		/* Set base address of Rx memory for channel #0 */
+   \   00000022   4FF4C041           MOV      R1,#+24576
+   \   00000026   0185               STRH     R1,[R0, #+40]
+    210          
+    211              for (i = 0 ; i < MAX_SOCK_NUM; i++){       // Set the size, masking and base address of Tx & Rx memory by each channel
+   \   00000028   3146               MOV      R1,R6
+   \   0000002A   1AE0               B.N      ??sysinit_0
+    212                  SSIZE[i] = (short)(0);
+    213          	RSIZE[i] = (short)(0);
+    214          	if (ssum < 8192){
+    215                      switch((tx_size >> i*2) & 0x03){  // Set Tx memory size
+    216                  	case 0:
+    217          		    SSIZE[i] = (short)(1024);
+    218          		    SMASK[i] = (INT16U)(0x03FF);
+    219          		    break;
+    220          		case 1:
+    221          		    SSIZE[i] = (short)(2048);
+    222          		    SMASK[i] = (INT16U)(0x07FF);
+    223          		    break;
+    224          		case 2:
+    225          		    SSIZE[i] = (short)(4096);
+    226          		    SMASK[i] = (INT16U)(0x0FFF);
+    227          		    break;
+    228          		case 3:
+    229          		    SSIZE[i] = (short)(8192);
+    230          		    SMASK[i] = (INT16U)(0x1FFF);
+    231          		    break;
+    232          	    }
+    233                  }
+    234                  if (rsum < 8192){
+    235                      switch((rx_size >> i*2) & 0x03){     // Set Rx memory size
+    236          		case 0:
+    237                              RSIZE[i] = (short)(1024);
+    238          		    RMASK[i] = (INT16U)(0x03FF);
+    239          		    break;
+    240          		case 1:
+    241          		    RSIZE[i] = (short)(2048);
+    242          		    RMASK[i] = (INT16U)(0x07FF);
+    243          		    break;
+    244          		case 2:
+    245          		    RSIZE[i] = (short)(4096);
+    246          		    RMASK[i] = (INT16U)(0x0FFF);
+    247          		    break;
+    248          		case 3:
+    249          		    RSIZE[i] = (short)(8192);
+   \                     ??sysinit_1:
+   \   0000002C   4FF40053           MOV      R3,#+8192
+   \   00000030   1383               STRH     R3,[R2, #+24]
+    250          		    RMASK[i] = (INT16U)(0x1FFF);
+   \   00000032   41F6FF73           MOVW     R3,#+8191
+   \   00000036   1381               STRH     R3,[R2, #+8]
+    251          		    break;
+    252                      }
+    253                  }
+    254                  ssum += SSIZE[i];
+   \                     ??sysinit_2:
+   \   00000038   B2F91030           LDRSH    R3,[R2, #+16]
+   \   0000003C   9E19               ADDS     R6,R3,R6
+   \   0000003E   36B2               SXTH     R6,R6
+    255                  rsum += RSIZE[i];
+   \   00000040   B2F91830           LDRSH    R3,[R2, #+24]
+   \   00000044   DF19               ADDS     R7,R3,R7
+   \   00000046   3FB2               SXTH     R7,R7
+    256          
+    257                  if (i != 0){             // Sets base address of Tx and Rx memory for channel #1,#2,#3
+   \   00000048   0029               CMP      R1,#+0
+   \   0000004A   09D0               BEQ.N    ??sysinit_3
+    258                      SBUFBASEADDRESS[i] = SBUFBASEADDRESS[i-1] + SSIZE[i-1];
+   \   0000004C   D38B               LDRH     R3,[R2, #+30]
+   \   0000004E   B2F80EC0           LDRH     R12,[R2, #+14]
+   \   00000052   6344               ADD      R3,R12,R3
+   \   00000054   1384               STRH     R3,[R2, #+32]
+    259          	    RBUFBASEADDRESS[i] = RBUFBASEADDRESS[i-1] + RSIZE[i-1];
+   \   00000056   D38C               LDRH     R3,[R2, #+38]
+   \   00000058   B2F816C0           LDRH     R12,[R2, #+22]
+   \   0000005C   6344               ADD      R3,R12,R3
+   \   0000005E   1385               STRH     R3,[R2, #+40]
+    260                  }
+   \                     ??sysinit_3:
+   \   00000060   491C               ADDS     R1,R1,#+1
+   \                     ??sysinit_0:
+   \   00000062   0429               CMP      R1,#+4
+   \   00000064   56DA               BGE.N    ??sysinit_4
+   \   00000066   00EB4102           ADD      R2,R0,R1, LSL #+1
+   \   0000006A   0023               MOVS     R3,#+0
+   \   0000006C   1382               STRH     R3,[R2, #+16]
+   \   0000006E   1383               STRH     R3,[R2, #+24]
+   \   00000070   B6F5005F           CMP      R6,#+8192
+   \   00000074   2ADA               BGE.N    ??sysinit_5
+   \   00000076   4B00               LSLS     R3,R1,#+1
+   \   00000078   44FA03F3           ASR      R3,R4,R3
+   \   0000007C   13F00303           ANDS     R3,R3,#0x3
+   \   00000080   05D0               BEQ.N    ??sysinit_6
+   \   00000082   022B               CMP      R3,#+2
+   \   00000084   13D0               BEQ.N    ??sysinit_7
+   \   00000086   0AD3               BCC.N    ??sysinit_8
+   \   00000088   032B               CMP      R3,#+3
+   \   0000008A   18D0               BEQ.N    ??sysinit_9
+   \   0000008C   1EE0               B.N      ??sysinit_5
+   \                     ??sysinit_6:
+   \   0000008E   4FF48063           MOV      R3,#+1024
+   \   00000092   1382               STRH     R3,[R2, #+16]
+   \   00000094   40F2FF33           MOVW     R3,#+1023
+   \   00000098   20F81130           STRH     R3,[R0, R1, LSL #+1]
+   \   0000009C   16E0               B.N      ??sysinit_5
+   \                     ??sysinit_8:
+   \   0000009E   4FF40063           MOV      R3,#+2048
+   \   000000A2   1382               STRH     R3,[R2, #+16]
+   \   000000A4   40F2FF73           MOVW     R3,#+2047
+   \   000000A8   20F81130           STRH     R3,[R0, R1, LSL #+1]
+   \   000000AC   0EE0               B.N      ??sysinit_5
+   \                     ??sysinit_7:
+   \   000000AE   4FF48053           MOV      R3,#+4096
+   \   000000B2   1382               STRH     R3,[R2, #+16]
+   \   000000B4   40F6FF73           MOVW     R3,#+4095
+   \   000000B8   20F81130           STRH     R3,[R0, R1, LSL #+1]
+   \   000000BC   06E0               B.N      ??sysinit_5
+   \                     ??sysinit_9:
+   \   000000BE   4FF40053           MOV      R3,#+8192
+   \   000000C2   1382               STRH     R3,[R2, #+16]
+   \   000000C4   41F6FF73           MOVW     R3,#+8191
+   \   000000C8   20F81130           STRH     R3,[R0, R1, LSL #+1]
+   \                     ??sysinit_5:
+   \   000000CC   B7F5005F           CMP      R7,#+8192
+   \   000000D0   B2DA               BGE.N    ??sysinit_2
+   \   000000D2   4B00               LSLS     R3,R1,#+1
+   \   000000D4   45FA03F3           ASR      R3,R5,R3
+   \   000000D8   13F00303           ANDS     R3,R3,#0x3
+   \   000000DC   05D0               BEQ.N    ??sysinit_10
+   \   000000DE   022B               CMP      R3,#+2
+   \   000000E0   11D0               BEQ.N    ??sysinit_11
+   \   000000E2   09D3               BCC.N    ??sysinit_12
+   \   000000E4   032B               CMP      R3,#+3
+   \   000000E6   A1D0               BEQ.N    ??sysinit_1
+   \   000000E8   A6E7               B.N      ??sysinit_2
+   \                     ??sysinit_10:
+   \   000000EA   4FF48063           MOV      R3,#+1024
+   \   000000EE   1383               STRH     R3,[R2, #+24]
+   \   000000F0   40F2FF33           MOVW     R3,#+1023
+   \   000000F4   1381               STRH     R3,[R2, #+8]
+   \   000000F6   9FE7               B.N      ??sysinit_2
+   \                     ??sysinit_12:
+   \   000000F8   4FF40063           MOV      R3,#+2048
+   \   000000FC   1383               STRH     R3,[R2, #+24]
+   \   000000FE   40F2FF73           MOVW     R3,#+2047
+   \   00000102   1381               STRH     R3,[R2, #+8]
+   \   00000104   98E7               B.N      ??sysinit_2
+   \                     ??sysinit_11:
+   \   00000106   4FF48053           MOV      R3,#+4096
+   \   0000010A   1383               STRH     R3,[R2, #+24]
+   \   0000010C   40F6FF73           MOVW     R3,#+4095
+   \   00000110   1381               STRH     R3,[R2, #+8]
+   \   00000112   91E7               B.N      ??sysinit_2
+    261              }
+    262          }
+   \                     ??sysinit_4:
+   \   00000114   F1BD               POP      {R0,R4-R7,PC}    ;; return
+    263          
+    264          
+
+   \                                 In section .text, align 2, keep-with-next
+    265          void setMR(INT8U val)
+    266          {
+    267              IINCHIP_WRITE(MR,val);
+   \                     setMR:
+   \   00000000   0146               MOV      R1,R0
+   \   00000002   0020               MOVS     R0,#+0
+   \   00000004   ....               B.N      IINCHIP_WRITE
+    268          }
+    269          
+    270          /**
+    271          @brief	This function sets up gateway IP address.
+    272          */ 
+    273          /**< a pointer to a 4 -byte array responsible to set the Gateway IP address. */
+
+   \                                 In section .text, align 2, keep-with-next
+    274          void setGAR(INT8U * addr)
+    275          {
+   \                     setGAR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    276              IINCHIP_WRITE((GAR0 + 0),addr[0]);
+   \   00000004   2178               LDRB     R1,[R4, #+0]
+   \   00000006   0120               MOVS     R0,#+1
+   \   00000008   ........           BL       IINCHIP_WRITE
+    277              IINCHIP_WRITE((GAR0 + 1),addr[1]);
+   \   0000000C   6178               LDRB     R1,[R4, #+1]
+   \   0000000E   0220               MOVS     R0,#+2
+   \   00000010   ........           BL       IINCHIP_WRITE
+    278              IINCHIP_WRITE((GAR0 + 2),addr[2]);
+   \   00000014   A178               LDRB     R1,[R4, #+2]
+   \   00000016   0320               MOVS     R0,#+3
+   \   00000018   ........           BL       IINCHIP_WRITE
+    279              IINCHIP_WRITE((GAR0 + 3),addr[3]);
+   \   0000001C   E178               LDRB     R1,[R4, #+3]
+   \   0000001E   0420               MOVS     R0,#+4
+   \   00000020   BDE81040           POP      {R4,LR}
+   \   00000024   ....               B.N      IINCHIP_WRITE
+    280          }
+
+   \                                 In section .text, align 2, keep-with-next
+    281          void getGWIP(INT8U * addr)
+    282          {
+   \                     getGWIP:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    283              addr[0] = IINCHIP_READ((GAR0 + 0));
+   \   00000004   0120               MOVS     R0,#+1
+   \   00000006   ........           BL       IINCHIP_READ
+   \   0000000A   2070               STRB     R0,[R4, #+0]
+    284              addr[1] = IINCHIP_READ((GAR0 + 1));
+   \   0000000C   0220               MOVS     R0,#+2
+   \   0000000E   ........           BL       IINCHIP_READ
+   \   00000012   6070               STRB     R0,[R4, #+1]
+    285              addr[2] = IINCHIP_READ((GAR0 + 2));
+   \   00000014   0320               MOVS     R0,#+3
+   \   00000016   ........           BL       IINCHIP_READ
+   \   0000001A   A070               STRB     R0,[R4, #+2]
+    286              addr[3] = IINCHIP_READ((GAR0 + 3));
+   \   0000001C   0420               MOVS     R0,#+4
+   \   0000001E   ........           BL       IINCHIP_READ
+   \   00000022   E070               STRB     R0,[R4, #+3]
+    287          }
+   \   00000024   10BD               POP      {R4,PC}          ;; return
+    288          
+    289          
+    290          /**
+    291          @brief	It sets up SubnetMask address
+    292          */ 
+    293          /**< a pointer to a 4 -byte array responsible to set the SubnetMask address */
+
+   \                                 In section .text, align 2, keep-with-next
+    294          void setSUBR(INT8U * addr)
+    295          {
+   \                     setSUBR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    296              IINCHIP_WRITE((SUBR0 + 0),addr[0]);
+   \   00000004   2178               LDRB     R1,[R4, #+0]
+   \   00000006   0520               MOVS     R0,#+5
+   \   00000008   ........           BL       IINCHIP_WRITE
+    297              IINCHIP_WRITE((SUBR0 + 1),addr[1]);
+   \   0000000C   6178               LDRB     R1,[R4, #+1]
+   \   0000000E   0620               MOVS     R0,#+6
+   \   00000010   ........           BL       IINCHIP_WRITE
+    298              IINCHIP_WRITE((SUBR0 + 2),addr[2]);
+   \   00000014   A178               LDRB     R1,[R4, #+2]
+   \   00000016   0720               MOVS     R0,#+7
+   \   00000018   ........           BL       IINCHIP_WRITE
+    299              IINCHIP_WRITE((SUBR0 + 3),addr[3]);
+   \   0000001C   E178               LDRB     R1,[R4, #+3]
+   \   0000001E   0820               MOVS     R0,#+8
+   \   00000020   BDE81040           POP      {R4,LR}
+   \   00000024   ....               B.N      IINCHIP_WRITE
+    300          }
+    301          
+    302          
+    303          /**
+    304          @brief	This function sets up MAC address.
+    305          */ 
+    306          /**< a pointer to a 6 -byte array responsible to set the MAC address. */
+
+   \                                 In section .text, align 2, keep-with-next
+    307          void setSHAR(INT8U * addr)
+    308          {
+   \                     setSHAR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    309              IINCHIP_WRITE((SHAR0 + 0),addr[0]);
+   \   00000004   2178               LDRB     R1,[R4, #+0]
+   \   00000006   0920               MOVS     R0,#+9
+   \   00000008   ........           BL       IINCHIP_WRITE
+    310              IINCHIP_WRITE((SHAR0 + 1),addr[1]);
+   \   0000000C   6178               LDRB     R1,[R4, #+1]
+   \   0000000E   0A20               MOVS     R0,#+10
+   \   00000010   ........           BL       IINCHIP_WRITE
+    311              IINCHIP_WRITE((SHAR0 + 2),addr[2]);
+   \   00000014   A178               LDRB     R1,[R4, #+2]
+   \   00000016   0B20               MOVS     R0,#+11
+   \   00000018   ........           BL       IINCHIP_WRITE
+    312              IINCHIP_WRITE((SHAR0 + 3),addr[3]);
+   \   0000001C   E178               LDRB     R1,[R4, #+3]
+   \   0000001E   0C20               MOVS     R0,#+12
+   \   00000020   ........           BL       IINCHIP_WRITE
+    313              IINCHIP_WRITE((SHAR0 + 4),addr[4]);
+   \   00000024   2179               LDRB     R1,[R4, #+4]
+   \   00000026   0D20               MOVS     R0,#+13
+   \   00000028   ........           BL       IINCHIP_WRITE
+    314              IINCHIP_WRITE((SHAR0 + 5),addr[5]);
+   \   0000002C   6179               LDRB     R1,[R4, #+5]
+   \   0000002E   0E20               MOVS     R0,#+14
+   \   00000030   BDE81040           POP      {R4,LR}
+   \   00000034   ....               B.N      IINCHIP_WRITE
+    315          }
+    316          
+    317          
+    318          /**
+    319          @brief	This function sets up Source IP address.
+    320          */
+    321          /**< a pointer to a 4 -byte array responsible to set the Source IP address. */
+
+   \                                 In section .text, align 2, keep-with-next
+    322          void setSIPR(INT8U *addr)
+    323          {
+   \                     setSIPR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    324              IINCHIP_WRITE((SIPR0 + 0),addr[0]);
+   \   00000004   2178               LDRB     R1,[R4, #+0]
+   \   00000006   0F20               MOVS     R0,#+15
+   \   00000008   ........           BL       IINCHIP_WRITE
+    325              IINCHIP_WRITE((SIPR0 + 1),addr[1]);
+   \   0000000C   6178               LDRB     R1,[R4, #+1]
+   \   0000000E   1020               MOVS     R0,#+16
+   \   00000010   ........           BL       IINCHIP_WRITE
+    326              IINCHIP_WRITE((SIPR0 + 2),addr[2]);
+   \   00000014   A178               LDRB     R1,[R4, #+2]
+   \   00000016   1120               MOVS     R0,#+17
+   \   00000018   ........           BL       IINCHIP_WRITE
+    327              IINCHIP_WRITE((SIPR0 + 3),addr[3]);
+   \   0000001C   E178               LDRB     R1,[R4, #+3]
+   \   0000001E   1220               MOVS     R0,#+18
+   \   00000020   BDE81040           POP      {R4,LR}
+   \   00000024   ....               B.N      IINCHIP_WRITE
+    328          }
+    329          
+    330          
+    331          /**
+    332          @brief	This function gets Interrupt register in common register.
+    333           */
+
+   \                                 In section .text, align 2, keep-with-next
+    334          INT8U getIR( void )
+    335          {
+    336              return IINCHIP_READ(IR);
+   \                     getIR:
+   \   00000000   1520               MOVS     R0,#+21
+   \   00000002   ....               B.N      IINCHIP_READ
+    337          }
+    338          /**
+    339          @brief	This function sets up Retransmission time.
+    340          
+    341          If there is no response from the peer or delay in response then retransmission 
+    342          will be there as per RTR (Retry Time-value Register)setting
+    343          */
+
+   \                                 In section .text, align 2, keep-with-next
+    344          void setRTR(INT16U timeout)
+    345          {
+   \                     setRTR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    346              IINCHIP_WRITE(RTR0,(INT8U)((timeout & 0xff00) >> 8));
+   \   00000004   210A               LSRS     R1,R4,#+8
+   \   00000006   1720               MOVS     R0,#+23
+   \   00000008   ........           BL       IINCHIP_WRITE
+    347              IINCHIP_WRITE((RTR0 + 1),(INT8U)(timeout & 0x00ff));
+   \   0000000C   2146               MOV      R1,R4
+   \   0000000E   C9B2               UXTB     R1,R1
+   \   00000010   1820               MOVS     R0,#+24
+   \   00000012   BDE81040           POP      {R4,LR}
+   \   00000016   ....               B.N      IINCHIP_WRITE
+    348          }
+    349          /**
+    350          @brief	This function set the number of Retransmission.
+    351          
+    352          If there is no response from the peer or delay in response then recorded time 
+    353          as per RTR & RCR register seeting then time out will occur.
+    354          */
+
+   \                                 In section .text, align 2, keep-with-next
+    355          void setRCR(INT8U retry)
+    356          {
+    357              IINCHIP_WRITE(RCR,retry);
+   \                     setRCR:
+   \   00000000   0146               MOV      R1,R0
+   \   00000002   1920               MOVS     R0,#+25
+   \   00000004   ....               B.N      IINCHIP_WRITE
+    358          }
+    359          
+    360          
+    361          /**
+    362          @brief	This function set the interrupt mask Enable/Disable appropriate Interrupt. ('1' : interrupt enable)
+    363          
+    364          If any bit in IMR is set as '0' then there is not interrupt signal though the bit is
+    365          set in IR register.
+    366          */
+
+   \                                 In section .text, align 2, keep-with-next
+    367          void setIMR(INT8U mask)
+    368          {
+    369              IINCHIP_WRITE(IMR,mask); // must be setted 0x10.
+   \                     setIMR:
+   \   00000000   0146               MOV      R1,R0
+   \   00000002   1620               MOVS     R0,#+22
+   \   00000004   ....               B.N      IINCHIP_WRITE
+    370          }
+    371          
+    372          
+    373          /**
+    374          @brief	These below functions are used to get the Gateway, SubnetMask
+    375          		and Source Hardware Address (MAC Address) and Source IP address
+    376          */
+
+   \                                 In section .text, align 2, keep-with-next
+    377          void getGAR(INT8U * addr)
+    378          {
+   \                     getGAR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    379              addr[0] = IINCHIP_READ(GAR0);
+   \   00000004   0120               MOVS     R0,#+1
+   \   00000006   ........           BL       IINCHIP_READ
+   \   0000000A   2070               STRB     R0,[R4, #+0]
+    380              addr[1] = IINCHIP_READ(GAR0+1);
+   \   0000000C   0220               MOVS     R0,#+2
+   \   0000000E   ........           BL       IINCHIP_READ
+   \   00000012   6070               STRB     R0,[R4, #+1]
+    381              addr[2] = IINCHIP_READ(GAR0+2);
+   \   00000014   0320               MOVS     R0,#+3
+   \   00000016   ........           BL       IINCHIP_READ
+   \   0000001A   A070               STRB     R0,[R4, #+2]
+    382              addr[3] = IINCHIP_READ(GAR0+3);
+   \   0000001C   0420               MOVS     R0,#+4
+   \   0000001E   ........           BL       IINCHIP_READ
+   \   00000022   E070               STRB     R0,[R4, #+3]
+    383          }
+   \   00000024   10BD               POP      {R4,PC}          ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    384          void getSUBR(INT8U * addr)
+    385          {
+   \                     getSUBR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    386              addr[0] = IINCHIP_READ(SUBR0);
+   \   00000004   0520               MOVS     R0,#+5
+   \   00000006   ........           BL       IINCHIP_READ
+   \   0000000A   2070               STRB     R0,[R4, #+0]
+    387              addr[1] = IINCHIP_READ(SUBR0+1);
+   \   0000000C   0620               MOVS     R0,#+6
+   \   0000000E   ........           BL       IINCHIP_READ
+   \   00000012   6070               STRB     R0,[R4, #+1]
+    388              addr[2] = IINCHIP_READ(SUBR0+2);
+   \   00000014   0720               MOVS     R0,#+7
+   \   00000016   ........           BL       IINCHIP_READ
+   \   0000001A   A070               STRB     R0,[R4, #+2]
+    389              addr[3] = IINCHIP_READ(SUBR0+3);
+   \   0000001C   0820               MOVS     R0,#+8
+   \   0000001E   ........           BL       IINCHIP_READ
+   \   00000022   E070               STRB     R0,[R4, #+3]
+    390          }
+   \   00000024   10BD               POP      {R4,PC}          ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    391          void getSHAR(INT8U * addr)
+    392          {
+   \                     getSHAR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    393              addr[0] = IINCHIP_READ(SHAR0);
+   \   00000004   0920               MOVS     R0,#+9
+   \   00000006   ........           BL       IINCHIP_READ
+   \   0000000A   2070               STRB     R0,[R4, #+0]
+    394              addr[1] = IINCHIP_READ(SHAR0+1);
+   \   0000000C   0A20               MOVS     R0,#+10
+   \   0000000E   ........           BL       IINCHIP_READ
+   \   00000012   6070               STRB     R0,[R4, #+1]
+    395              addr[2] = IINCHIP_READ(SHAR0+2);
+   \   00000014   0B20               MOVS     R0,#+11
+   \   00000016   ........           BL       IINCHIP_READ
+   \   0000001A   A070               STRB     R0,[R4, #+2]
+    396              addr[3] = IINCHIP_READ(SHAR0+3);
+   \   0000001C   0C20               MOVS     R0,#+12
+   \   0000001E   ........           BL       IINCHIP_READ
+   \   00000022   E070               STRB     R0,[R4, #+3]
+    397              addr[4] = IINCHIP_READ(SHAR0+4);
+   \   00000024   0D20               MOVS     R0,#+13
+   \   00000026   ........           BL       IINCHIP_READ
+   \   0000002A   2071               STRB     R0,[R4, #+4]
+    398              addr[5] = IINCHIP_READ(SHAR0+5);
+   \   0000002C   0E20               MOVS     R0,#+14
+   \   0000002E   ........           BL       IINCHIP_READ
+   \   00000032   6071               STRB     R0,[R4, #+5]
+    399          }
+   \   00000034   10BD               POP      {R4,PC}          ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    400          void getSIPR(INT8U * addr)
+    401          {
+   \                     getSIPR:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+    402              addr[0] = IINCHIP_READ(SIPR0);
+   \   00000004   0F20               MOVS     R0,#+15
+   \   00000006   ........           BL       IINCHIP_READ
+   \   0000000A   2070               STRB     R0,[R4, #+0]
+    403              addr[1] = IINCHIP_READ(SIPR0+1);
+   \   0000000C   1020               MOVS     R0,#+16
+   \   0000000E   ........           BL       IINCHIP_READ
+   \   00000012   6070               STRB     R0,[R4, #+1]
+    404              addr[2] = IINCHIP_READ(SIPR0+2);
+   \   00000014   1120               MOVS     R0,#+17
+   \   00000016   ........           BL       IINCHIP_READ
+   \   0000001A   A070               STRB     R0,[R4, #+2]
+    405              addr[3] = IINCHIP_READ(SIPR0+3);
+   \   0000001C   1220               MOVS     R0,#+18
+   \   0000001E   ........           BL       IINCHIP_READ
+   \   00000022   E070               STRB     R0,[R4, #+3]
+    406          }
+   \   00000024   10BD               POP      {R4,PC}          ;; return
+    407          
+    408          
+    409          /**
+    410          @brief	These below functions are used to get the Destination Hardware Address (MAC Address), Destination IP address and Destination Port.
+    411          */
+
+   \                                 In section .text, align 2, keep-with-next
+    412          void getSn_DHAR(SOCKET s, INT8U * addr)
+    413          {
+   \                     getSn_DHAR:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0C46               MOV      R4,R1
+    414              addr[0] = IINCHIP_READ(Sn_DHAR0(s));
+   \   00000004   0502               LSLS     R5,R0,#+8
+   \   00000006   05F20640           ADDW     R0,R5,#+1030
+   \   0000000A   80B2               UXTH     R0,R0
+   \   0000000C   ........           BL       IINCHIP_READ
+   \   00000010   2070               STRB     R0,[R4, #+0]
+    415              addr[1] = IINCHIP_READ(Sn_DHAR0(s)+1);
+   \   00000012   05F20740           ADDW     R0,R5,#+1031
+   \   00000016   80B2               UXTH     R0,R0
+   \   00000018   ........           BL       IINCHIP_READ
+   \   0000001C   6070               STRB     R0,[R4, #+1]
+    416              addr[2] = IINCHIP_READ(Sn_DHAR0(s)+2);
+   \   0000001E   05F58160           ADD      R0,R5,#+1032
+   \   00000022   80B2               UXTH     R0,R0
+   \   00000024   ........           BL       IINCHIP_READ
+   \   00000028   A070               STRB     R0,[R4, #+2]
+    417              addr[3] = IINCHIP_READ(Sn_DHAR0(s)+3);
+   \   0000002A   05F20940           ADDW     R0,R5,#+1033
+   \   0000002E   80B2               UXTH     R0,R0
+   \   00000030   ........           BL       IINCHIP_READ
+   \   00000034   E070               STRB     R0,[R4, #+3]
+    418              addr[4] = IINCHIP_READ(Sn_DHAR0(s)+4);
+   \   00000036   05F20A40           ADDW     R0,R5,#+1034
+   \   0000003A   80B2               UXTH     R0,R0
+   \   0000003C   ........           BL       IINCHIP_READ
+   \   00000040   2071               STRB     R0,[R4, #+4]
+    419              addr[5] = IINCHIP_READ(Sn_DHAR0(s)+5);
+   \   00000042   05F20B40           ADDW     R0,R5,#+1035
+   \   00000046   80B2               UXTH     R0,R0
+   \   00000048   ........           BL       IINCHIP_READ
+   \   0000004C   6071               STRB     R0,[R4, #+5]
+    420          }
+   \   0000004E   31BD               POP      {R0,R4,R5,PC}    ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    421          void setSn_DHAR(SOCKET s, INT8U * addr)
+    422          {
+   \                     setSn_DHAR:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0C46               MOV      R4,R1
+    423              IINCHIP_WRITE((Sn_DHAR0(s) + 0),addr[0]);
+   \   00000004   0502               LSLS     R5,R0,#+8
+   \   00000006   2178               LDRB     R1,[R4, #+0]
+   \   00000008   05F20640           ADDW     R0,R5,#+1030
+   \   0000000C   80B2               UXTH     R0,R0
+   \   0000000E   ........           BL       IINCHIP_WRITE
+    424              IINCHIP_WRITE((Sn_DHAR0(s) + 1),addr[1]);
+   \   00000012   6178               LDRB     R1,[R4, #+1]
+   \   00000014   05F20740           ADDW     R0,R5,#+1031
+   \   00000018   80B2               UXTH     R0,R0
+   \   0000001A   ........           BL       IINCHIP_WRITE
+    425              IINCHIP_WRITE((Sn_DHAR0(s) + 2),addr[2]);
+   \   0000001E   A178               LDRB     R1,[R4, #+2]
+   \   00000020   05F58160           ADD      R0,R5,#+1032
+   \   00000024   80B2               UXTH     R0,R0
+   \   00000026   ........           BL       IINCHIP_WRITE
+    426              IINCHIP_WRITE((Sn_DHAR0(s) + 3),addr[3]);
+   \   0000002A   E178               LDRB     R1,[R4, #+3]
+   \   0000002C   05F20940           ADDW     R0,R5,#+1033
+   \   00000030   80B2               UXTH     R0,R0
+   \   00000032   ........           BL       IINCHIP_WRITE
+    427              IINCHIP_WRITE((Sn_DHAR0(s) + 4),addr[4]);
+   \   00000036   2179               LDRB     R1,[R4, #+4]
+   \   00000038   05F20A40           ADDW     R0,R5,#+1034
+   \   0000003C   80B2               UXTH     R0,R0
+   \   0000003E   ........           BL       IINCHIP_WRITE
+    428              IINCHIP_WRITE((Sn_DHAR0(s) + 5),addr[5]);
+   \   00000042   6179               LDRB     R1,[R4, #+5]
+   \   00000044   05F20B40           ADDW     R0,R5,#+1035
+   \   00000048   80B2               UXTH     R0,R0
+   \   0000004A   BDE83440           POP      {R2,R4,R5,LR}
+   \   0000004E   ....               B.N      IINCHIP_WRITE
+    429          }
+
+   \                                 In section .text, align 2, keep-with-next
+    430          void getSn_DIPR(SOCKET s, INT8U * addr)
+    431          {
+   \                     getSn_DIPR:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0C46               MOV      R4,R1
+    432              addr[0] = IINCHIP_READ(Sn_DIPR0(s));
+   \   00000004   0502               LSLS     R5,R0,#+8
+   \   00000006   05F20C40           ADDW     R0,R5,#+1036
+   \   0000000A   80B2               UXTH     R0,R0
+   \   0000000C   ........           BL       IINCHIP_READ
+   \   00000010   2070               STRB     R0,[R4, #+0]
+    433              addr[1] = IINCHIP_READ(Sn_DIPR0(s)+1);
+   \   00000012   05F20D40           ADDW     R0,R5,#+1037
+   \   00000016   80B2               UXTH     R0,R0
+   \   00000018   ........           BL       IINCHIP_READ
+   \   0000001C   6070               STRB     R0,[R4, #+1]
+    434              addr[2] = IINCHIP_READ(Sn_DIPR0(s)+2);
+   \   0000001E   05F20E40           ADDW     R0,R5,#+1038
+   \   00000022   80B2               UXTH     R0,R0
+   \   00000024   ........           BL       IINCHIP_READ
+   \   00000028   A070               STRB     R0,[R4, #+2]
+    435              addr[3] = IINCHIP_READ(Sn_DIPR0(s)+3);
+   \   0000002A   05F20F40           ADDW     R0,R5,#+1039
+   \   0000002E   80B2               UXTH     R0,R0
+   \   00000030   ........           BL       IINCHIP_READ
+   \   00000034   E070               STRB     R0,[R4, #+3]
+    436          }
+   \   00000036   31BD               POP      {R0,R4,R5,PC}    ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    437          void setSn_DIPR(SOCKET s, INT8U * addr)
+    438          {
+   \                     setSn_DIPR:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0C46               MOV      R4,R1
+    439              IINCHIP_WRITE((Sn_DIPR0(s) + 0),addr[0]);
+   \   00000004   0502               LSLS     R5,R0,#+8
+   \   00000006   2178               LDRB     R1,[R4, #+0]
+   \   00000008   05F20C40           ADDW     R0,R5,#+1036
+   \   0000000C   80B2               UXTH     R0,R0
+   \   0000000E   ........           BL       IINCHIP_WRITE
+    440              IINCHIP_WRITE((Sn_DIPR0(s) + 1),addr[1]);
+   \   00000012   6178               LDRB     R1,[R4, #+1]
+   \   00000014   05F20D40           ADDW     R0,R5,#+1037
+   \   00000018   80B2               UXTH     R0,R0
+   \   0000001A   ........           BL       IINCHIP_WRITE
+    441              IINCHIP_WRITE((Sn_DIPR0(s) + 2),addr[2]);
+   \   0000001E   A178               LDRB     R1,[R4, #+2]
+   \   00000020   05F20E40           ADDW     R0,R5,#+1038
+   \   00000024   80B2               UXTH     R0,R0
+   \   00000026   ........           BL       IINCHIP_WRITE
+    442              IINCHIP_WRITE((Sn_DIPR0(s) + 3),addr[3]);
+   \   0000002A   E178               LDRB     R1,[R4, #+3]
+   \   0000002C   05F20F40           ADDW     R0,R5,#+1039
+   \   00000030   80B2               UXTH     R0,R0
+   \   00000032   BDE83440           POP      {R2,R4,R5,LR}
+   \   00000036   ....               B.N      IINCHIP_WRITE
+    443          }
+
+   \                                 In section .text, align 2, keep-with-next
+    444          void getSn_DPORT(SOCKET s, INT8U * addr)
+    445          {
+   \                     getSn_DPORT:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0C46               MOV      R4,R1
+    446              addr[0] = IINCHIP_READ(Sn_DPORT0(s));
+   \   00000004   0502               LSLS     R5,R0,#+8
+   \   00000006   05F58260           ADD      R0,R5,#+1040
+   \   0000000A   80B2               UXTH     R0,R0
+   \   0000000C   ........           BL       IINCHIP_READ
+   \   00000010   2070               STRB     R0,[R4, #+0]
+    447              addr[1] = IINCHIP_READ(Sn_DPORT0(s)+1);
+   \   00000012   05F21140           ADDW     R0,R5,#+1041
+   \   00000016   80B2               UXTH     R0,R0
+   \   00000018   ........           BL       IINCHIP_READ
+   \   0000001C   6070               STRB     R0,[R4, #+1]
+    448          }
+   \   0000001E   31BD               POP      {R0,R4,R5,PC}    ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    449          void setSn_DPORT(SOCKET s, INT8U * addr)
+    450          {
+   \                     setSn_DPORT:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0C46               MOV      R4,R1
+    451              IINCHIP_WRITE((Sn_DPORT0(s) + 0),addr[0]);
+   \   00000004   0502               LSLS     R5,R0,#+8
+   \   00000006   2178               LDRB     R1,[R4, #+0]
+   \   00000008   05F58260           ADD      R0,R5,#+1040
+   \   0000000C   80B2               UXTH     R0,R0
+   \   0000000E   ........           BL       IINCHIP_WRITE
+    452              IINCHIP_WRITE((Sn_DPORT0(s) + 1),addr[1]);
+   \   00000012   6178               LDRB     R1,[R4, #+1]
+   \   00000014   05F21140           ADDW     R0,R5,#+1041
+   \   00000018   80B2               UXTH     R0,R0
+   \   0000001A   BDE83440           POP      {R2,R4,R5,LR}
+   \   0000001E   ....               B.N      IINCHIP_WRITE
+    453          }
+    454          
+    455          
+    456          /**
+    457          @brief	This sets the maximum segment size of TCP in Active Mode), while in Passive Mode this is set by peer
+    458          */
+
+   \                                 In section .text, align 2, keep-with-next
+    459          void setSn_MSS(SOCKET s, INT16U Sn_MSSR0)
+    460          {
+   \                     setSn_MSS:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0C46               MOV      R4,R1
+    461              IINCHIP_WRITE(Sn_MSSR0(s),(INT8U)((Sn_MSSR0 & 0xff00) >> 8));
+   \   00000004   0502               LSLS     R5,R0,#+8
+   \   00000006   210A               LSRS     R1,R4,#+8
+   \   00000008   05F21240           ADDW     R0,R5,#+1042
+   \   0000000C   80B2               UXTH     R0,R0
+   \   0000000E   ........           BL       IINCHIP_WRITE
+    462              IINCHIP_WRITE((Sn_MSSR0(s) + 1),(INT8U)(Sn_MSSR0 & 0x00ff));
+   \   00000012   2146               MOV      R1,R4
+   \   00000014   C9B2               UXTB     R1,R1
+   \   00000016   05F21340           ADDW     R0,R5,#+1043
+   \   0000001A   80B2               UXTH     R0,R0
+   \   0000001C   BDE83440           POP      {R2,R4,R5,LR}
+   \   00000020   ....               B.N      IINCHIP_WRITE
+    463          }
+    464          
+
+   \                                 In section .text, align 2, keep-with-next
+    465          void setSn_TTL(SOCKET s, INT8U ttl)
+    466          {
+    467              IINCHIP_WRITE(Sn_TTL(s), ttl);
+   \                     setSn_TTL:
+   \   00000000   0002               LSLS     R0,R0,#+8
+   \   00000002   00F21640           ADDW     R0,R0,#+1046
+   \   00000006   80B2               UXTH     R0,R0
+   \   00000008   ....               B.N      IINCHIP_WRITE
+    468          }
+    469          
+    470          
+    471          /**
+    472          @brief	These below function is used to setup the Protocol Field of IP Header when
+    473          		executing the IP Layer RAW mode.
+    474          */
+
+   \                                 In section .text, align 2, keep-with-next
+    475          void setSn_PROTO(SOCKET s, INT8U proto)
+    476          {
+    477              IINCHIP_WRITE(Sn_PROTO(s),proto);
+   \                     setSn_PROTO:
+   \   00000000   0002               LSLS     R0,R0,#+8
+   \   00000002   00F21440           ADDW     R0,R0,#+1044
+   \   00000006   80B2               UXTH     R0,R0
+   \   00000008   ....               B.N      IINCHIP_WRITE
+    478          }
+    479          
+    480          
+    481          /**
+    482          @brief	get socket interrupt status
+    483          
+    484          These below functions are used to read the Interrupt & Soket Status register
+    485          */
+
+   \                                 In section .text, align 2, keep-with-next
+    486          INT8U getSn_IR(SOCKET s)
+    487          {
+    488              return IINCHIP_READ(Sn_IR(s));
+   \                     getSn_IR:
+   \   00000000   0002               LSLS     R0,R0,#+8
+   \   00000002   00F20240           ADDW     R0,R0,#+1026
+   \   00000006   80B2               UXTH     R0,R0
+   \   00000008   ....               B.N      IINCHIP_READ
+    489          }
+    490          
+    491          
+    492          /**
+    493          @brief	 get socket status
+    494          */
+
+   \                                 In section .text, align 2, keep-with-next
+    495          INT8U getSn_SR(SOCKET s)
+    496          {
+    497             return IINCHIP_READ(Sn_SR(s));
+   \                     getSn_SR:
+   \   00000000   0002               LSLS     R0,R0,#+8
+   \   00000002   00F20340           ADDW     R0,R0,#+1027
+   \   00000006   80B2               UXTH     R0,R0
+   \   00000008   ....               B.N      IINCHIP_READ
+    498          }
+    499          
+    500          
+    501          /**
+    502          @brief	get socket TX free buf size
+    503          
+    504          This gives free buffer size of transmit buffer. This is the data size that user can transmit.
+    505          User shuold check this value first and control the size of transmitting data
+    506          */
+
+   \                                 In section .text, align 2, keep-with-next
+    507          INT16U getSn_TX_FSR(SOCKET s)
+    508          {
+   \                     getSn_TX_FSR:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0446               MOV      R4,R0
+    509              INT16U val=0,val1=0;
+   \   00000006   0025               MOVS     R5,#+0
+    510              do{
+    511                  val1 = IINCHIP_READ(Sn_TX_FSR0(s));
+   \                     ??getSn_TX_FSR_0:
+   \   00000008   2702               LSLS     R7,R4,#+8
+   \   0000000A   07F58466           ADD      R6,R7,#+1056
+   \   0000000E   3046               MOV      R0,R6
+   \   00000010   80B2               UXTH     R0,R0
+   \   00000012   ........           BL       IINCHIP_READ
+   \   00000016   8046               MOV      R8,R0
+   \   00000018   07F22147           ADDW     R7,R7,#+1057
+   \   0000001C   3846               MOV      R0,R7
+   \   0000001E   80B2               UXTH     R0,R0
+    512                  val1 = (val1 << 8) + IINCHIP_READ(Sn_TX_FSR0(s) + 1);
+   \   00000020   ........           BL       IINCHIP_READ
+   \   00000024   00EB0828           ADD      R8,R0,R8, LSL #+8
+   \   00000028   1FFA88F8           UXTH     R8,R8
+    513                  if (val1 != 0){
+   \   0000002C   4046               MOV      R0,R8
+   \   0000002E   0028               CMP      R0,#+0
+   \   00000030   0BD0               BEQ.N    ??getSn_TX_FSR_1
+    514                      val = IINCHIP_READ(Sn_TX_FSR0(s));
+   \   00000032   3046               MOV      R0,R6
+   \   00000034   80B2               UXTH     R0,R0
+   \   00000036   ........           BL       IINCHIP_READ
+   \   0000003A   0546               MOV      R5,R0
+    515             	    val = (val << 8) + IINCHIP_READ(Sn_TX_FSR0(s) + 1);
+   \   0000003C   3846               MOV      R0,R7
+   \   0000003E   80B2               UXTH     R0,R0
+   \   00000040   ........           BL       IINCHIP_READ
+   \   00000044   00EB0525           ADD      R5,R0,R5, LSL #+8
+   \   00000048   ADB2               UXTH     R5,R5
+    516          	}
+    517              } while (val != val1);
+   \                     ??getSn_TX_FSR_1:
+   \   0000004A   2846               MOV      R0,R5
+   \   0000004C   4045               CMP      R0,R8
+   \   0000004E   DBD1               BNE.N    ??getSn_TX_FSR_0
+    518              
+    519              return val;
+   \   00000050   BDE8F081           POP      {R4-R8,PC}       ;; return
+    520          }
+    521          
+    522          
+    523          /**
+    524          @brief	 get socket RX recv buf size
+    525          
+    526          This gives size of received data in receive buffer. 
+    527          */
+
+   \                                 In section .text, align 2, keep-with-next
+    528          INT16U getSn_RX_RSR(SOCKET s)
+    529          {
+   \                     getSn_RX_RSR:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0446               MOV      R4,R0
+    530              INT16U val=0,val1=0;
+   \   00000006   0025               MOVS     R5,#+0
+    531              do{
+    532                  val1 = IINCHIP_READ(Sn_RX_RSR0(s));
+   \                     ??getSn_RX_RSR_0:
+   \   00000008   2702               LSLS     R7,R4,#+8
+   \   0000000A   07F22646           ADDW     R6,R7,#+1062
+   \   0000000E   3046               MOV      R0,R6
+   \   00000010   80B2               UXTH     R0,R0
+   \   00000012   ........           BL       IINCHIP_READ
+   \   00000016   8046               MOV      R8,R0
+   \   00000018   07F22747           ADDW     R7,R7,#+1063
+   \   0000001C   3846               MOV      R0,R7
+   \   0000001E   80B2               UXTH     R0,R0
+    533          	val1 = (val1 << 8) + IINCHIP_READ(Sn_RX_RSR0(s) + 1);
+   \   00000020   ........           BL       IINCHIP_READ
+   \   00000024   00EB0828           ADD      R8,R0,R8, LSL #+8
+   \   00000028   1FFA88F8           UXTH     R8,R8
+    534                  if(val1 != 0){
+   \   0000002C   4046               MOV      R0,R8
+   \   0000002E   0028               CMP      R0,#+0
+   \   00000030   0BD0               BEQ.N    ??getSn_RX_RSR_1
+    535                      val = IINCHIP_READ(Sn_RX_RSR0(s));
+   \   00000032   3046               MOV      R0,R6
+   \   00000034   80B2               UXTH     R0,R0
+   \   00000036   ........           BL       IINCHIP_READ
+   \   0000003A   0546               MOV      R5,R0
+    536             	    val = (val << 8) + IINCHIP_READ(Sn_RX_RSR0(s) + 1);
+   \   0000003C   3846               MOV      R0,R7
+   \   0000003E   80B2               UXTH     R0,R0
+   \   00000040   ........           BL       IINCHIP_READ
+   \   00000044   00EB0525           ADD      R5,R0,R5, LSL #+8
+   \   00000048   ADB2               UXTH     R5,R5
+    537          	}
+    538              }while (val != val1);
+   \                     ??getSn_RX_RSR_1:
+   \   0000004A   2846               MOV      R0,R5
+   \   0000004C   4045               CMP      R0,R8
+   \   0000004E   DBD1               BNE.N    ??getSn_RX_RSR_0
+    539              
+    540              return val;
+   \   00000050   BDE8F081           POP      {R4-R8,PC}       ;; return
+    541          }
+    542          
+    543          
+    544          /**
+    545          @brief	 This function is being called by send() and sendto() function also. 
+    546          
+    547          This function read the Tx write pointer register and after copy the data in buffer update the Tx write pointer
+    548          register. User should read upper byte first and lower byte later to get proper value.
+    549          */
+
+   \                                 In section .text, align 2, keep-with-next
+    550          void send_data_processing(SOCKET s, INT8U *data, INT16U len)
+    551          {
+   \                     send_data_processing:
+   \   00000000   2DE9F843           PUSH     {R3-R9,LR}
+   \   00000004   0446               MOV      R4,R0
+   \   00000006   8946               MOV      R9,R1
+   \   00000008   9046               MOV      R8,R2
+    552              INT16U ptr;
+    553              ptr = IINCHIP_READ(Sn_TX_WR0(s));
+   \   0000000A   2602               LSLS     R6,R4,#+8
+   \   0000000C   06F22445           ADDW     R5,R6,#+1060
+   \   00000010   2846               MOV      R0,R5
+   \   00000012   80B2               UXTH     R0,R0
+   \   00000014   ........           BL       IINCHIP_READ
+   \   00000018   0746               MOV      R7,R0
+   \   0000001A   06F22546           ADDW     R6,R6,#+1061
+   \   0000001E   3046               MOV      R0,R6
+   \   00000020   80B2               UXTH     R0,R0
+    554              ptr = ((ptr & 0x00ff) << 8) + IINCHIP_READ(Sn_TX_WR0(s) + 1);
+   \   00000022   ........           BL       IINCHIP_READ
+   \   00000026   00EB0727           ADD      R7,R0,R7, LSL #+8
+   \   0000002A   BFB2               UXTH     R7,R7
+    555              write_data(s, data, (INT8U *)(ptr), len);
+   \   0000002C   4346               MOV      R3,R8
+   \   0000002E   3A46               MOV      R2,R7
+   \   00000030   4946               MOV      R1,R9
+   \   00000032   2046               MOV      R0,R4
+   \   00000034   ........           BL       write_data
+    556              ptr += len;
+   \   00000038   08EB0704           ADD      R4,R8,R7
+   \   0000003C   A4B2               UXTH     R4,R4
+    557              IINCHIP_WRITE(Sn_TX_WR0(s),(INT8U)((ptr & 0xff00) >> 8));
+   \   0000003E   2046               MOV      R0,R4
+   \   00000040   010A               LSRS     R1,R0,#+8
+   \   00000042   2846               MOV      R0,R5
+   \   00000044   80B2               UXTH     R0,R0
+   \   00000046   ........           BL       IINCHIP_WRITE
+    558              IINCHIP_WRITE((Sn_TX_WR0(s) + 1),(INT8U)(ptr & 0x00ff));
+   \   0000004A   2146               MOV      R1,R4
+   \   0000004C   C9B2               UXTB     R1,R1
+   \   0000004E   3046               MOV      R0,R6
+   \   00000050   80B2               UXTH     R0,R0
+   \   00000052   BDE8F443           POP      {R2,R4-R9,LR}
+   \   00000056   ....               B.N      IINCHIP_WRITE
+    559          }
+    560          
+    561          /**
+    562          @brief	This function is being called by recv() also.
+    563          
+    564          This function read the Rx read pointer register
+    565          and after copy the data from receive buffer update the Rx write pointer register.
+    566          User should read upper byte first and lower byte later to get proper value.
+    567          */
+
+   \                                 In section .text, align 2, keep-with-next
+    568          void recv_data_processing(SOCKET s, INT8U *data, INT16U len)
+    569          {
+   \                     recv_data_processing:
+   \   00000000   2DE9F843           PUSH     {R3-R9,LR}
+   \   00000004   0446               MOV      R4,R0
+   \   00000006   8946               MOV      R9,R1
+   \   00000008   9046               MOV      R8,R2
+    570              INT16U ptr;
+    571              ptr = IINCHIP_READ(Sn_RX_RD0(s));
+   \   0000000A   2602               LSLS     R6,R4,#+8
+   \   0000000C   06F58565           ADD      R5,R6,#+1064
+   \   00000010   2846               MOV      R0,R5
+   \   00000012   80B2               UXTH     R0,R0
+   \   00000014   ........           BL       IINCHIP_READ
+   \   00000018   0746               MOV      R7,R0
+   \   0000001A   06F22946           ADDW     R6,R6,#+1065
+   \   0000001E   3046               MOV      R0,R6
+   \   00000020   80B2               UXTH     R0,R0
+    572              ptr = ((ptr & 0x00ff) << 8) + IINCHIP_READ(Sn_RX_RD0(s) + 1);
+   \   00000022   ........           BL       IINCHIP_READ
+   \   00000026   00EB0727           ADD      R7,R0,R7, LSL #+8
+   \   0000002A   BFB2               UXTH     R7,R7
+    573              read_data(s, (INT8U *)ptr, data, len); // read data
+   \   0000002C   4346               MOV      R3,R8
+   \   0000002E   4A46               MOV      R2,R9
+   \   00000030   3946               MOV      R1,R7
+   \   00000032   2046               MOV      R0,R4
+   \   00000034   ........           BL       read_data
+    574              ptr += len;
+   \   00000038   08EB0704           ADD      R4,R8,R7
+   \   0000003C   A4B2               UXTH     R4,R4
+    575              IINCHIP_WRITE(Sn_RX_RD0(s),(INT8U)((ptr & 0xff00) >> 8));
+   \   0000003E   2046               MOV      R0,R4
+   \   00000040   010A               LSRS     R1,R0,#+8
+   \   00000042   2846               MOV      R0,R5
+   \   00000044   80B2               UXTH     R0,R0
+   \   00000046   ........           BL       IINCHIP_WRITE
+    576              IINCHIP_WRITE((Sn_RX_RD0(s) + 1),(INT8U)(ptr & 0x00ff));
+   \   0000004A   2146               MOV      R1,R4
+   \   0000004C   C9B2               UXTB     R1,R1
+   \   0000004E   3046               MOV      R0,R6
+   \   00000050   80B2               UXTH     R0,R0
+   \   00000052   BDE8F443           POP      {R2,R4-R9,LR}
+   \   00000056   ....               B.N      IINCHIP_WRITE
+    577          }
+    578          
+    579          
+    580          /**
+    581          @brief	for copy the data form application buffer to Transmite buffer of the chip.
+    582          
+    583          This function is being used for copy the data form application buffer to Transmite
+    584          buffer of the chip. It calculate the actual physical address where one has to write
+    585          the data in transmite buffer. Here also take care of the condition while it exceed
+    586          the Tx memory uper-bound of socket.
+    587          */
+
+   \                                 In section .text, align 2, keep-with-next
+    588          void write_data(SOCKET s, VINT8U * src, VINT8U * dst, INT16U len)
+    589          {
+   \                     write_data:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0746               MOV      R7,R0
+   \   00000006   0C46               MOV      R4,R1
+   \   00000008   1646               MOV      R6,R2
+   \   0000000A   1D46               MOV      R5,R3
+    590              INT16U size;
+    591              unsigned int dst_mask;
+    592              INT8U * dst_ptr;
+    593          
+    594              dst_mask = (unsigned int)dst & getIINCHIP_TxMASK(s);
+   \   0000000C   ........           BL       getIINCHIP_TxMASK
+   \   00000010   00EA0608           AND      R8,R0,R6
+    595              dst_ptr = (INT8U *)(getIINCHIP_TxBASE(s) + dst_mask);
+   \   00000014   3846               MOV      R0,R7
+   \   00000016   ........           BL       getIINCHIP_TxBASE
+   \   0000001A   4044               ADD      R0,R8,R0
+    596          	
+    597              if (dst_mask + len > getIINCHIP_TxMAX(s)){ 
+   \   0000001C   0646               MOV      R6,R0
+   \   0000001E   3846               MOV      R0,R7
+   \   00000020   ........           BL       getIINCHIP_TxMAX
+   \   00000024   05EB0801           ADD      R1,R5,R8
+   \   00000028   8842               CMP      R0,R1
+   \   0000002A   17D2               BCS.N    ??write_data_0
+    598                  size = getIINCHIP_TxMAX(s) - dst_mask;
+   \   0000002C   3846               MOV      R0,R7
+   \   0000002E   ........           BL       getIINCHIP_TxMAX
+   \   00000032   A0EB0808           SUB      R8,R0,R8
+   \   00000036   1FFA88F8           UXTH     R8,R8
+    599          	wiz_write_buf((unsigned int)dst_ptr, (INT8U*)src, size);
+   \   0000003A   4246               MOV      R2,R8
+   \   0000003C   2146               MOV      R1,R4
+   \   0000003E   3046               MOV      R0,R6
+   \   00000040   80B2               UXTH     R0,R0
+   \   00000042   ........           BL       wiz_write_buf
+    600          	src += size;
+    601          	size = len - size;
+    602          	dst_ptr = (INT8U *)(getIINCHIP_TxBASE(s));
+   \   00000046   3846               MOV      R0,R7
+   \   00000048   ........           BL       getIINCHIP_TxBASE
+    603          	wiz_write_buf((unsigned int)dst_ptr, (INT8U*)src, size);
+   \   0000004C   A5EB0802           SUB      R2,R5,R8
+   \   00000050   92B2               UXTH     R2,R2
+   \   00000052   08EB0401           ADD      R1,R8,R4
+   \   00000056   BDE8F041           POP      {R4-R8,LR}
+   \   0000005A   ....               B.N      wiz_write_buf
+    604              }
+    605              else{
+    606                  wiz_write_buf((unsigned int)dst_ptr, (INT8U*)src, len);
+   \                     ??write_data_0:
+   \   0000005C   2A46               MOV      R2,R5
+   \   0000005E   2146               MOV      R1,R4
+   \   00000060   3046               MOV      R0,R6
+   \   00000062   80B2               UXTH     R0,R0
+   \   00000064   BDE8F041           POP      {R4-R8,LR}
+   \   00000068   ....               B.N      wiz_write_buf
+    607              }
+    608          }
+    609          
+    610          
+    611          /**
+    612          @brief	This function is being used for copy the data form Receive buffer of the chip to application buffer.
+    613          
+    614          It calculate the actual physical address where one has to read
+    615          the data from Receive buffer. Here also take care of the condition while it exceed
+    616          the Rx memory uper-bound of socket.
+    617          */
+
+   \                                 In section .text, align 2, keep-with-next
+    618          void read_data(SOCKET s, VINT8U * src, VINT8U * dst, INT16U len)
+    619          {
+   \                     read_data:
+   \   00000000   2DE9F041           PUSH     {R4-R8,LR}
+   \   00000004   0746               MOV      R7,R0
+   \   00000006   0E46               MOV      R6,R1
+   \   00000008   1446               MOV      R4,R2
+   \   0000000A   1D46               MOV      R5,R3
+    620              INT16U size;
+    621              unsigned int src_mask;
+    622              INT8U * src_ptr;
+    623          
+    624              src_mask = (unsigned int)src & getIINCHIP_RxMASK(s);
+   \   0000000C   ........           BL       getIINCHIP_RxMASK
+   \   00000010   00EA0608           AND      R8,R0,R6
+    625              src_ptr = (INT8U *)(getIINCHIP_RxBASE(s) + src_mask);
+   \   00000014   3846               MOV      R0,R7
+   \   00000016   ........           BL       getIINCHIP_RxBASE
+   \   0000001A   4044               ADD      R0,R8,R0
+    626          	
+    627              if( (src_mask + len) > getIINCHIP_RxMAX(s) ) {
+   \   0000001C   0646               MOV      R6,R0
+   \   0000001E   3846               MOV      R0,R7
+   \   00000020   ........           BL       getIINCHIP_RxMAX
+   \   00000024   05EB0801           ADD      R1,R5,R8
+   \   00000028   8842               CMP      R0,R1
+   \   0000002A   17D2               BCS.N    ??read_data_0
+    628                  size = getIINCHIP_RxMAX(s) - src_mask;
+   \   0000002C   3846               MOV      R0,R7
+   \   0000002E   ........           BL       getIINCHIP_RxMAX
+   \   00000032   A0EB0808           SUB      R8,R0,R8
+   \   00000036   1FFA88F8           UXTH     R8,R8
+    629          		wiz_read_buf((unsigned int)src_ptr, (INT8U*)dst,size);
+   \   0000003A   4246               MOV      R2,R8
+   \   0000003C   2146               MOV      R1,R4
+   \   0000003E   3046               MOV      R0,R6
+   \   00000040   80B2               UXTH     R0,R0
+   \   00000042   ........           BL       wiz_read_buf
+    630          		dst += size;
+    631          		size = len - size;
+    632          		src_ptr = (INT8U *)(getIINCHIP_RxBASE(s));
+   \   00000046   3846               MOV      R0,R7
+   \   00000048   ........           BL       getIINCHIP_RxBASE
+    633          		wiz_read_buf((unsigned int)src_ptr, (INT8U*) dst,size);
+   \   0000004C   A5EB0802           SUB      R2,R5,R8
+   \   00000050   92B2               UXTH     R2,R2
+   \   00000052   08EB0401           ADD      R1,R8,R4
+   \   00000056   BDE8F041           POP      {R4-R8,LR}
+   \   0000005A   ....               B.N      wiz_read_buf
+    634              } 
+    635              else
+    636                  wiz_read_buf((unsigned int)src_ptr, (INT8U*) dst,len);
+   \                     ??read_data_0:
+   \   0000005C   2A46               MOV      R2,R5
+   \   0000005E   2146               MOV      R1,R4
+   \   00000060   3046               MOV      R0,R6
+   \   00000062   80B2               UXTH     R0,R0
+   \   00000064   BDE8F041           POP      {R4-R8,LR}
+   \   00000068   ....               B.N      wiz_read_buf
+    637              
+    638          }
+    639          
+
+   \                                 In section .text, align 2, keep-with-next
+    640          void SPI1Write(char ch)
+    641          {
+   \                     SPI1Write:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0446               MOV      R4,R0
+   \   00000004   ....               LDR.N    R5,??DataTable11  ;; 0x40013000
+    642          
+    643             /* Wait for SPI1 Tx buffer empty */
+    644          	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+   \                     ??SPI1Write_0:
+   \   00000006   0221               MOVS     R1,#+2
+   \   00000008   2846               MOV      R0,R5
+   \   0000000A   ........           BL       SPI_I2S_GetFlagStatus
+   \   0000000E   0028               CMP      R0,#+0
+   \   00000010   F9D0               BEQ.N    ??SPI1Write_0
+    645              /* Send SPI1 data */
+    646              SPI_I2S_SendData(SPI1, ch);
+   \   00000012   2146               MOV      R1,R4
+   \   00000014   2846               MOV      R0,R5
+   \   00000016   ........           BL       SPI_I2S_SendData
+    647             /* Wait for SPI1 Tx buffer empty */
+    648              while ((SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET)
+    649                      &&(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET));
+   \                     ??SPI1Write_1:
+   \   0000001A   0221               MOVS     R1,#+2
+   \   0000001C   2846               MOV      R0,R5
+   \   0000001E   ........           BL       SPI_I2S_GetFlagStatus
+   \   00000022   0028               CMP      R0,#+0
+   \   00000024   05D1               BNE.N    ??SPI1Write_2
+   \   00000026   8021               MOVS     R1,#+128
+   \   00000028   2846               MOV      R0,R5
+   \   0000002A   ........           BL       SPI_I2S_GetFlagStatus
+   \   0000002E   0128               CMP      R0,#+1
+   \   00000030   F3D0               BEQ.N    ??SPI1Write_1
+    650          
+    651          }
+   \                     ??SPI1Write_2:
+   \   00000032   31BD               POP      {R0,R4,R5,PC}    ;; return
+
+   \                                 In section .text, align 2, keep-with-next
+    652          char SPI1Read(void)
+    653          {
+   \                     SPI1Read:
+   \   00000000   10B5               PUSH     {R4,LR}
+    654          	wait_1us(1);
+   \   00000002   0120               MOVS     R0,#+1
+   \   00000004   ........           BL       wait_1us
+   \   00000008   ....               LDR.N    R4,??DataTable11  ;; 0x40013000
+    655            /* Wait for SPI1 last data reception */
+    656          	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+   \                     ??SPI1Read_0:
+   \   0000000A   0121               MOVS     R1,#+1
+   \   0000000C   2046               MOV      R0,R4
+   \   0000000E   ........           BL       SPI_I2S_GetFlagStatus
+   \   00000012   0028               CMP      R0,#+0
+   \   00000014   F9D0               BEQ.N    ??SPI1Read_0
+    657            /* Read SPI1 last received data */
+    658          	return SPI_I2S_ReceiveData(SPI1);
+   \   00000016   2046               MOV      R0,R4
+   \   00000018   ........           BL       SPI_I2S_ReceiveData
+   \   0000001C   C0B2               UXTB     R0,R0
+   \   0000001E   10BD               POP      {R4,PC}          ;; return
+    659          }
+
+   \                                 In section .text, align 2, keep-with-next
+    660          void W5100CSon(void)
+    661          {
+   \                     W5100CSon:
+   \   00000000   80B5               PUSH     {R7,LR}
+    662          	wait_1us(1);
+   \   00000002   0120               MOVS     R0,#+1
+   \   00000004   ........           BL       wait_1us
+    663          	GPIO_SetBits(GPIOA, W5100_CS);
+   \   00000008   1021               MOVS     R1,#+16
+   \   0000000A   ....               LDR.N    R0,??DataTable13  ;; 0x40010800
+   \   0000000C   BDE80440           POP      {R2,LR}
+   \   00000010   ........           B.W      GPIO_SetBits
+    664          }
+
+   \                                 In section .text, align 2, keep-with-next
+    665          void W5100CSoff(void)
+    666          {
+    667          	GPIO_ResetBits(GPIOA, W5100_CS);
+   \                     W5100CSoff:
+   \   00000000   1021               MOVS     R1,#+16
+   \   00000002   ....               LDR.N    R0,??DataTable13  ;; 0x40010800
+   \   00000004   ........           B.W      GPIO_ResetBits
+    668          }
+    669          #define COUNT1US 6
+
+   \                                 In section .text, align 2, keep-with-next
+    670          void wait_1us(unsigned int cnt)
+    671          {
+    672          	unsigned int i,j;
+    673          	while(cnt--){
+   \                     wait_1us:
+   \                     ??wait_1us_0:
+   \   00000000   0146               MOV      R1,R0
+   \   00000002   481E               SUBS     R0,R1,#+1
+   \   00000004   0029               CMP      R1,#+0
+   \   00000006   04D0               BEQ.N    ??wait_1us_1
+    674          		j = 2;
+    675            		for(i = 1; i < COUNT1US; i++)
+   \   00000008   0121               MOVS     R1,#+1
+   \                     ??wait_1us_2:
+   \   0000000A   0629               CMP      R1,#+6
+   \   0000000C   F8D2               BCS.N    ??wait_1us_0
+    676              		j = j * j;
+   \   0000000E   491C               ADDS     R1,R1,#+1
+   \   00000010   FBE7               B.N      ??wait_1us_2
+    677          	};
+    678          }
+   \                     ??wait_1us_1:
+   \   00000012   7047               BX       LR               ;; return
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable1:
+   \   00000000   ........           DC32     I_STATUS
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable9:
+   \   00000000   ........           DC32     SMASK
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable11:
+   \   00000000   00300140           DC32     0x40013000
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable13:
+   \   00000000   00080140           DC32     0x40010800
+    679          
+
+   Maximum stack usage in bytes:
+
+     Function             .cstack
+     --------             -------
+     IINCHIP_READ             16
+     IINCHIP_WRITE            16
+     ResetW5100                8
+     SPI1Read                  8
+     SPI1Write                16
+     W5100CSoff                8
+     W5100CSon                 8
+     getGAR                    8
+     getGWIP                   8
+     getIINCHIP_RxBASE         0
+     getIINCHIP_RxMASK         0
+     getIINCHIP_RxMAX          0
+     getIINCHIP_TxBASE         0
+     getIINCHIP_TxMASK         0
+     getIINCHIP_TxMAX          0
+     getIR                     8
+     getISR                    0
+     getSHAR                   8
+     getSIPR                   8
+     getSUBR                   8
+     getSn_DHAR               16
+     getSn_DIPR               16
+     getSn_DPORT              16
+     getSn_IR                  8
+     getSn_RX_RSR             24
+     getSn_SR                  8
+     getSn_TX_FSR             24
+     iinchip_init              8
+     putISR                    0
+     read_data                24
+     recv_data_processing     32
+     send_data_processing     32
+     setGAR                    8
+     setIMR                    8
+     setMR                     8
+     setRCR                    8
+     setRTR                    8
+     setSHAR                   8
+     setSIPR                   8
+     setSUBR                   8
+     setSn_DHAR               16
+     setSn_DIPR               16
+     setSn_DPORT              16
+     setSn_MSS                16
+     setSn_PROTO               8
+     setSn_TTL                 8
+     sysinit                  24
+     wait_1us                  0
+     wiz_read_buf             32
+     wiz_write_buf            32
+     write_data               24
+
+
+   Section sizes:
+
+     Function/Label       Bytes
+     --------------       -----
+     I_STATUS                4
+     SMASK                  48
+     RMASK
+     SSIZE
+     RSIZE
+     SBUFBASEADDRESS
+     RBUFBASEADDRESS
+     getISR                  6
+     putISR                  6
+     getIINCHIP_RxMAX       10
+     getIINCHIP_TxMAX       10
+     getIINCHIP_RxMASK      10
+     getIINCHIP_TxMASK       8
+     getIINCHIP_RxBASE      10
+     getIINCHIP_TxBASE      10
+     IINCHIP_WRITE          56
+     IINCHIP_READ           64
+     wiz_write_buf          94
+     wiz_read_buf          104
+     ResetW5100             38
+     iinchip_init            4
+     sysinit               278
+     setMR                   6
+     setGAR                 38
+     getGWIP                38
+     setSUBR                38
+     setSHAR                54
+     setSIPR                38
+     getIR                   4
+     setRTR                 24
+     setRCR                  6
+     setIMR                  6
+     getGAR                 38
+     getSUBR                38
+     getSHAR                54
+     getSIPR                38
+     getSn_DHAR             80
+     setSn_DHAR             80
+     getSn_DIPR             56
+     setSn_DIPR             56
+     getSn_DPORT            32
+     setSn_DPORT            32
+     setSn_MSS              34
+     setSn_TTL              10
+     setSn_PROTO            10
+     getSn_IR               10
+     getSn_SR               10
+     getSn_TX_FSR           84
+     getSn_RX_RSR           84
+     send_data_processing   88
+     recv_data_processing   88
+     write_data            106
+     read_data             106
+     SPI1Write              52
+     SPI1Read               32
+     W5100CSon              20
+     W5100CSoff              8
+     wait_1us               20
+     ??DataTable1            4
+     ??DataTable9            4
+     ??DataTable11           4
+     ??DataTable13           4
+
+ 
+    52 bytes in section .bss
+ 2 242 bytes in section .text
+ 
+ 2 242 bytes of CODE memory
+    52 bytes of DATA memory
+
+Errors: none
+Warnings: none

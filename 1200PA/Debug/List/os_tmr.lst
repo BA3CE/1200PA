@@ -1,0 +1,2142 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  22:57:23 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\uCOS-II\Source\os_tmr.c                               #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\os_tmr.c" -D _DLIB_FILE_DESCRIPTOR     #
+#                    -lC "F:\MyProjects\Tjinc\CAN & Uart over                 #
+#                    IP\Debug\List\" -o "F:\MyProjects\Tjinc\CAN & Uart over  #
+#                    IP\Debug\Obj\" --no_unroll --no_inline --no_tbaa         #
+#                    --no_scheduling --debug --endian=little --cpu=Cortex-M3  #
+#                    -e --fpu=None --dlib_config "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4                           #
+#                    Kickstart\arm\INC\DLib_Config_Normal.h" -I               #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\os_tmr.lst                                 #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\Obj\os_tmr.o                                    #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\uCOS-II\Source\os_tmr.c
+      1          /*
+      2          ************************************************************************************************************************
+      3          *                                                uC/OS-II
+      4          *                                          The Real-Time Kernel
+      5          *                                            TIMER MANAGEMENT
+      6          *
+      7          *                              (c) Copyright 1992-2007, Micrium, Weston, FL
+      8          *                                           All Rights Reserved
+      9          *
+     10          *
+     11          * File    : OS_TMR.C
+     12          * By      : Jean J. Labrosse
+     13          * Version : V2.86
+     14          *
+     15          * LICENSING TERMS:
+     16          * ---------------
+     17          *   uC/OS-II is provided in source form for FREE evaluation, for educational use or for peaceful research.  
+     18          * If you plan on using  uC/OS-II  in a commercial product you need to contact Micriµm to properly license 
+     19          * its use in your product. We provide ALL the source code for your convenience and to help you experience 
+     20          * uC/OS-II.   The fact that the  source is provided does  NOT  mean that you can use it without  paying a 
+     21          * licensing fee.
+     22          ************************************************************************************************************************
+     23          */
+     24          
+     25          #include "ucos_ii.h"
+     26          
+     27          /*
+     28          ************************************************************************************************************************
+     29          *                                                        NOTES
+     30          *
+     31          * 1) Your application MUST define the following #define constants:
+     32          *
+     33          *    OS_TASK_TMR_PRIO          The priority of the Timer management task
+     34          *    OS_TASK_TMR_STK_SIZE      The size     of the Timer management task's stack
+     35          *
+     36          * 2) You must call OSTmrSignal() to notify the Timer management task that it's time to update the timers.
+     37          ************************************************************************************************************************
+     38          */
+     39          
+     40          /*
+     41          ************************************************************************************************************************
+     42          *                                                     CONSTANTS
+     43          ************************************************************************************************************************
+     44          */
+     45          
+     46          #define  OS_TMR_LINK_DLY       0
+     47          #define  OS_TMR_LINK_PERIODIC  1
+     48          
+     49          /*
+     50          ************************************************************************************************************************
+     51          *                                                  LOCAL PROTOTYPES
+     52          ************************************************************************************************************************
+     53          */
+     54          
+     55          #if OS_TMR_EN > 0
+     56          static  OS_TMR  *OSTmr_Alloc         (void);
+     57          static  void     OSTmr_Free          (OS_TMR *ptmr);
+     58          static  void     OSTmr_InitTask      (void);
+     59          static  void     OSTmr_Link          (OS_TMR *ptmr, INT8U type);
+     60          static  void     OSTmr_Unlink        (OS_TMR *ptmr);
+     61          static  void     OSTmr_Lock          (void);
+     62          static  void     OSTmr_Unlock        (void);
+     63          static  void     OSTmr_Task          (void   *p_arg);
+     64          #endif
+     65          
+     66          /*$PAGE*/
+     67          /*
+     68          ************************************************************************************************************************
+     69          *                                                   CREATE A TIMER
+     70          *
+     71          * Description: This function is called by your application code to create a timer.
+     72          *
+     73          * Arguments  : dly           Initial delay.
+     74          *                            If the timer is configured for ONE-SHOT mode, this is the timeout used
+     75          *                            If the timer is configured for PERIODIC mode, this is the first timeout to wait for
+     76          *                               before the timer starts entering periodic mode
+     77          *
+     78          *              period        The 'period' being repeated for the timer.
+     79          *                               If you specified 'OS_TMR_OPT_PERIODIC' as an option, when the timer expires, it will
+     80          *                               automatically restart with the same period.
+     81          *
+     82          *              opt           Specifies either:
+     83          *                               OS_TMR_OPT_ONE_SHOT       The timer counts down only once
+     84          *                               OS_TMR_OPT_PERIODIC       The timer counts down and then reloads itself
+     85          *
+     86          *              callback      Is a pointer to a callback function that will be called when the timer expires.  The
+     87          *                               callback function must be declared as follows:
+     88          *
+     89          *                               void MyCallback (OS_TMR *ptmr, void *p_arg);
+     90          *
+     91          *              callback_arg  Is an argument (a pointer) that is passed to the callback function when it is called.
+     92          *
+     93          *              pname         Is a pointer to an ASCII string that is used to name the timer.  Names are useful for
+     94          *                               debugging.  The length of the ASCII string for the name can be as big as:
+     95          *
+     96          *                               OS_TMR_CFG_NAME_SIZE and should be found in OS_CFG.H
+     97          *
+     98          *              perr          Is a pointer to an error code.  '*perr' will contain one of the following:
+     99          *                               OS_ERR_NONE
+    100          *                               OS_ERR_TMR_INVALID_DLY     you specified an invalid delay
+    101          *                               OS_ERR_TMR_INVALID_PERIOD  you specified an invalid period
+    102          *                               OS_ERR_TMR_INVALID_OPT     you specified an invalid option
+    103          *                               OS_ERR_TMR_ISR             if the call was made from an ISR
+    104          *                               OS_ERR_TMR_NON_AVAIL       if there are no free timers from the timer pool
+    105          *                               OS_ERR_TMR_NAME_TOO_LONG   if the timer name is too long to fit
+    106          *
+    107          * Returns    : A pointer to an OS_TMR data structure.  
+    108          *              This is the 'handle' that your application will use to reference the timer created.
+    109          ************************************************************************************************************************
+    110          */
+    111          
+    112          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    113          OS_TMR  *OSTmrCreate (INT32U           dly,
+    114                                INT32U           period,
+    115                                INT8U            opt,
+    116                                OS_TMR_CALLBACK  callback,
+    117                                void            *callback_arg,
+    118                                INT8U           *pname,
+    119                                INT8U           *perr)
+    120          {
+   \                     OSTmrCreate:
+   \   00000000   2DE9F84F           PUSH     {R3-R11,LR}
+   \   00000004   0646               MOV      R6,R0
+   \   00000006   8B46               MOV      R11,R1
+   \   00000008   1446               MOV      R4,R2
+   \   0000000A   DDF82890           LDR      R9,[SP, #+40]
+   \   0000000E   0B9D               LDR      R5,[SP, #+44]
+   \   00000010   0C9F               LDR      R7,[SP, #+48]
+    121              OS_TMR   *ptmr;
+    122          #if OS_TMR_CFG_NAME_SIZE > 0
+    123              INT8U     len;
+    124          #endif
+    125          
+    126          
+    127          #if OS_ARG_CHK_EN > 0
+    128              if (perr == (INT8U *)0) {                               /* Validate arguments                                     */
+   \   00000012   002F               CMP      R7,#+0
+   \   00000014   02D1               BNE.N    ??OSTmrCreate_0
+    129                  return ((OS_TMR *)0);
+   \   00000016   0020               MOVS     R0,#+0
+   \   00000018   BDE8F28F           POP      {R1,R4-R11,PC}
+    130              }
+    131              switch (opt) {
+   \                     ??OSTmrCreate_0:
+   \   0000001C   2046               MOV      R0,R4
+   \   0000001E   0128               CMP      R0,#+1
+   \   00000020   09D0               BEQ.N    ??OSTmrCreate_1
+   \   00000022   0228               CMP      R0,#+2
+   \   00000024   0ED1               BNE.N    ??OSTmrCreate_2
+    132                  case OS_TMR_OPT_PERIODIC:
+    133                       if (period == 0) {
+   \   00000026   BBF1000F           CMP      R11,#+0
+   \   0000002A   10D1               BNE.N    ??OSTmrCreate_3
+    134                           *perr = OS_ERR_TMR_INVALID_PERIOD;
+   \   0000002C   8320               MOVS     R0,#+131
+   \   0000002E   3870               STRB     R0,[R7, #+0]
+    135                           return ((OS_TMR *)0);
+   \   00000030   0020               MOVS     R0,#+0
+   \   00000032   BDE8F28F           POP      {R1,R4-R11,PC}
+    136                       }
+    137                       break;
+    138          
+    139                  case OS_TMR_OPT_ONE_SHOT:
+    140                       if (dly == 0) {
+   \                     ??OSTmrCreate_1:
+   \   00000036   002E               CMP      R6,#+0
+   \   00000038   09D1               BNE.N    ??OSTmrCreate_3
+    141                           *perr = OS_ERR_TMR_INVALID_DLY;
+   \   0000003A   8220               MOVS     R0,#+130
+   \   0000003C   3870               STRB     R0,[R7, #+0]
+    142                           return ((OS_TMR *)0);
+   \   0000003E   0020               MOVS     R0,#+0
+   \   00000040   BDE8F28F           POP      {R1,R4-R11,PC}
+    143                       }
+    144                       break;
+    145          
+    146                  default:
+    147                       *perr = OS_ERR_TMR_INVALID_OPT;
+   \                     ??OSTmrCreate_2:
+   \   00000044   8420               MOVS     R0,#+132
+   \   00000046   3870               STRB     R0,[R7, #+0]
+    148                       return ((OS_TMR *)0);
+   \   00000048   0020               MOVS     R0,#+0
+   \   0000004A   BDE8F28F           POP      {R1,R4-R11,PC}
+    149              }
+    150          #endif
+    151              if (OSIntNesting > 0) {                                 /* See if trying to call from an ISR                      */
+   \                     ??OSTmrCreate_3:
+   \   0000004E   ........           LDR.W    R0,??DataTable7  ;; OSIntNesting
+   \   00000052   0078               LDRB     R0,[R0, #+0]
+   \   00000054   0028               CMP      R0,#+0
+   \   00000056   04D0               BEQ.N    ??OSTmrCreate_4
+    152                  *perr  = OS_ERR_TMR_ISR;
+   \   00000058   8B20               MOVS     R0,#+139
+   \   0000005A   3870               STRB     R0,[R7, #+0]
+    153                  return ((OS_TMR *)0);
+   \   0000005C   0020               MOVS     R0,#+0
+   \   0000005E   BDE8F28F           POP      {R1,R4-R11,PC}
+    154              }
+    155              OSTmr_Lock();
+   \                     ??OSTmrCreate_4:
+   \   00000062   ........           BL       OSTmr_Lock
+    156              ptmr = OSTmr_Alloc();                                   /* Obtain a timer from the free pool                      */
+   \   00000066   ........           BL       OSTmr_Alloc
+   \   0000006A   8046               MOV      R8,R0
+    157              if (ptmr == (OS_TMR *)0) {
+   \   0000006C   B8F1000F           CMP      R8,#+0
+   \   00000070   06D1               BNE.N    ??OSTmrCreate_5
+    158                  OSTmr_Unlock();
+   \   00000072   ........           BL       OSTmr_Unlock
+    159                  *perr = OS_ERR_TMR_NON_AVAIL;
+   \   00000076   8620               MOVS     R0,#+134
+   \   00000078   3870               STRB     R0,[R7, #+0]
+    160                  return ((OS_TMR *)0);
+   \   0000007A   0020               MOVS     R0,#+0
+   \   0000007C   BDE8F28F           POP      {R1,R4-R11,PC}
+    161              }
+    162              ptmr->OSTmrState       = OS_TMR_STATE_STOPPED;          /* Indicate that timer is not running yet                 */
+   \                     ??OSTmrCreate_5:
+   \   00000080   08F13000           ADD      R0,R8,#+48
+   \   00000084   0121               MOVS     R1,#+1
+   \   00000086   4170               STRB     R1,[R0, #+1]
+    163              ptmr->OSTmrDly         = dly;
+   \   00000088   08F1040A           ADD      R10,R8,#+4
+   \   0000008C   CAF81460           STR      R6,[R10, #+20]
+    164              ptmr->OSTmrPeriod      = period;
+   \   00000090   CAF818B0           STR      R11,[R10, #+24]
+    165              ptmr->OSTmrOpt         = opt;
+   \   00000094   88F83040           STRB     R4,[R8, #+48]
+    166              ptmr->OSTmrCallback    = callback;
+   \   00000098   0098               LDR      R0,[SP, #+0]
+   \   0000009A   C8F80400           STR      R0,[R8, #+4]
+    167              ptmr->OSTmrCallbackArg = callback_arg;
+   \   0000009E   CAF80490           STR      R9,[R10, #+4]
+    168          #if OS_TMR_CFG_NAME_SIZE > 0
+    169              if (pname !=(INT8U *)0) {
+   \   000000A2   002D               CMP      R5,#+0
+   \   000000A4   09D0               BEQ.N    ??OSTmrCreate_6
+    170                  len = OS_StrLen(pname);                             /* Copy timer name                                        */
+   \   000000A6   2846               MOV      R0,R5
+   \   000000A8   ........           BL       OS_StrLen
+    171                  if (len < OS_TMR_CFG_NAME_SIZE) {
+   \   000000AC   1028               CMP      R0,#+16
+   \   000000AE   0BD2               BCS.N    ??OSTmrCreate_7
+    172                      (void)OS_StrCopy(ptmr->OSTmrName, pname);
+   \   000000B0   2946               MOV      R1,R5
+   \   000000B2   08F12000           ADD      R0,R8,#+32
+   \   000000B6   ........           BL       OS_StrCopy
+    173                  } else {
+    174          #if OS_TMR_CFG_NAME_SIZE > 1
+    175                      ptmr->OSTmrName[0] = '#';                       /* Invalid size specified                                 */
+    176                      ptmr->OSTmrName[1] = OS_ASCII_NUL;
+    177          #endif
+    178                      *perr              = OS_ERR_TMR_NAME_TOO_LONG;
+    179                      OSTmr_Unlock();
+    180                      return (ptmr);
+    181                  }
+    182              }
+    183          #endif
+    184              OSTmr_Unlock();
+   \                     ??OSTmrCreate_6:
+   \   000000BA   ........           BL       OSTmr_Unlock
+    185              *perr = OS_ERR_NONE;
+   \   000000BE   0020               MOVS     R0,#+0
+   \   000000C0   3870               STRB     R0,[R7, #+0]
+    186              return (ptmr);
+   \   000000C2   4046               MOV      R0,R8
+   \   000000C4   BDE8F28F           POP      {R1,R4-R11,PC}   ;; return
+   \                     ??OSTmrCreate_7:
+   \   000000C8   2320               MOVS     R0,#+35
+   \   000000CA   8AF81C00           STRB     R0,[R10, #+28]
+   \   000000CE   0020               MOVS     R0,#+0
+   \   000000D0   8AF81D00           STRB     R0,[R10, #+29]
+   \   000000D4   8C20               MOVS     R0,#+140
+   \   000000D6   3870               STRB     R0,[R7, #+0]
+   \   000000D8   ........           BL       OSTmr_Unlock
+   \   000000DC   4046               MOV      R0,R8
+   \   000000DE   BDE8F28F           POP      {R1,R4-R11,PC}
+    187          }
+    188          #endif
+    189          
+    190          /*$PAGE*/
+    191          /*
+    192          ************************************************************************************************************************
+    193          *                                                   DELETE A TIMER
+    194          *
+    195          * Description: This function is called by your application code to delete a timer.
+    196          *
+    197          * Arguments  : ptmr          Is a pointer to the timer to stop and delete.
+    198          *
+    199          *              perr          Is a pointer to an error code.  '*perr' will contain one of the following:
+    200          *                               OS_ERR_NONE
+    201          *                               OS_ERR_TMR_INVALID        'ptmr'  is a NULL pointer
+    202          *                               OS_ERR_TMR_INVALID_TYPE   'ptmr'  is not pointing to an OS_TMR
+    203          *                               OS_ERR_TMR_ISR            if the function was called from an ISR
+    204          *                               OS_ERR_TMR_INACTIVE       if the timer was not created
+    205          *                               OS_ERR_TMR_INVALID_STATE  the timer is in an invalid state
+    206          *
+    207          * Returns    : OS_TRUE       If the call was successful
+    208          *              OS_FALSE      If not
+    209          ************************************************************************************************************************
+    210          */
+    211          
+    212          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    213          BOOLEAN  OSTmrDel (OS_TMR  *ptmr,
+    214                             INT8U   *perr)
+    215          {
+   \                     OSTmrDel:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0546               MOV      R5,R0
+   \   00000004   0C00               MOVS     R4,R1
+    216          #if OS_ARG_CHK_EN > 0
+    217              if (perr == (INT8U *)0) {                               /* Validate arguments                                     */
+   \   00000006   01D1               BNE.N    ??OSTmrDel_0
+    218                  return (OS_FALSE);
+   \   00000008   0020               MOVS     R0,#+0
+   \   0000000A   32BD               POP      {R1,R4,R5,PC}
+    219              }
+    220              if (ptmr == (OS_TMR *)0) {
+   \                     ??OSTmrDel_0:
+   \   0000000C   002D               CMP      R5,#+0
+   \   0000000E   03D1               BNE.N    ??OSTmrDel_1
+    221                  *perr = OS_ERR_TMR_INVALID;
+   \   00000010   8A20               MOVS     R0,#+138
+   \   00000012   2070               STRB     R0,[R4, #+0]
+    222                  return (OS_FALSE);
+   \   00000014   0020               MOVS     R0,#+0
+   \   00000016   32BD               POP      {R1,R4,R5,PC}
+    223              }
+    224          #endif
+    225              if (ptmr->OSTmrType != OS_TMR_TYPE) {                   /* Validate timer structure                               */
+   \                     ??OSTmrDel_1:
+   \   00000018   2878               LDRB     R0,[R5, #+0]
+   \   0000001A   6428               CMP      R0,#+100
+   \   0000001C   03D0               BEQ.N    ??OSTmrDel_2
+    226                  *perr = OS_ERR_TMR_INVALID_TYPE;
+   \   0000001E   8920               MOVS     R0,#+137
+   \   00000020   2070               STRB     R0,[R4, #+0]
+    227                  return (OS_FALSE);
+   \   00000022   0020               MOVS     R0,#+0
+   \   00000024   32BD               POP      {R1,R4,R5,PC}
+    228              }
+    229              if (OSIntNesting > 0) {                                 /* See if trying to call from an ISR                      */
+   \                     ??OSTmrDel_2:
+   \   00000026   ....               LDR.N    R0,??DataTable7  ;; OSIntNesting
+   \   00000028   0078               LDRB     R0,[R0, #+0]
+   \   0000002A   0028               CMP      R0,#+0
+   \   0000002C   03D0               BEQ.N    ??OSTmrDel_3
+    230                  *perr  = OS_ERR_TMR_ISR;
+   \   0000002E   8B20               MOVS     R0,#+139
+   \   00000030   2070               STRB     R0,[R4, #+0]
+    231                  return (OS_FALSE);
+   \   00000032   0020               MOVS     R0,#+0
+   \   00000034   32BD               POP      {R1,R4,R5,PC}
+    232              }
+    233              OSTmr_Lock();
+   \                     ??OSTmrDel_3:
+   \   00000036   ........           BL       OSTmr_Lock
+    234              switch (ptmr->OSTmrState) {
+   \   0000003A   95F83100           LDRB     R0,[R5, #+49]
+   \   0000003E   0028               CMP      R0,#+0
+   \   00000040   19D0               BEQ.N    ??OSTmrDel_4
+   \   00000042   0228               CMP      R0,#+2
+   \   00000044   0ED0               BEQ.N    ??OSTmrDel_5
+   \   00000046   0DD3               BCC.N    ??OSTmrDel_5
+   \   00000048   0328               CMP      R0,#+3
+   \   0000004A   1AD1               BNE.N    ??OSTmrDel_6
+    235                  case OS_TMR_STATE_RUNNING:
+    236                       OSTmr_Unlink(ptmr);                            /* Remove from current wheel spoke                        */
+   \   0000004C   2846               MOV      R0,R5
+   \   0000004E   ........           BL       OSTmr_Unlink
+    237                       OSTmr_Free(ptmr);                              /* Return timer to free list of timers                    */
+   \   00000052   2846               MOV      R0,R5
+   \   00000054   ........           BL       OSTmr_Free
+    238                       OSTmr_Unlock();
+   \   00000058   ........           BL       OSTmr_Unlock
+    239                       *perr = OS_ERR_NONE;
+   \   0000005C   0020               MOVS     R0,#+0
+   \   0000005E   2070               STRB     R0,[R4, #+0]
+    240                       return (OS_TRUE);
+   \   00000060   0120               MOVS     R0,#+1
+   \   00000062   32BD               POP      {R1,R4,R5,PC}
+    241          
+    242                  case OS_TMR_STATE_STOPPED:                          /* Timer has not started or ...                           */
+    243                  case OS_TMR_STATE_COMPLETED:                        /* ... timer has completed the ONE-SHOT time              */
+    244                       OSTmr_Free(ptmr);                              /* Return timer to free list of timers                    */
+   \                     ??OSTmrDel_5:
+   \   00000064   2846               MOV      R0,R5
+   \   00000066   ........           BL       OSTmr_Free
+    245                       OSTmr_Unlock();
+   \   0000006A   ........           BL       OSTmr_Unlock
+    246                       *perr = OS_ERR_NONE;
+   \   0000006E   0020               MOVS     R0,#+0
+   \   00000070   2070               STRB     R0,[R4, #+0]
+    247                       return (OS_TRUE);
+   \   00000072   0120               MOVS     R0,#+1
+   \   00000074   32BD               POP      {R1,R4,R5,PC}
+    248          
+    249                  case OS_TMR_STATE_UNUSED:                           /* Already deleted                                        */
+    250                       OSTmr_Unlock();
+   \                     ??OSTmrDel_4:
+   \   00000076   ........           BL       OSTmr_Unlock
+    251                       *perr = OS_ERR_TMR_INACTIVE;
+   \   0000007A   8720               MOVS     R0,#+135
+   \   0000007C   2070               STRB     R0,[R4, #+0]
+    252                       return (OS_FALSE);
+   \   0000007E   0020               MOVS     R0,#+0
+   \   00000080   32BD               POP      {R1,R4,R5,PC}
+    253          
+    254                  default:
+    255                       OSTmr_Unlock();
+   \                     ??OSTmrDel_6:
+   \   00000082   ........           BL       OSTmr_Unlock
+    256                       *perr = OS_ERR_TMR_INVALID_STATE;
+   \   00000086   8D20               MOVS     R0,#+141
+   \   00000088   2070               STRB     R0,[R4, #+0]
+    257                       return (OS_FALSE);
+   \   0000008A   0020               MOVS     R0,#+0
+   \   0000008C   32BD               POP      {R1,R4,R5,PC}    ;; return
+    258              }
+    259          }
+    260          #endif
+    261          
+    262          /*$PAGE*/
+    263          /*
+    264          ************************************************************************************************************************
+    265          *                                             GET THE NAME OF A TIMER
+    266          *
+    267          * Description: This function is called to obtain the name of a timer.
+    268          *
+    269          * Arguments  : ptmr          Is a pointer to the timer to obtain the name for
+    270          *
+    271          *              pdest         Is a pointer to where the name of the timer will be placed.  It is the caller's responsibility
+    272          *                            to ensure that he has sufficient storage in the destination, i.e. at least OS_TMR_CFG_NAME_SIZE
+    273          *
+    274          *              perr          Is a pointer to an error code.  '*perr' will contain one of the following:
+    275          *                               OS_ERR_NONE               The call was successful
+    276          *                               OS_ERR_TMR_INVALID_DEST   'pdest' is a NULL pointer
+    277          *                               OS_ERR_TMR_INVALID        'ptmr'  is a NULL pointer
+    278          *                               OS_ERR_TMR_INVALID_TYPE   'ptmr'  is not pointing to an OS_TMR
+    279          *                               OS_ERR_NAME_GET_ISR       if the call was made from an ISR
+    280          *                               OS_ERR_TMR_INACTIVE       'ptmr'  points to a timer that is not active
+    281          *                               OS_ERR_TMR_INVALID_STATE  the timer is in an invalid state
+    282          *
+    283          * Returns    : The length of the string or 0 if the timer does not exist.
+    284          ************************************************************************************************************************
+    285          */
+    286          
+    287          #if OS_TMR_EN > 0 && OS_TMR_CFG_NAME_SIZE > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    288          INT8U  OSTmrNameGet (OS_TMR  *ptmr,
+    289                               INT8U   *pdest,
+    290                               INT8U   *perr)
+    291          {
+   \                     OSTmrNameGet:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   0546               MOV      R5,R0
+   \   00000004   0E46               MOV      R6,R1
+   \   00000006   1400               MOVS     R4,R2
+    292              INT8U  len;
+    293          
+    294          
+    295          #if OS_ARG_CHK_EN > 0
+    296              if (perr == (INT8U *)0) {
+   \   00000008   01D1               BNE.N    ??OSTmrNameGet_0
+    297                  return (0);
+   \   0000000A   0020               MOVS     R0,#+0
+   \   0000000C   70BD               POP      {R4-R6,PC}
+    298              }
+    299              if (pdest == (INT8U *)0) {
+   \                     ??OSTmrNameGet_0:
+   \   0000000E   002E               CMP      R6,#+0
+   \   00000010   03D1               BNE.N    ??OSTmrNameGet_1
+    300                  *perr = OS_ERR_TMR_INVALID_DEST;
+   \   00000012   8820               MOVS     R0,#+136
+   \   00000014   2070               STRB     R0,[R4, #+0]
+    301                  return (0);
+   \   00000016   0020               MOVS     R0,#+0
+   \   00000018   70BD               POP      {R4-R6,PC}
+    302              }
+    303              if (ptmr == (OS_TMR *)0) {
+   \                     ??OSTmrNameGet_1:
+   \   0000001A   002D               CMP      R5,#+0
+   \   0000001C   03D1               BNE.N    ??OSTmrNameGet_2
+    304                  *perr = OS_ERR_TMR_INVALID;
+   \   0000001E   8A20               MOVS     R0,#+138
+   \   00000020   2070               STRB     R0,[R4, #+0]
+    305                  return (0);
+   \   00000022   0020               MOVS     R0,#+0
+   \   00000024   70BD               POP      {R4-R6,PC}
+    306              }
+    307          #endif
+    308              if (ptmr->OSTmrType != OS_TMR_TYPE) {              /* Validate timer structure                                    */
+   \                     ??OSTmrNameGet_2:
+   \   00000026   2878               LDRB     R0,[R5, #+0]
+   \   00000028   6428               CMP      R0,#+100
+   \   0000002A   03D0               BEQ.N    ??OSTmrNameGet_3
+    309                  *perr = OS_ERR_TMR_INVALID_TYPE;
+   \   0000002C   8920               MOVS     R0,#+137
+   \   0000002E   2070               STRB     R0,[R4, #+0]
+    310                  return (0);
+   \   00000030   0020               MOVS     R0,#+0
+   \   00000032   70BD               POP      {R4-R6,PC}
+    311              }
+    312              if (OSIntNesting > 0) {                            /* See if trying to call from an ISR                           */
+   \                     ??OSTmrNameGet_3:
+   \   00000034   ....               LDR.N    R0,??DataTable7  ;; OSIntNesting
+   \   00000036   0078               LDRB     R0,[R0, #+0]
+   \   00000038   0028               CMP      R0,#+0
+   \   0000003A   03D0               BEQ.N    ??OSTmrNameGet_4
+    313                  *perr = OS_ERR_NAME_GET_ISR;
+   \   0000003C   1120               MOVS     R0,#+17
+   \   0000003E   2070               STRB     R0,[R4, #+0]
+    314                  return (0);
+   \   00000040   0020               MOVS     R0,#+0
+   \   00000042   70BD               POP      {R4-R6,PC}
+    315              }
+    316              OSTmr_Lock();
+   \                     ??OSTmrNameGet_4:
+   \   00000044   ........           BL       OSTmr_Lock
+    317              switch (ptmr->OSTmrState) {
+   \   00000048   95F83100           LDRB     R0,[R5, #+49]
+   \   0000004C   0028               CMP      R0,#+0
+   \   0000004E   0ED0               BEQ.N    ??OSTmrNameGet_5
+   \   00000050   401E               SUBS     R0,R0,#+1
+   \   00000052   0228               CMP      R0,#+2
+   \   00000054   11D8               BHI.N    ??OSTmrNameGet_6
+    318                  case OS_TMR_STATE_RUNNING:
+    319                  case OS_TMR_STATE_STOPPED:
+    320                  case OS_TMR_STATE_COMPLETED:
+    321                       len   = OS_StrCopy(pdest, ptmr->OSTmrName);
+   \   00000056   05F12001           ADD      R1,R5,#+32
+   \   0000005A   3046               MOV      R0,R6
+   \   0000005C   ........           BL       OS_StrCopy
+   \   00000060   0546               MOV      R5,R0
+    322                       OSTmr_Unlock();
+   \   00000062   ........           BL       OSTmr_Unlock
+    323                       *perr = OS_ERR_NONE;
+   \   00000066   0020               MOVS     R0,#+0
+   \   00000068   2070               STRB     R0,[R4, #+0]
+    324                       return (len);
+   \   0000006A   2846               MOV      R0,R5
+   \   0000006C   70BD               POP      {R4-R6,PC}
+    325          
+    326                  case OS_TMR_STATE_UNUSED:                      /* Timer is not allocated                                      */
+    327                       OSTmr_Unlock();
+   \                     ??OSTmrNameGet_5:
+   \   0000006E   ........           BL       OSTmr_Unlock
+    328                       *perr = OS_ERR_TMR_INACTIVE;
+   \   00000072   8720               MOVS     R0,#+135
+   \   00000074   2070               STRB     R0,[R4, #+0]
+    329                       return (0);
+   \   00000076   0020               MOVS     R0,#+0
+   \   00000078   70BD               POP      {R4-R6,PC}
+    330          
+    331                  default:
+    332                       OSTmr_Unlock();
+   \                     ??OSTmrNameGet_6:
+   \   0000007A   ........           BL       OSTmr_Unlock
+    333                       *perr = OS_ERR_TMR_INVALID_STATE;
+   \   0000007E   8D20               MOVS     R0,#+141
+   \   00000080   2070               STRB     R0,[R4, #+0]
+    334                       return (0);
+   \   00000082   0020               MOVS     R0,#+0
+   \   00000084   70BD               POP      {R4-R6,PC}       ;; return
+    335              }
+    336          }
+    337          #endif
+    338          
+    339          /*$PAGE*/
+    340          /*
+    341          ************************************************************************************************************************
+    342          *                                    GET HOW MUCH TIME IS LEFT BEFORE A TIMER EXPIRES
+    343          *
+    344          * Description: This function is called to get the number of ticks before a timer times out.
+    345          *
+    346          * Arguments  : ptmr          Is a pointer to the timer to obtain the remaining time from.
+    347          *
+    348          *              perr          Is a pointer to an error code.  '*perr' will contain one of the following:
+    349          *                               OS_ERR_NONE
+    350          *                               OS_ERR_TMR_INVALID        'ptmr' is a NULL pointer
+    351          *                               OS_ERR_TMR_INVALID_TYPE   'ptmr'  is not pointing to an OS_TMR
+    352          *                               OS_ERR_TMR_ISR            if the call was made from an ISR
+    353          *                               OS_ERR_TMR_INACTIVE       'ptmr' points to a timer that is not active
+    354          *                               OS_ERR_TMR_INVALID_STATE  the timer is in an invalid state
+    355          *
+    356          * Returns    : The time remaining for the timer to expire.  The time represents 'timer' increments.  In other words, if
+    357          *              OSTmr_Task() is signaled every 1/10 of a second then the returned value represents the number of 1/10 of
+    358          *              a second remaining before the timer expires.
+    359          ************************************************************************************************************************
+    360          */
+    361          
+    362          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    363          INT32U  OSTmrRemainGet (OS_TMR  *ptmr,
+    364                                  INT8U   *perr)
+    365          {
+   \                     OSTmrRemainGet:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0546               MOV      R5,R0
+   \   00000004   0C00               MOVS     R4,R1
+    366              INT32U  remain;
+    367          
+    368          
+    369          #if OS_ARG_CHK_EN > 0
+    370              if (perr == (INT8U *)0) {
+   \   00000006   01D1               BNE.N    ??OSTmrRemainGet_0
+    371                  return (0);
+   \   00000008   0020               MOVS     R0,#+0
+   \   0000000A   32BD               POP      {R1,R4,R5,PC}
+    372              }
+    373              if (ptmr == (OS_TMR *)0) {
+   \                     ??OSTmrRemainGet_0:
+   \   0000000C   002D               CMP      R5,#+0
+   \   0000000E   03D1               BNE.N    ??OSTmrRemainGet_1
+    374                  *perr = OS_ERR_TMR_INVALID;
+   \   00000010   8A20               MOVS     R0,#+138
+   \   00000012   2070               STRB     R0,[R4, #+0]
+    375                  return (0);
+   \   00000014   0020               MOVS     R0,#+0
+   \   00000016   32BD               POP      {R1,R4,R5,PC}
+    376              }
+    377          #endif
+    378              if (ptmr->OSTmrType != OS_TMR_TYPE) {              /* Validate timer structure                                    */
+   \                     ??OSTmrRemainGet_1:
+   \   00000018   2878               LDRB     R0,[R5, #+0]
+   \   0000001A   6428               CMP      R0,#+100
+   \   0000001C   03D0               BEQ.N    ??OSTmrRemainGet_2
+    379                  *perr = OS_ERR_TMR_INVALID_TYPE;
+   \   0000001E   8920               MOVS     R0,#+137
+   \   00000020   2070               STRB     R0,[R4, #+0]
+    380                  return (0);
+   \   00000022   0020               MOVS     R0,#+0
+   \   00000024   32BD               POP      {R1,R4,R5,PC}
+    381              }
+    382              if (OSIntNesting > 0) {                            /* See if trying to call from an ISR                           */
+   \                     ??OSTmrRemainGet_2:
+   \   00000026   ....               LDR.N    R0,??DataTable7  ;; OSIntNesting
+   \   00000028   0078               LDRB     R0,[R0, #+0]
+   \   0000002A   0028               CMP      R0,#+0
+   \   0000002C   03D0               BEQ.N    ??OSTmrRemainGet_3
+    383                  *perr = OS_ERR_TMR_ISR;
+   \   0000002E   8B20               MOVS     R0,#+139
+   \   00000030   2070               STRB     R0,[R4, #+0]
+    384                  return (0);
+   \   00000032   0020               MOVS     R0,#+0
+   \   00000034   32BD               POP      {R1,R4,R5,PC}
+    385              }
+    386              OSTmr_Lock();
+   \                     ??OSTmrRemainGet_3:
+   \   00000036   ........           BL       OSTmr_Lock
+    387              switch (ptmr->OSTmrState) {
+   \   0000003A   05F13000           ADD      R0,R5,#+48
+   \   0000003E   4078               LDRB     R0,[R0, #+1]
+   \   00000040   0028               CMP      R0,#+0
+   \   00000042   2AD0               BEQ.N    ??OSTmrRemainGet_4
+   \   00000044   0228               CMP      R0,#+2
+   \   00000046   23D0               BEQ.N    ??OSTmrRemainGet_5
+   \   00000048   0CD3               BCC.N    ??OSTmrRemainGet_6
+   \   0000004A   0328               CMP      R0,#+3
+   \   0000004C   2BD1               BNE.N    ??OSTmrRemainGet_7
+    388                  case OS_TMR_STATE_RUNNING:
+    389                       remain = ptmr->OSTmrMatch - OSTmrTime;    /* Determine how much time is left to timeout                  */
+   \   0000004E   6869               LDR      R0,[R5, #+20]
+   \   00000050   ........           LDR.W    R1,??DataTable28  ;; OSTmrTime
+   \   00000054   0968               LDR      R1,[R1, #+0]
+   \   00000056   451A               SUBS     R5,R0,R1
+    390                       OSTmr_Unlock();
+   \   00000058   ........           BL       OSTmr_Unlock
+    391                       *perr  = OS_ERR_NONE;
+   \   0000005C   0020               MOVS     R0,#+0
+   \   0000005E   2070               STRB     R0,[R4, #+0]
+    392                       return (remain);
+   \   00000060   2846               MOV      R0,R5
+   \   00000062   32BD               POP      {R1,R4,R5,PC}
+    393          
+    394                  case OS_TMR_STATE_STOPPED:                     /* It's assumed that the timer has not started yet             */
+    395                       switch (ptmr->OSTmrOpt) {
+   \                     ??OSTmrRemainGet_6:
+   \   00000064   95F83000           LDRB     R0,[R5, #+48]
+   \   00000068   0228               CMP      R0,#+2
+   \   0000006A   0AD1               BNE.N    ??OSTmrRemainGet_8
+    396                           case OS_TMR_OPT_PERIODIC:
+    397                                if (ptmr->OSTmrDly == 0) {
+   \   0000006C   A869               LDR      R0,[R5, #+24]
+   \   0000006E   0028               CMP      R0,#+0
+   \   00000070   01D1               BNE.N    ??OSTmrRemainGet_9
+    398                                    remain = ptmr->OSTmrPeriod;
+   \   00000072   ED69               LDR      R5,[R5, #+28]
+   \   00000074   00E0               B.N      ??OSTmrRemainGet_10
+    399                                } else {
+    400                                    remain = ptmr->OSTmrDly;
+   \                     ??OSTmrRemainGet_9:
+   \   00000076   0546               MOV      R5,R0
+    401                                }
+    402                                OSTmr_Unlock();
+   \                     ??OSTmrRemainGet_10:
+   \   00000078   ........           BL       OSTmr_Unlock
+    403                                *perr  = OS_ERR_NONE;
+   \   0000007C   0020               MOVS     R0,#+0
+   \   0000007E   2070               STRB     R0,[R4, #+0]
+   \   00000080   04E0               B.N      ??OSTmrRemainGet_11
+    404                                break;
+    405          
+    406                           case OS_TMR_OPT_ONE_SHOT:
+    407                           default:
+    408                                remain = ptmr->OSTmrDly;
+   \                     ??OSTmrRemainGet_8:
+   \   00000082   AD69               LDR      R5,[R5, #+24]
+    409                                OSTmr_Unlock();
+   \   00000084   ........           BL       OSTmr_Unlock
+    410                                *perr  = OS_ERR_NONE;
+   \   00000088   0020               MOVS     R0,#+0
+   \   0000008A   2070               STRB     R0,[R4, #+0]
+    411                                break;
+    412                       }
+    413                       return (remain);
+   \                     ??OSTmrRemainGet_11:
+   \   0000008C   2846               MOV      R0,R5
+   \   0000008E   32BD               POP      {R1,R4,R5,PC}
+    414          
+    415                  case OS_TMR_STATE_COMPLETED:                   /* Only ONE-SHOT that timed out can be in this state           */
+    416                       OSTmr_Unlock();
+   \                     ??OSTmrRemainGet_5:
+   \   00000090   ........           BL       OSTmr_Unlock
+    417                       *perr = OS_ERR_NONE;
+   \   00000094   0020               MOVS     R0,#+0
+   \   00000096   2070               STRB     R0,[R4, #+0]
+    418                       return (0);
+   \   00000098   32BD               POP      {R1,R4,R5,PC}
+    419          
+    420                  case OS_TMR_STATE_UNUSED:
+    421                       OSTmr_Unlock();
+   \                     ??OSTmrRemainGet_4:
+   \   0000009A   ........           BL       OSTmr_Unlock
+    422                       *perr = OS_ERR_TMR_INACTIVE;
+   \   0000009E   8720               MOVS     R0,#+135
+   \   000000A0   2070               STRB     R0,[R4, #+0]
+    423                       return (0);
+   \   000000A2   0020               MOVS     R0,#+0
+   \   000000A4   32BD               POP      {R1,R4,R5,PC}
+    424          
+    425                  default:
+    426                       OSTmr_Unlock();
+   \                     ??OSTmrRemainGet_7:
+   \   000000A6   ........           BL       OSTmr_Unlock
+    427                       *perr = OS_ERR_TMR_INVALID_STATE;
+   \   000000AA   8D20               MOVS     R0,#+141
+   \   000000AC   2070               STRB     R0,[R4, #+0]
+    428                       return (0);
+   \   000000AE   0020               MOVS     R0,#+0
+   \   000000B0   32BD               POP      {R1,R4,R5,PC}    ;; return
+    429              }
+    430          }
+    431          #endif
+    432          
+    433          /*$PAGE*/
+    434          /*
+    435          ************************************************************************************************************************
+    436          *                                    FIND OUT WHAT STATE A TIMER IS IN
+    437          *
+    438          * Description: This function is called to determine what state the timer is in:
+    439          *
+    440          *                  OS_TMR_STATE_UNUSED     the timer has not been created
+    441          *                  OS_TMR_STATE_STOPPED    the timer has been created but has not been started or has been stopped
+    442          *                  OS_TMR_COMPLETED        the timer is in ONE-SHOT mode and has completed it's timeout
+    443          *                  OS_TMR_RUNNING          the timer is currently running
+    444          *
+    445          * Arguments  : ptmr          Is a pointer to the desired timer
+    446          *
+    447          *              perr          Is a pointer to an error code.  '*perr' will contain one of the following:
+    448          *                               OS_ERR_NONE
+    449          *                               OS_ERR_TMR_INVALID        'ptmr' is a NULL pointer
+    450          *                               OS_ERR_TMR_INVALID_TYPE   'ptmr'  is not pointing to an OS_TMR
+    451          *                               OS_ERR_TMR_ISR            if the call was made from an ISR
+    452          *                               OS_ERR_TMR_INACTIVE       'ptmr' points to a timer that is not active
+    453          *                               OS_ERR_TMR_INVALID_STATE  if the timer is not in a valid state
+    454          *
+    455          * Returns    : The current state of the timer (see description).
+    456          ************************************************************************************************************************
+    457          */
+    458          
+    459          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    460          INT8U  OSTmrStateGet (OS_TMR  *ptmr,
+    461                                INT8U   *perr)
+    462          {
+   \                     OSTmrStateGet:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0546               MOV      R5,R0
+   \   00000004   0C00               MOVS     R4,R1
+    463              INT8U  state;
+    464          
+    465          
+    466          #if OS_ARG_CHK_EN > 0
+    467              if (perr == (INT8U *)0) {
+   \   00000006   01D1               BNE.N    ??OSTmrStateGet_0
+    468                  return (0);
+   \   00000008   0020               MOVS     R0,#+0
+   \   0000000A   32BD               POP      {R1,R4,R5,PC}
+    469              }
+    470              if (ptmr == (OS_TMR *)0) {
+   \                     ??OSTmrStateGet_0:
+   \   0000000C   002D               CMP      R5,#+0
+   \   0000000E   03D1               BNE.N    ??OSTmrStateGet_1
+    471                  *perr = OS_ERR_TMR_INVALID;
+   \   00000010   8A20               MOVS     R0,#+138
+   \   00000012   2070               STRB     R0,[R4, #+0]
+    472                  return (0);
+   \   00000014   0020               MOVS     R0,#+0
+   \   00000016   32BD               POP      {R1,R4,R5,PC}
+    473              }
+    474          #endif
+    475              if (ptmr->OSTmrType != OS_TMR_TYPE) {              /* Validate timer structure                                    */
+   \                     ??OSTmrStateGet_1:
+   \   00000018   2878               LDRB     R0,[R5, #+0]
+   \   0000001A   6428               CMP      R0,#+100
+   \   0000001C   03D0               BEQ.N    ??OSTmrStateGet_2
+    476                  *perr = OS_ERR_TMR_INVALID_TYPE;
+   \   0000001E   8920               MOVS     R0,#+137
+   \   00000020   2070               STRB     R0,[R4, #+0]
+    477                  return (0);
+   \   00000022   0020               MOVS     R0,#+0
+   \   00000024   32BD               POP      {R1,R4,R5,PC}
+    478              }
+    479              if (OSIntNesting > 0) {                            /* See if trying to call from an ISR                           */
+   \                     ??OSTmrStateGet_2:
+   \   00000026   ....               LDR.N    R0,??DataTable7  ;; OSIntNesting
+   \   00000028   0078               LDRB     R0,[R0, #+0]
+   \   0000002A   0028               CMP      R0,#+0
+   \   0000002C   03D0               BEQ.N    ??OSTmrStateGet_3
+    480                  *perr = OS_ERR_TMR_ISR;
+   \   0000002E   8B20               MOVS     R0,#+139
+   \   00000030   2070               STRB     R0,[R4, #+0]
+    481                  return (0);
+   \   00000032   0020               MOVS     R0,#+0
+   \   00000034   32BD               POP      {R1,R4,R5,PC}
+    482              }
+    483              OSTmr_Lock();
+   \                     ??OSTmrStateGet_3:
+   \   00000036   ........           BL       OSTmr_Lock
+    484              state = ptmr->OSTmrState;
+   \   0000003A   95F83150           LDRB     R5,[R5, #+49]
+    485              switch (state) {
+   \   0000003E   2846               MOV      R0,R5
+   \   00000040   0328               CMP      R0,#+3
+   \   00000042   02D8               BHI.N    ??OSTmrStateGet_4
+    486                  case OS_TMR_STATE_UNUSED:   
+    487                  case OS_TMR_STATE_STOPPED:  
+    488                  case OS_TMR_STATE_COMPLETED:
+    489                  case OS_TMR_STATE_RUNNING:  
+    490                       *perr = OS_ERR_NONE;
+   \   00000044   0020               MOVS     R0,#+0
+   \   00000046   2070               STRB     R0,[R4, #+0]
+   \   00000048   01E0               B.N      ??OSTmrStateGet_5
+    491                       break;
+    492                       
+    493                  default:
+    494                       *perr = OS_ERR_TMR_INVALID_STATE;
+   \                     ??OSTmrStateGet_4:
+   \   0000004A   8D20               MOVS     R0,#+141
+   \   0000004C   2070               STRB     R0,[R4, #+0]
+    495                       break;
+    496              }
+    497              OSTmr_Unlock();
+   \                     ??OSTmrStateGet_5:
+   \   0000004E   ........           BL       OSTmr_Unlock
+    498              return (state);
+   \   00000052   2846               MOV      R0,R5
+   \   00000054   32BD               POP      {R1,R4,R5,PC}    ;; return
+    499          }
+    500          #endif
+    501          
+    502          /*$PAGE*/
+    503          /*
+    504          ************************************************************************************************************************
+    505          *                                                   START A TIMER
+    506          *
+    507          * Description: This function is called by your application code to start a timer.
+    508          *
+    509          * Arguments  : ptmr          Is a pointer to an OS_TMR
+    510          *
+    511          *              perr          Is a pointer to an error code.  '*perr' will contain one of the following:
+    512          *                               OS_ERR_NONE
+    513          *                               OS_ERR_TMR_INVALID
+    514          *                               OS_ERR_TMR_INVALID_TYPE    'ptmr'  is not pointing to an OS_TMR
+    515          *                               OS_ERR_TMR_ISR             if the call was made from an ISR
+    516          *                               OS_ERR_TMR_INACTIVE        if the timer was not created
+    517          *                               OS_ERR_TMR_INVALID_STATE   the timer is in an invalid state
+    518          *
+    519          * Returns    : OS_TRUE    if the timer was started
+    520          *              OS_FALSE   if an error was detected
+    521          ************************************************************************************************************************
+    522          */
+    523          
+    524          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    525          BOOLEAN  OSTmrStart (OS_TMR   *ptmr,
+    526                               INT8U    *perr)
+    527          {
+   \                     OSTmrStart:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+   \   00000002   0546               MOV      R5,R0
+   \   00000004   0C00               MOVS     R4,R1
+    528          #if OS_ARG_CHK_EN > 0
+    529              if (perr == (INT8U *)0) {                               /* Validate arguments                                     */
+   \   00000006   01D1               BNE.N    ??OSTmrStart_0
+    530                  return (OS_FALSE);
+   \   00000008   0020               MOVS     R0,#+0
+   \   0000000A   32BD               POP      {R1,R4,R5,PC}
+    531              }
+    532              if (ptmr == (OS_TMR *)0) {
+   \                     ??OSTmrStart_0:
+   \   0000000C   002D               CMP      R5,#+0
+   \   0000000E   03D1               BNE.N    ??OSTmrStart_1
+    533                  *perr = OS_ERR_TMR_INVALID;
+   \   00000010   8A20               MOVS     R0,#+138
+   \   00000012   2070               STRB     R0,[R4, #+0]
+    534                  return (OS_FALSE);
+   \   00000014   0020               MOVS     R0,#+0
+   \   00000016   32BD               POP      {R1,R4,R5,PC}
+    535              }
+    536          #endif
+    537              if (ptmr->OSTmrType != OS_TMR_TYPE) {                   /* Validate timer structure                               */
+   \                     ??OSTmrStart_1:
+   \   00000018   2878               LDRB     R0,[R5, #+0]
+   \   0000001A   6428               CMP      R0,#+100
+   \   0000001C   03D0               BEQ.N    ??OSTmrStart_2
+    538                  *perr = OS_ERR_TMR_INVALID_TYPE;
+   \   0000001E   8920               MOVS     R0,#+137
+   \   00000020   2070               STRB     R0,[R4, #+0]
+    539                  return (OS_FALSE);
+   \   00000022   0020               MOVS     R0,#+0
+   \   00000024   32BD               POP      {R1,R4,R5,PC}
+    540              }
+    541              if (OSIntNesting > 0) {                                 /* See if trying to call from an ISR                      */
+   \                     ??OSTmrStart_2:
+   \   00000026   ....               LDR.N    R0,??DataTable7  ;; OSIntNesting
+   \   00000028   0078               LDRB     R0,[R0, #+0]
+   \   0000002A   0028               CMP      R0,#+0
+   \   0000002C   03D0               BEQ.N    ??OSTmrStart_3
+    542                  *perr  = OS_ERR_TMR_ISR;
+   \   0000002E   8B20               MOVS     R0,#+139
+   \   00000030   2070               STRB     R0,[R4, #+0]
+    543                  return (OS_FALSE);
+   \   00000032   0020               MOVS     R0,#+0
+   \   00000034   32BD               POP      {R1,R4,R5,PC}
+    544              }
+    545              OSTmr_Lock();
+   \                     ??OSTmrStart_3:
+   \   00000036   ........           BL       OSTmr_Lock
+    546              switch (ptmr->OSTmrState) {
+   \   0000003A   95F83100           LDRB     R0,[R5, #+49]
+   \   0000003E   0028               CMP      R0,#+0
+   \   00000040   1BD0               BEQ.N    ??OSTmrStart_4
+   \   00000042   0228               CMP      R0,#+2
+   \   00000044   0FD0               BEQ.N    ??OSTmrStart_5
+   \   00000046   0ED3               BCC.N    ??OSTmrStart_5
+   \   00000048   0328               CMP      R0,#+3
+   \   0000004A   1CD1               BNE.N    ??OSTmrStart_6
+    547                  case OS_TMR_STATE_RUNNING:                          /* Restart the timer                                      */
+    548                       OSTmr_Unlink(ptmr);                            /* ... Stop the timer                                     */
+   \   0000004C   2846               MOV      R0,R5
+   \   0000004E   ........           BL       OSTmr_Unlink
+    549                       OSTmr_Link(ptmr, OS_TMR_LINK_DLY);             /* ... Link timer to timer wheel                          */
+   \   00000052   0021               MOVS     R1,#+0
+   \   00000054   2846               MOV      R0,R5
+   \   00000056   ........           BL       OSTmr_Link
+    550                       OSTmr_Unlock();
+   \   0000005A   ........           BL       OSTmr_Unlock
+    551                       *perr = OS_ERR_NONE;
+   \   0000005E   0020               MOVS     R0,#+0
+   \   00000060   2070               STRB     R0,[R4, #+0]
+    552                       return (OS_TRUE);
+   \   00000062   0120               MOVS     R0,#+1
+   \   00000064   32BD               POP      {R1,R4,R5,PC}
+    553          
+    554                  case OS_TMR_STATE_STOPPED:                          /* Start the timer                                        */
+    555                  case OS_TMR_STATE_COMPLETED:
+    556                       OSTmr_Link(ptmr, OS_TMR_LINK_DLY);             /* ... Link timer to timer wheel                          */
+   \                     ??OSTmrStart_5:
+   \   00000066   0021               MOVS     R1,#+0
+   \   00000068   2846               MOV      R0,R5
+   \   0000006A   ........           BL       OSTmr_Link
+    557                       OSTmr_Unlock();
+   \   0000006E   ........           BL       OSTmr_Unlock
+    558                       *perr = OS_ERR_NONE;
+   \   00000072   0020               MOVS     R0,#+0
+   \   00000074   2070               STRB     R0,[R4, #+0]
+    559                       return (OS_TRUE);
+   \   00000076   0120               MOVS     R0,#+1
+   \   00000078   32BD               POP      {R1,R4,R5,PC}
+    560          
+    561                  case OS_TMR_STATE_UNUSED:                           /* Timer not created                                      */
+    562                       OSTmr_Unlock();
+   \                     ??OSTmrStart_4:
+   \   0000007A   ........           BL       OSTmr_Unlock
+    563                       *perr = OS_ERR_TMR_INACTIVE;
+   \   0000007E   8720               MOVS     R0,#+135
+   \   00000080   2070               STRB     R0,[R4, #+0]
+    564                       return (OS_FALSE);
+   \   00000082   0020               MOVS     R0,#+0
+   \   00000084   32BD               POP      {R1,R4,R5,PC}
+    565          
+    566                  default:
+    567                       OSTmr_Unlock();
+   \                     ??OSTmrStart_6:
+   \   00000086   ........           BL       OSTmr_Unlock
+    568                       *perr = OS_ERR_TMR_INVALID_STATE;
+   \   0000008A   8D20               MOVS     R0,#+141
+   \   0000008C   2070               STRB     R0,[R4, #+0]
+    569                       return (OS_FALSE);
+   \   0000008E   0020               MOVS     R0,#+0
+   \   00000090   32BD               POP      {R1,R4,R5,PC}    ;; return
+    570              }
+    571          }
+    572          #endif
+    573          
+    574          /*$PAGE*/
+    575          /*
+    576          ************************************************************************************************************************
+    577          *                                                   STOP A TIMER
+    578          *
+    579          * Description: This function is called by your application code to stop a timer.
+    580          *
+    581          * Arguments  : ptmr          Is a pointer to the timer to stop.
+    582          *
+    583          *              opt           Allows you to specify an option to this functions which can be:
+    584          *
+    585          *                               OS_TMR_OPT_NONE          Do nothing special but stop the timer
+    586          *                               OS_TMR_OPT_CALLBACK      Execute the callback function, pass it the callback argument
+    587          *                                                        specified when the timer was created.
+    588          *                               OS_TMR_OPT_CALLBACK_ARG  Execute the callback function, pass it the callback argument
+    589          *                                                        specified in THIS function call
+    590          *
+    591          *              callback_arg  Is a pointer to a 'new' callback argument that can be passed to the callback function
+    592          *                               instead of the timer's callback argument.  In other words, use 'callback_arg' passed in
+    593          *                               THIS function INSTEAD of ptmr->OSTmrCallbackArg
+    594          *
+    595          *              perr          Is a pointer to an error code.  '*perr' will contain one of the following:
+    596          *                               OS_ERR_NONE
+    597          *                               OS_ERR_TMR_INVALID         'ptmr' is a NULL pointer
+    598          *                               OS_ERR_TMR_INVALID_TYPE    'ptmr'  is not pointing to an OS_TMR
+    599          *                               OS_ERR_TMR_ISR             if the function was called from an ISR
+    600          *                               OS_ERR_TMR_INACTIVE        if the timer was not created
+    601          *                               OS_ERR_TMR_INVALID_OPT     if you specified an invalid option for 'opt'
+    602          *                               OS_ERR_TMR_STOPPED         if the timer was already stopped
+    603          *                               OS_ERR_TMR_INVALID_STATE   the timer is in an invalid state
+    604          *                               OS_ERR_TMR_NO_CALLBACK     if the timer does not have a callback function defined
+    605          *
+    606          * Returns    : OS_TRUE       If we stopped the timer (if the timer is already stopped, we also return OS_TRUE)
+    607          *              OS_FALSE      If not
+    608          ************************************************************************************************************************
+    609          */
+    610          
+    611          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    612          BOOLEAN  OSTmrStop (OS_TMR  *ptmr,
+    613                              INT8U    opt,
+    614                              void    *callback_arg,
+    615                              INT8U   *perr)
+    616          {
+   \                     OSTmrStop:
+   \   00000000   F8B5               PUSH     {R3-R7,LR}
+   \   00000002   0746               MOV      R7,R0
+   \   00000004   0D46               MOV      R5,R1
+   \   00000006   1446               MOV      R4,R2
+   \   00000008   1E00               MOVS     R6,R3
+    617              OS_TMR_CALLBACK  pfnct;
+    618          
+    619          
+    620          #if OS_ARG_CHK_EN > 0
+    621              if (perr == (INT8U *)0) {                                     /* Validate arguments                               */
+   \   0000000A   01D1               BNE.N    ??OSTmrStop_0
+    622                  return (OS_FALSE);
+   \   0000000C   0020               MOVS     R0,#+0
+   \   0000000E   F2BD               POP      {R1,R4-R7,PC}
+    623              }
+    624              if (ptmr == (OS_TMR *)0) {
+   \                     ??OSTmrStop_0:
+   \   00000010   002F               CMP      R7,#+0
+   \   00000012   03D1               BNE.N    ??OSTmrStop_1
+    625                  *perr = OS_ERR_TMR_INVALID;
+   \   00000014   8A20               MOVS     R0,#+138
+   \   00000016   3070               STRB     R0,[R6, #+0]
+    626                  return (OS_FALSE);
+   \   00000018   0020               MOVS     R0,#+0
+   \   0000001A   F2BD               POP      {R1,R4-R7,PC}
+    627              }
+    628          #endif
+    629              if (ptmr->OSTmrType != OS_TMR_TYPE) {                         /* Validate timer structure                         */
+   \                     ??OSTmrStop_1:
+   \   0000001C   3878               LDRB     R0,[R7, #+0]
+   \   0000001E   6428               CMP      R0,#+100
+   \   00000020   03D0               BEQ.N    ??OSTmrStop_2
+    630                  *perr = OS_ERR_TMR_INVALID_TYPE;
+   \   00000022   8920               MOVS     R0,#+137
+   \   00000024   3070               STRB     R0,[R6, #+0]
+    631                  return (OS_FALSE);
+   \   00000026   0020               MOVS     R0,#+0
+   \   00000028   F2BD               POP      {R1,R4-R7,PC}
+    632              }
+    633              if (OSIntNesting > 0) {                                       /* See if trying to call from an ISR                */
+   \                     ??OSTmrStop_2:
+   \   0000002A   ....               LDR.N    R0,??DataTable7  ;; OSIntNesting
+   \   0000002C   0078               LDRB     R0,[R0, #+0]
+   \   0000002E   0028               CMP      R0,#+0
+   \   00000030   03D0               BEQ.N    ??OSTmrStop_3
+    634                  *perr  = OS_ERR_TMR_ISR;
+   \   00000032   8B20               MOVS     R0,#+139
+   \   00000034   3070               STRB     R0,[R6, #+0]
+    635                  return (OS_FALSE);
+   \   00000036   0020               MOVS     R0,#+0
+   \   00000038   F2BD               POP      {R1,R4-R7,PC}
+    636              }
+    637              OSTmr_Lock();
+   \                     ??OSTmrStop_3:
+   \   0000003A   ........           BL       OSTmr_Lock
+    638              switch (ptmr->OSTmrState) {
+   \   0000003E   97F83100           LDRB     R0,[R7, #+49]
+   \   00000042   0028               CMP      R0,#+0
+   \   00000044   30D0               BEQ.N    ??OSTmrStop_4
+   \   00000046   0228               CMP      R0,#+2
+   \   00000048   28D0               BEQ.N    ??OSTmrStop_5
+   \   0000004A   27D3               BCC.N    ??OSTmrStop_5
+   \   0000004C   0328               CMP      R0,#+3
+   \   0000004E   31D1               BNE.N    ??OSTmrStop_6
+    639                  case OS_TMR_STATE_RUNNING:
+    640                       OSTmr_Unlink(ptmr);                                  /* Remove from current wheel spoke                  */
+   \   00000050   3846               MOV      R0,R7
+   \   00000052   ........           BL       OSTmr_Unlink
+    641                       *perr = OS_ERR_NONE;
+   \   00000056   0020               MOVS     R0,#+0
+   \   00000058   3070               STRB     R0,[R6, #+0]
+    642                       switch (opt) {
+   \   0000005A   002D               CMP      R5,#+0
+   \   0000005C   1AD0               BEQ.N    ??OSTmrStop_7
+   \   0000005E   032D               CMP      R5,#+3
+   \   00000060   02D0               BEQ.N    ??OSTmrStop_8
+   \   00000062   042D               CMP      R5,#+4
+   \   00000064   0AD0               BEQ.N    ??OSTmrStop_9
+   \   00000066   13E0               B.N      ??OSTmrStop_10
+    643                           case OS_TMR_OPT_CALLBACK:
+    644                                pfnct = ptmr->OSTmrCallback;                /* Execute callback function if available ...       */
+   \                     ??OSTmrStop_8:
+   \   00000068   7A68               LDR      R2,[R7, #+4]
+    645                                if (pfnct != (OS_TMR_CALLBACK)0) {
+   \   0000006A   1000               MOVS     R0,R2
+   \   0000006C   03D0               BEQ.N    ??OSTmrStop_11
+    646                                    (*pfnct)((void *)ptmr, ptmr->OSTmrCallbackArg);  /* Use callback arg when timer was created */
+   \   0000006E   B968               LDR      R1,[R7, #+8]
+   \   00000070   3846               MOV      R0,R7
+   \   00000072   9047               BLX      R2
+   \   00000074   0EE0               B.N      ??OSTmrStop_7
+    647                                } else {
+    648                                    *perr = OS_ERR_TMR_NO_CALLBACK;
+   \                     ??OSTmrStop_11:
+   \   00000076   8F20               MOVS     R0,#+143
+   \   00000078   3070               STRB     R0,[R6, #+0]
+   \   0000007A   0BE0               B.N      ??OSTmrStop_7
+    649                                }
+    650                                break;
+    651          
+    652                           case OS_TMR_OPT_CALLBACK_ARG:
+    653                                pfnct = ptmr->OSTmrCallback;                /* Execute callback function if available ...       */
+   \                     ??OSTmrStop_9:
+   \   0000007C   7A68               LDR      R2,[R7, #+4]
+    654                                if (pfnct != (OS_TMR_CALLBACK)0) {
+   \   0000007E   1000               MOVS     R0,R2
+   \   00000080   03D0               BEQ.N    ??OSTmrStop_12
+    655                                    (*pfnct)((void *)ptmr, callback_arg);   /* ... using the 'callback_arg' provided in call    */
+   \   00000082   2146               MOV      R1,R4
+   \   00000084   3846               MOV      R0,R7
+   \   00000086   9047               BLX      R2
+   \   00000088   04E0               B.N      ??OSTmrStop_7
+    656                                } else {
+    657                                    *perr = OS_ERR_TMR_NO_CALLBACK;
+   \                     ??OSTmrStop_12:
+   \   0000008A   8F20               MOVS     R0,#+143
+   \   0000008C   3070               STRB     R0,[R6, #+0]
+   \   0000008E   01E0               B.N      ??OSTmrStop_7
+    658                                }
+    659                                break;
+    660          
+    661                           case OS_TMR_OPT_NONE:
+    662                                break;
+    663          
+    664                           default:
+    665                               *perr = OS_ERR_TMR_INVALID_OPT;
+   \                     ??OSTmrStop_10:
+   \   00000090   8420               MOVS     R0,#+132
+   \   00000092   3070               STRB     R0,[R6, #+0]
+    666                               break;
+    667                       }
+    668                       OSTmr_Unlock();
+   \                     ??OSTmrStop_7:
+   \   00000094   ........           BL       OSTmr_Unlock
+    669                       return (OS_TRUE);
+   \   00000098   0120               MOVS     R0,#+1
+   \   0000009A   F2BD               POP      {R1,R4-R7,PC}
+    670          
+    671                  case OS_TMR_STATE_COMPLETED:                              /* Timer has already completed the ONE-SHOT or ...  */
+    672                  case OS_TMR_STATE_STOPPED:                                /* ... timer has not started yet.                   */
+    673                       OSTmr_Unlock();
+   \                     ??OSTmrStop_5:
+   \   0000009C   ........           BL       OSTmr_Unlock
+    674                       *perr = OS_ERR_TMR_STOPPED;
+   \   000000A0   8E20               MOVS     R0,#+142
+   \   000000A2   3070               STRB     R0,[R6, #+0]
+    675                       return (OS_TRUE);
+   \   000000A4   0120               MOVS     R0,#+1
+   \   000000A6   F2BD               POP      {R1,R4-R7,PC}
+    676          
+    677                  case OS_TMR_STATE_UNUSED:                                 /* Timer was not created                            */
+    678                       OSTmr_Unlock();
+   \                     ??OSTmrStop_4:
+   \   000000A8   ........           BL       OSTmr_Unlock
+    679                       *perr = OS_ERR_TMR_INACTIVE;
+   \   000000AC   8720               MOVS     R0,#+135
+   \   000000AE   3070               STRB     R0,[R6, #+0]
+    680                       return (OS_FALSE);
+   \   000000B0   0020               MOVS     R0,#+0
+   \   000000B2   F2BD               POP      {R1,R4-R7,PC}
+    681          
+    682                  default:
+    683                       OSTmr_Unlock();
+   \                     ??OSTmrStop_6:
+   \   000000B4   ........           BL       OSTmr_Unlock
+    684                       *perr = OS_ERR_TMR_INVALID_STATE;
+   \   000000B8   8D20               MOVS     R0,#+141
+   \   000000BA   3070               STRB     R0,[R6, #+0]
+    685                       return (OS_FALSE);
+   \   000000BC   0020               MOVS     R0,#+0
+   \   000000BE   F2BD               POP      {R1,R4-R7,PC}    ;; return
+    686              }
+    687          }
+    688          #endif
+    689          
+    690          /*$PAGE*/
+    691          /*
+    692          ************************************************************************************************************************
+    693          *                                      SIGNAL THAT IT'S TIME TO UPDATE THE TIMERS
+    694          *
+    695          * Description: This function is typically called by the ISR that occurs at the timer tick rate and is used to signal to
+    696          *              OSTmr_Task() that it's time to update the timers.
+    697          *
+    698          * Arguments  : none
+    699          *
+    700          * Returns    : OS_ERR_NONE         The call was successful and the timer task was signaled.
+    701          *              OS_ERR_SEM_OVF      If OSTmrSignal() was called more often than OSTmr_Task() can handle the timers.  
+    702          *                                  This would indicate that your system is heavily loaded.
+    703          *              OS_ERR_EVENT_TYPE   Unlikely you would get this error because the semaphore used for signaling is created 
+    704          *                                  by uC/OS-II.
+    705          *              OS_ERR_PEVENT_NULL  Again, unlikely you would ever get this error because the semaphore used for signaling 
+    706          *                                  is created by uC/OS-II.
+    707          ************************************************************************************************************************
+    708          */
+    709          
+    710          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    711          INT8U  OSTmrSignal (void)
+    712          {
+    713              INT8U  err;
+    714          
+    715          
+    716              err = OSSemPost(OSTmrSemSignal);
+   \                     OSTmrSignal:
+   \   00000000   ....               LDR.N    R0,??DataTable29  ;; OSTmrSemSignal
+   \   00000002   0068               LDR      R0,[R0, #+0]
+   \   00000004   ........           B.W      OSSemPost
+    717              return (err);
+    718          }
+    719          #endif
+    720          
+    721          /*$PAGE*/
+    722          /*
+    723          ************************************************************************************************************************
+    724          *                                               ALLOCATE AND FREE A TIMER
+    725          *
+    726          * Description: This function is called to allocate a timer.
+    727          *
+    728          * Arguments  : none
+    729          *
+    730          * Returns    : a pointer to a timer if one is available
+    731          ************************************************************************************************************************
+    732          */
+    733          
+    734          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    735          static  OS_TMR  *OSTmr_Alloc (void)
+    736          {
+    737              OS_TMR *ptmr;
+    738          
+    739          
+    740              if (OSTmrFreeList == (OS_TMR *)0) {
+   \                     OSTmr_Alloc:
+   \   00000000   ....               LDR.N    R1,??DataTable19  ;; OSTmrFreeList
+   \   00000002   0868               LDR      R0,[R1, #+0]
+   \   00000004   0028               CMP      R0,#+0
+   \   00000006   0CD0               BEQ.N    ??OSTmr_Alloc_0
+    741                  return ((OS_TMR *)0);
+    742              }
+    743              ptmr            = (OS_TMR *)OSTmrFreeList;
+    744              OSTmrFreeList   = (OS_TMR *)ptmr->OSTmrNext;
+   \   00000008   C268               LDR      R2,[R0, #+12]
+   \   0000000A   0A60               STR      R2,[R1, #+0]
+    745              ptmr->OSTmrNext = (OS_TCB *)0;
+   \   0000000C   0021               MOVS     R1,#+0
+   \   0000000E   C160               STR      R1,[R0, #+12]
+    746              ptmr->OSTmrPrev = (OS_TCB *)0;
+   \   00000010   0161               STR      R1,[R0, #+16]
+    747              OSTmrUsed++;
+   \   00000012   ....               LDR.N    R1,??DataTable17  ;; OSTmrUsed
+   \   00000014   0A88               LDRH     R2,[R1, #+0]
+   \   00000016   521C               ADDS     R2,R2,#+1
+   \   00000018   0A80               STRH     R2,[R1, #+0]
+    748              OSTmrFree--;
+   \   0000001A   ....               LDR.N    R1,??DataTable18  ;; OSTmrFree
+   \   0000001C   0A88               LDRH     R2,[R1, #+0]
+   \   0000001E   521E               SUBS     R2,R2,#+1
+   \   00000020   0A80               STRH     R2,[R1, #+0]
+    749              return (ptmr);
+   \                     ??OSTmr_Alloc_0:
+   \   00000022   7047               BX       LR               ;; return
+    750          }
+    751          #endif
+    752          
+    753          
+    754          /*
+    755          ************************************************************************************************************************
+    756          *                                             RETURN A TIMER TO THE FREE LIST
+    757          *
+    758          * Description: This function is called to return a timer object to the free list of timers.
+    759          *
+    760          * Arguments  : ptmr     is a pointer to the timer to free
+    761          *
+    762          * Returns    : none
+    763          ************************************************************************************************************************
+    764          */
+    765          
+    766          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    767          static  void  OSTmr_Free (OS_TMR *ptmr)
+    768          {
+    769              ptmr->OSTmrState       = OS_TMR_STATE_UNUSED;      /* Clear timer object fields                                   */
+   \                     OSTmr_Free:
+   \   00000000   00F12001           ADD      R1,R0,#+32
+   \   00000004   0022               MOVS     R2,#+0
+   \   00000006   4A74               STRB     R2,[R1, #+17]
+    770              ptmr->OSTmrOpt         = OS_TMR_OPT_NONE;
+   \   00000008   0A74               STRB     R2,[R1, #+16]
+    771              ptmr->OSTmrPeriod      = 0;
+   \   0000000A   C261               STR      R2,[R0, #+28]
+    772              ptmr->OSTmrMatch       = 0;
+   \   0000000C   4261               STR      R2,[R0, #+20]
+    773              ptmr->OSTmrCallback    = (OS_TMR_CALLBACK)0;
+   \   0000000E   4260               STR      R2,[R0, #+4]
+    774              ptmr->OSTmrCallbackArg = (void *)0;
+   \   00000010   8260               STR      R2,[R0, #+8]
+    775          #if OS_TMR_CFG_NAME_SIZE > 1
+    776              ptmr->OSTmrName[0]     = '?';                      /* Unknown name                                                */
+   \   00000012   3F22               MOVS     R2,#+63
+   \   00000014   80F82020           STRB     R2,[R0, #+32]
+    777              ptmr->OSTmrName[1]     = OS_ASCII_NUL;
+   \   00000018   0022               MOVS     R2,#+0
+   \   0000001A   4A70               STRB     R2,[R1, #+1]
+    778          #endif
+    779          
+    780              ptmr->OSTmrPrev        = (OS_TCB *)0;              /* Chain timer to free list                                    */
+   \   0000001C   1146               MOV      R1,R2
+   \   0000001E   0161               STR      R1,[R0, #+16]
+    781              ptmr->OSTmrNext        = OSTmrFreeList;
+   \   00000020   ....               LDR.N    R1,??DataTable19  ;; OSTmrFreeList
+   \   00000022   0A68               LDR      R2,[R1, #+0]
+   \   00000024   C260               STR      R2,[R0, #+12]
+    782              OSTmrFreeList          = ptmr;
+   \   00000026   0860               STR      R0,[R1, #+0]
+    783          
+    784              OSTmrUsed--;                                       /* Update timer object statistics                              */
+   \   00000028   ....               LDR.N    R0,??DataTable17  ;; OSTmrUsed
+   \   0000002A   0188               LDRH     R1,[R0, #+0]
+   \   0000002C   491E               SUBS     R1,R1,#+1
+   \   0000002E   0180               STRH     R1,[R0, #+0]
+    785              OSTmrFree++;
+   \   00000030   ....               LDR.N    R0,??DataTable18  ;; OSTmrFree
+   \   00000032   0188               LDRH     R1,[R0, #+0]
+   \   00000034   491C               ADDS     R1,R1,#+1
+   \   00000036   0180               STRH     R1,[R0, #+0]
+    786          }
+   \   00000038   7047               BX       LR               ;; return
+    787          #endif
+    788          
+    789          /*$PAGE*/
+    790          /*
+    791          ************************************************************************************************************************
+    792          *                                                    INITIALIZATION
+    793          *                                          INITIALIZE THE FREE LIST OF TIMERS
+    794          *
+    795          * Description: This function is called by OSInit() to initialize the free list of OS_TMRs.
+    796          *
+    797          * Arguments  : none
+    798          *
+    799          * Returns    : none
+    800          ************************************************************************************************************************
+    801          */
+    802          
+    803          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 4, keep-with-next
+    804          void  OSTmr_Init (void)
+    805          {
+   \                     OSTmr_Init:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   82B0               SUB      SP,SP,#+8
+    806          #if OS_EVENT_NAME_SIZE > 10
+    807              INT8U    err;
+    808          #endif
+    809              INT16U   i;
+    810              OS_TMR  *ptmr1;
+    811              OS_TMR  *ptmr2;
+    812          
+    813          
+    814              OS_MemClr((INT8U *)&OSTmrTbl[0],      sizeof(OSTmrTbl));            /* Clear all the TMRs                         */
+   \   00000004   284C               LDR.N    R4,??OSTmr_Init_0  ;; OSTmrTbl
+   \   00000006   4FF45071           MOV      R1,#+832
+   \   0000000A   2046               MOV      R0,R4
+   \   0000000C   ........           BL       OS_MemClr
+    815              OS_MemClr((INT8U *)&OSTmrWheelTbl[0], sizeof(OSTmrWheelTbl));       /* Clear the timer wheel                      */
+   \   00000010   4021               MOVS     R1,#+64
+   \   00000012   ....               LDR.N    R0,??DataTable30  ;; OSTmrWheelTbl
+   \   00000014   ........           BL       OS_MemClr
+    816          
+    817              ptmr1 = &OSTmrTbl[0];
+   \   00000018   2046               MOV      R0,R4
+    818              ptmr2 = &OSTmrTbl[1];
+   \   0000001A   04F13401           ADD      R1,R4,#+52
+    819              for (i = 0; i < (OS_TMR_CFG_MAX - 1); i++) {                        /* Init. list of free TMRs                    */
+   \   0000001E   0022               MOVS     R2,#+0
+   \   00000020   10E0               B.N      ??OSTmr_Init_1
+    820                  ptmr1->OSTmrType    = OS_TMR_TYPE;
+   \                     ??OSTmr_Init_2:
+   \   00000022   6423               MOVS     R3,#+100
+   \   00000024   00F8313B           STRB     R3,[R0], #+49
+    821                  ptmr1->OSTmrState   = OS_TMR_STATE_UNUSED;                      /* Indicate that timer is inactive            */
+   \   00000028   0023               MOVS     R3,#+0
+   \   0000002A   00F82539           STRB     R3,[R0], #-37
+    822                  ptmr1->OSTmrNext    = (void *)ptmr2;                            /* Link to next timer                         */
+   \   0000002E   40F8141B           STR      R1,[R0], #+20
+    823          #if OS_TMR_CFG_NAME_SIZE > 1
+    824                  ptmr1->OSTmrName[0] = '?';                                      /* Unknown name                               */
+   \   00000032   3F23               MOVS     R3,#+63
+   \   00000034   00F8013B           STRB     R3,[R0], #+1
+    825                  ptmr1->OSTmrName[1] = OS_ASCII_NUL;
+   \   00000038   0023               MOVS     R3,#+0
+   \   0000003A   00F8133B           STRB     R3,[R0], #+19
+    826          #endif
+    827                  ptmr1++;
+    828                  ptmr2++;
+   \   0000003E   3431               ADDS     R1,R1,#+52
+    829              }
+   \   00000040   521C               ADDS     R2,R2,#+1
+   \   00000042   92B2               UXTH     R2,R2
+   \                     ??OSTmr_Init_1:
+   \   00000044   1346               MOV      R3,R2
+   \   00000046   0F2B               CMP      R3,#+15
+   \   00000048   EBD3               BCC.N    ??OSTmr_Init_2
+    830              ptmr1->OSTmrType    = OS_TMR_TYPE;
+   \   0000004A   6421               MOVS     R1,#+100
+   \   0000004C   0170               STRB     R1,[R0, #+0]
+    831              ptmr1->OSTmrState   = OS_TMR_STATE_UNUSED;                          /* Indicate that timer is inactive            */
+   \   0000004E   00F12001           ADD      R1,R0,#+32
+   \   00000052   0022               MOVS     R2,#+0
+   \   00000054   4A74               STRB     R2,[R1, #+17]
+    832              ptmr1->OSTmrNext    = (void *)0;                                    /* Last OS_TMR                                */
+   \   00000056   C260               STR      R2,[R0, #+12]
+    833          #if OS_TMR_CFG_NAME_SIZE > 1
+    834              ptmr1->OSTmrName[0] = '?';                                          /* Unknown name                               */
+   \   00000058   3F22               MOVS     R2,#+63
+   \   0000005A   80F82020           STRB     R2,[R0, #+32]
+    835              ptmr1->OSTmrName[1] = OS_ASCII_NUL;
+   \   0000005E   0020               MOVS     R0,#+0
+   \   00000060   4870               STRB     R0,[R1, #+1]
+    836          #endif
+    837              OSTmrTime           = 0;
+   \   00000062   ....               LDR.N    R0,??DataTable28  ;; OSTmrTime
+   \   00000064   0021               MOVS     R1,#+0
+   \   00000066   0160               STR      R1,[R0, #+0]
+    838              OSTmrUsed           = 0;
+   \   00000068   ....               LDR.N    R0,??DataTable17  ;; OSTmrUsed
+   \   0000006A   0180               STRH     R1,[R0, #+0]
+    839              OSTmrFree           = OS_TMR_CFG_MAX;
+   \   0000006C   ....               LDR.N    R0,??DataTable18  ;; OSTmrFree
+   \   0000006E   1021               MOVS     R1,#+16
+   \   00000070   0180               STRH     R1,[R0, #+0]
+    840              OSTmrFreeList       = &OSTmrTbl[0];
+   \   00000072   ....               LDR.N    R0,??DataTable19  ;; OSTmrFreeList
+   \   00000074   0460               STR      R4,[R0, #+0]
+    841              OSTmrSem            = OSSemCreate(1);
+   \   00000076   ....               LDR.N    R5,??DataTable27  ;; OSTmrSem
+   \   00000078   0120               MOVS     R0,#+1
+   \   0000007A   ........           BL       OSSemCreate
+   \   0000007E   2860               STR      R0,[R5, #+0]
+    842              OSTmrSemSignal      = OSSemCreate(0);
+   \   00000080   ....               LDR.N    R6,??DataTable29  ;; OSTmrSemSignal
+   \   00000082   0020               MOVS     R0,#+0
+   \   00000084   ........           BL       OSSemCreate
+   \   00000088   3060               STR      R0,[R6, #+0]
+    843          
+    844          #if OS_EVENT_NAME_SIZE > 18
+    845              OSEventNameSet(OSTmrSem,       (INT8U *)"uC/OS-II TmrLock",   &err);/* Assign names to semaphores                 */
+    846          #else
+    847          #if OS_EVENT_NAME_SIZE > 10
+    848              OSEventNameSet(OSTmrSem,       (INT8U *)"OS-TmrLock",         &err);
+   \   0000008A   084C               LDR.N    R4,??OSTmr_Init_0+0x4  ;; `?<Constant "OS-TmrLock">`
+   \   0000008C   00AA               ADD      R2,SP,#+0
+   \   0000008E   2146               MOV      R1,R4
+   \   00000090   2868               LDR      R0,[R5, #+0]
+   \   00000092   ........           BL       OSEventNameSet
+    849          #endif
+    850          #endif
+    851          
+    852          #if OS_EVENT_NAME_SIZE > 18
+    853              OSEventNameSet(OSTmrSemSignal, (INT8U *)"uC/OS-II TmrSignal", &err);
+    854          #else
+    855          #if OS_EVENT_NAME_SIZE > 10
+    856              OSEventNameSet(OSTmrSemSignal, (INT8U *)"OS-TmrSig",          &err);
+   \   00000096   00AA               ADD      R2,SP,#+0
+   \   00000098   04F10C01           ADD      R1,R4,#+12
+   \   0000009C   3068               LDR      R0,[R6, #+0]
+   \   0000009E   ........           BL       OSEventNameSet
+    857          #endif
+    858          #endif
+    859          
+    860              OSTmr_InitTask();
+   \   000000A2   ........           BL       OSTmr_InitTask
+    861          }
+   \   000000A6   73BD               POP      {R0,R1,R4-R6,PC}  ;; return
+   \                     ??OSTmr_Init_0:
+   \   000000A8   ........           DC32     OSTmrTbl
+   \   000000AC   ........           DC32     `?<Constant "OS-TmrLock">`
+    862          #endif
+    863          
+    864          /*$PAGE*/
+    865          /*
+    866          ************************************************************************************************************************
+    867          *                                          INITIALIZE THE TIMER MANAGEMENT TASK
+    868          *
+    869          * Description: This function is called by OSTmrInit() to create the timer management task.
+    870          *
+    871          * Arguments  : none
+    872          *
+    873          * Returns    : none
+    874          ************************************************************************************************************************
+    875          */
+    876          
+    877          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 4, keep-with-next
+    878          static  void  OSTmr_InitTask (void)
+    879          {
+   \                     OSTmr_InitTask:
+   \   00000000   80B5               PUSH     {R7,LR}
+    880          #if OS_TASK_NAME_SIZE > 6
+    881              INT8U  err;
+    882          #endif
+    883          
+    884          
+    885          #if OS_TASK_CREATE_EXT_EN > 0
+    886              #if OS_STK_GROWTH == 1
+    887              (void)OSTaskCreateExt(OSTmr_Task,
+    888                                    (void *)0,                                       /* No arguments passed to OSTmrTask()      */
+    889                                    &OSTmrTaskStk[OS_TASK_TMR_STK_SIZE - 1],         /* Set Top-Of-Stack                        */
+    890                                    OS_TASK_TMR_PRIO,
+    891                                    OS_TASK_TMR_ID,
+    892                                    &OSTmrTaskStk[0],                                /* Set Bottom-Of-Stack                     */
+    893                                    OS_TASK_TMR_STK_SIZE,
+    894                                    (void *)0,                                       /* No TCB extension                        */
+    895                                    OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);      /* Enable stack checking + clear stack     */
+   \   00000002   0C4A               LDR.N    R2,??OSTmr_InitTask_0  ;; OSTmrTaskStk
+   \   00000004   0320               MOVS     R0,#+3
+   \   00000006   01B5               PUSH     {R0,LR}
+   \   00000008   0021               MOVS     R1,#+0
+   \   0000000A   8020               MOVS     R0,#+128
+   \   0000000C   03B4               PUSH     {R0,R1}
+   \   0000000E   1146               MOV      R1,R2
+   \   00000010   4FF6FD70           MOVW     R0,#+65533
+   \   00000014   03B4               PUSH     {R0,R1}
+   \   00000016   1D23               MOVS     R3,#+29
+   \   00000018   02F5FE72           ADD      R2,R2,#+508
+   \   0000001C   0021               MOVS     R1,#+0
+   \   0000001E   0648               LDR.N    R0,??OSTmr_InitTask_0+0x4  ;; OSTmr_Task
+   \   00000020   ........           BL       OSTaskCreateExt
+   \   00000024   06B0               ADD      SP,SP,#+24
+    896              #else
+    897              (void)OSTaskCreateExt(OSTmr_Task,
+    898                                    (void *)0,                                       /* No arguments passed to OSTmrTask()      */
+    899                                    &OSTmrTaskStk[0],                                /* Set Top-Of-Stack                        */
+    900                                    OS_TASK_TMR_PRIO,
+    901                                    OS_TASK_TMR_ID,
+    902                                    &OSTmrTaskStk[OS_TASK_TMR_STK_SIZE - 1],         /* Set Bottom-Of-Stack                     */
+    903                                    OS_TASK_TMR_STK_SIZE,
+    904                                    (void *)0,                                       /* No TCB extension                        */
+    905                                    OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);      /* Enable stack checking + clear stack     */
+    906              #endif
+    907          #else
+    908              #if OS_STK_GROWTH == 1
+    909              (void)OSTaskCreate(OSTmr_Task,
+    910                                 (void *)0,
+    911                                 &OSTmrTaskStk[OS_TASK_TMR_STK_SIZE - 1],
+    912                                 OS_TASK_TMR_PRIO);
+    913              #else
+    914              (void)OSTaskCreate(OSTmr_Task,
+    915                                 (void *)0,
+    916                                 &OSTmrTaskStk[0],
+    917                                 OS_TASK_TMR_PRIO);
+    918              #endif
+    919          #endif
+    920          
+    921          #if OS_TASK_NAME_SIZE > 12
+    922              OSTaskNameSet(OS_TASK_TMR_PRIO, (INT8U *)"uC/OS-II Tmr", &err);
+   \   00000026   00AA               ADD      R2,SP,#+0
+   \   00000028   0449               LDR.N    R1,??OSTmr_InitTask_0+0x8  ;; `?<Constant "uC/OS-II Tmr">`
+   \   0000002A   1D20               MOVS     R0,#+29
+   \   0000002C   ........           BL       OSTaskNameSet
+    923          #else
+    924          #if OS_TASK_NAME_SIZE > 6
+    925              OSTaskNameSet(OS_TASK_TMR_PRIO, (INT8U *)"OS-Tmr", &err);
+    926          #endif
+    927          #endif
+    928          }
+   \   00000030   01BD               POP      {R0,PC}          ;; return
+   \   00000032   00BF               Nop      
+   \                     ??OSTmr_InitTask_0:
+   \   00000034   ........           DC32     OSTmrTaskStk
+   \   00000038   ........           DC32     OSTmr_Task
+   \   0000003C   ........           DC32     `?<Constant "uC/OS-II Tmr">`
+    929          #endif
+    930          
+    931          /*$PAGE*/
+    932          /*
+    933          ************************************************************************************************************************
+    934          *                                         INSERT A TIMER INTO THE TIMER WHEEL
+    935          *
+    936          * Description: This function is called to insert the timer into the timer wheel.  The timer is always inserted at the
+    937          *              beginning of the list.
+    938          *
+    939          * Arguments  : ptmr          Is a pointer to the timer to insert.
+    940          *
+    941          *              type          Is either:
+    942          *                               OS_TMR_LINK_PERIODIC    Means to re-insert the timer after a period expired
+    943          *                               OS_TMR_LINK_DLY         Means to insert    the timer the first time
+    944          *
+    945          * Returns    : none
+    946          ************************************************************************************************************************
+    947          */
+    948          
+    949          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    950          static  void  OSTmr_Link (OS_TMR *ptmr, INT8U type)
+    951          {
+    952              OS_TMR       *ptmr1;
+    953              OS_TMR_WHEEL *pspoke;
+    954              INT16U        spoke;
+    955          
+    956          
+    957              ptmr->OSTmrState = OS_TMR_STATE_RUNNING;
+   \                     OSTmr_Link:
+   \   00000000   0322               MOVS     R2,#+3
+   \   00000002   80F83120           STRB     R2,[R0, #+49]
+    958              if (type == OS_TMR_LINK_PERIODIC) {                            /* Determine when timer will expire                */
+   \   00000006   0129               CMP      R1,#+1
+   \   00000008   05D1               BNE.N    ??OSTmr_Link_0
+    959                  ptmr->OSTmrMatch = ptmr->OSTmrPeriod + OSTmrTime;
+   \                     ??OSTmr_Link_1:
+   \   0000000A   C169               LDR      R1,[R0, #+28]
+   \   0000000C   ....               LDR.N    R2,??DataTable28  ;; OSTmrTime
+   \   0000000E   1268               LDR      R2,[R2, #+0]
+   \   00000010   5118               ADDS     R1,R2,R1
+   \   00000012   4161               STR      R1,[R0, #+20]
+   \   00000014   06E0               B.N      ??OSTmr_Link_2
+    960              } else {
+    961                  if (ptmr->OSTmrDly == 0) {
+   \                     ??OSTmr_Link_0:
+   \   00000016   8169               LDR      R1,[R0, #+24]
+   \   00000018   0029               CMP      R1,#+0
+   \   0000001A   F6D0               BEQ.N    ??OSTmr_Link_1
+    962                      ptmr->OSTmrMatch = ptmr->OSTmrPeriod + OSTmrTime;
+    963                  } else {
+    964                      ptmr->OSTmrMatch = ptmr->OSTmrDly    + OSTmrTime;
+   \   0000001C   ....               LDR.N    R2,??DataTable28  ;; OSTmrTime
+   \   0000001E   1268               LDR      R2,[R2, #+0]
+   \   00000020   5118               ADDS     R1,R2,R1
+   \   00000022   4161               STR      R1,[R0, #+20]
+    965                  }
+    966              }
+    967              spoke  = (INT16U)(ptmr->OSTmrMatch % OS_TMR_CFG_WHEEL_SIZE);
+    968              pspoke = &OSTmrWheelTbl[spoke];
+   \                     ??OSTmr_Link_2:
+   \   00000024   4169               LDR      R1,[R0, #+20]
+   \   00000026   01F00701           AND      R1,R1,#0x7
+   \   0000002A   ....               LDR.N    R2,??DataTable30  ;; OSTmrWheelTbl
+   \   0000002C   02EBC101           ADD      R1,R2,R1, LSL #+3
+    969          
+    970              if (pspoke->OSTmrFirst == (OS_TMR *)0) {                       /* Link into timer wheel                           */
+   \   00000030   0A68               LDR      R2,[R1, #+0]
+   \   00000032   002A               CMP      R2,#+0
+   \   00000034   0860               STR      R0,[R1, #+0]
+   \   00000036   C260               STR      R2,[R0, #+12]
+   \   00000038   02D1               BNE.N    ??OSTmr_Link_3
+    971                  pspoke->OSTmrFirst   = ptmr;
+    972                  ptmr->OSTmrNext      = (OS_TMR *)0;
+    973                  pspoke->OSTmrEntries = 1;
+   \   0000003A   0122               MOVS     R2,#+1
+   \   0000003C   8A80               STRH     R2,[R1, #+4]
+   \   0000003E   03E0               B.N      ??OSTmr_Link_4
+    974              } else {
+    975                  ptmr1                = pspoke->OSTmrFirst;                 /* Point to first timer in the spoke               */
+    976                  pspoke->OSTmrFirst   = ptmr;
+    977                  ptmr->OSTmrNext      = (void *)ptmr1;
+    978                  ptmr1->OSTmrPrev     = (void *)ptmr;
+   \                     ??OSTmr_Link_3:
+   \   00000040   1061               STR      R0,[R2, #+16]
+    979                  pspoke->OSTmrEntries++;
+   \   00000042   8A88               LDRH     R2,[R1, #+4]
+   \   00000044   521C               ADDS     R2,R2,#+1
+   \   00000046   8A80               STRH     R2,[R1, #+4]
+    980              }
+    981              ptmr->OSTmrPrev = (void *)0;                                   /* Timer always inserted as first node in list     */
+   \                     ??OSTmr_Link_4:
+   \   00000048   0021               MOVS     R1,#+0
+   \   0000004A   0161               STR      R1,[R0, #+16]
+    982          }
+   \   0000004C   7047               BX       LR               ;; return
+    983          #endif
+    984          
+    985          /*$PAGE*/
+    986          /*
+    987          ************************************************************************************************************************
+    988          *                                         REMOVE A TIMER FROM THE TIMER WHEEL
+    989          *
+    990          * Description: This function is called to remove the timer from the timer wheel.
+    991          *
+    992          * Arguments  : ptmr          Is a pointer to the timer to remove.
+    993          *
+    994          * Returns    : none
+    995          ************************************************************************************************************************
+    996          */
+    997          
+    998          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+    999          static  void  OSTmr_Unlink (OS_TMR *ptmr)
+   1000          {
+   \                     OSTmr_Unlink:
+   \   00000000   18B4               PUSH     {R3,R4}
+   1001              OS_TMR        *ptmr1;
+   1002              OS_TMR        *ptmr2;
+   1003              OS_TMR_WHEEL  *pspoke;
+   1004              INT16U         spoke;
+   1005          
+   1006          
+   1007              spoke  = (INT16U)(ptmr->OSTmrMatch % OS_TMR_CFG_WHEEL_SIZE);
+   1008              pspoke = &OSTmrWheelTbl[spoke];
+   \   00000002   00F10C01           ADD      R1,R0,#+12
+   \   00000006   8A68               LDR      R2,[R1, #+8]
+   \   00000008   02F00702           AND      R2,R2,#0x7
+   \   0000000C   ....               LDR.N    R3,??DataTable30  ;; OSTmrWheelTbl
+   \   0000000E   03EBC202           ADD      R2,R3,R2, LSL #+3
+   1009          
+   1010              if (pspoke->OSTmrFirst == ptmr) {                       /* See if timer to remove is at the beginning of list     */
+   \   00000012   1368               LDR      R3,[R2, #+0]
+   \   00000014   8342               CMP      R3,R0
+   \   00000016   06D1               BNE.N    ??OSTmr_Unlink_0
+   1011                  ptmr1              = (OS_TMR *)ptmr->OSTmrNext;
+   \   00000018   C368               LDR      R3,[R0, #+12]
+   1012                  pspoke->OSTmrFirst = (OS_TMR *)ptmr1;
+   \   0000001A   1360               STR      R3,[R2, #+0]
+   1013                  if (ptmr1 != (OS_TMR *)0) {
+   \   0000001C   002B               CMP      R3,#+0
+   \   0000001E   08D0               BEQ.N    ??OSTmr_Unlink_1
+   1014                      ptmr1->OSTmrPrev = (void *)0;
+   \   00000020   0024               MOVS     R4,#+0
+   \   00000022   1C61               STR      R4,[R3, #+16]
+   \   00000024   05E0               B.N      ??OSTmr_Unlink_1
+   1015                  }
+   1016              } else {
+   1017                  ptmr1            = (OS_TMR *)ptmr->OSTmrPrev;       /* Remove timer from somewhere in the list                */
+   \                     ??OSTmr_Unlink_0:
+   \   00000026   4B68               LDR      R3,[R1, #+4]
+   1018                  ptmr2            = (OS_TMR *)ptmr->OSTmrNext;
+   \   00000028   C468               LDR      R4,[R0, #+12]
+   1019                  ptmr1->OSTmrNext = ptmr2;
+   \   0000002A   DC60               STR      R4,[R3, #+12]
+   1020                  if (ptmr2 != (OS_TMR *)0) {
+   \   0000002C   002C               CMP      R4,#+0
+   \   0000002E   00D0               BEQ.N    ??OSTmr_Unlink_1
+   1021                      ptmr2->OSTmrPrev = (void *)ptmr1;
+   \   00000030   2361               STR      R3,[R4, #+16]
+   1022                  }
+   1023              }
+   1024              ptmr->OSTmrState = OS_TMR_STATE_STOPPED;
+   \                     ??OSTmr_Unlink_1:
+   \   00000032   0123               MOVS     R3,#+1
+   \   00000034   80F83130           STRB     R3,[R0, #+49]
+   1025              ptmr->OSTmrNext  = (void *)0;
+   \   00000038   0023               MOVS     R3,#+0
+   \   0000003A   C360               STR      R3,[R0, #+12]
+   1026              ptmr->OSTmrPrev  = (void *)0;
+   \   0000003C   1846               MOV      R0,R3
+   \   0000003E   4860               STR      R0,[R1, #+4]
+   1027              pspoke->OSTmrEntries--;
+   \   00000040   9088               LDRH     R0,[R2, #+4]
+   \   00000042   401E               SUBS     R0,R0,#+1
+   \   00000044   9080               STRH     R0,[R2, #+4]
+   1028          }
+   \   00000046   11BC               POP      {R0,R4}
+   \   00000048   7047               BX       LR               ;; return
+   1029          #endif
+   1030          
+   1031          /*$PAGE*/
+   1032          /*
+   1033          ************************************************************************************************************************
+   1034          *                                       TIMER MANAGER DATA STRUCTURE LOCKING MECHANISM
+   1035          *
+   1036          * Description: These functions are used to gain exclusive access to timer management data structures.
+   1037          *
+   1038          * Arguments  : none
+   1039          *
+   1040          * Returns    : none
+   1041          ************************************************************************************************************************
+   1042          */
+   1043          
+   1044          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+   1045          static  void  OSTmr_Lock (void)
+   1046          {
+   \                     OSTmr_Lock:
+   \   00000000   80B5               PUSH     {R7,LR}
+   1047              INT8U  err;
+   1048          
+   1049          
+   1050              OSSemPend(OSTmrSem, 0, &err);
+   \   00000002   00AA               ADD      R2,SP,#+0
+   \   00000004   0021               MOVS     R1,#+0
+   \   00000006   ....               LDR.N    R0,??DataTable27  ;; OSTmrSem
+   \   00000008   0068               LDR      R0,[R0, #+0]
+   \   0000000A   ........           BL       OSSemPend
+   1051              (void)err;
+   1052          }
+   \   0000000E   01BD               POP      {R0,PC}          ;; return
+   1053          #endif
+   1054          
+   1055          
+   1056          
+   1057          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+   1058          static  void  OSTmr_Unlock (void)
+   1059          {
+   1060              (void)OSSemPost(OSTmrSem);
+   \                     OSTmr_Unlock:
+   \   00000000   ....               LDR.N    R0,??DataTable27  ;; OSTmrSem
+   \   00000002   0068               LDR      R0,[R0, #+0]
+   \   00000004   ........           B.W      OSSemPost
+   1061          }
+   1062          #endif
+   1063          
+   1064          /*$PAGE*/
+   1065          /*
+   1066          ************************************************************************************************************************
+   1067          *                                                 TIMER MANAGEMENT TASK
+   1068          *
+   1069          * Description: This task is created by OSTmrInit().
+   1070          *
+   1071          * Arguments  : none
+   1072          *
+   1073          * Returns    : none
+   1074          ************************************************************************************************************************
+   1075          */
+   1076          
+   1077          #if OS_TMR_EN > 0
+
+   \                                 In section .text, align 2, keep-with-next
+   1078          static  void  OSTmr_Task (void *p_arg)
+   1079          {
+   \                     OSTmr_Task:
+   \   00000000   70B5               PUSH     {R4-R6,LR}
+   \   00000002   82B0               SUB      SP,SP,#+8
+   1080              INT8U            err;
+   1081              OS_TMR          *ptmr;
+   1082              OS_TMR          *ptmr_next;
+   1083              OS_TMR_CALLBACK  pfnct;
+   1084              OS_TMR_WHEEL    *pspoke;
+   1085              INT16U           spoke;
+   1086          
+   1087          
+   1088              (void)p_arg;                                                 /* Not using 'p_arg', prevent compiler warning       */
+   \   00000004   ....               LDR.N    R4,??DataTable28  ;; OSTmrTime
+   \   00000006   01E0               B.N      ??OSTmr_Task_0
+   1089              for (;;) {
+   1090                  OSSemPend(OSTmrSemSignal, 0, &err);                      /* Wait for signal indicating time to update timers  */
+   1091                  OSTmr_Lock();
+   1092                  OSTmrTime++;                                             /* Increment the current time                        */
+   1093                  spoke  = (INT16U)(OSTmrTime % OS_TMR_CFG_WHEEL_SIZE);    /* Position on current timer wheel entry             */
+   1094                  pspoke = &OSTmrWheelTbl[spoke];
+   1095                  ptmr   = pspoke->OSTmrFirst;
+   1096                  while (ptmr != (OS_TMR *)0) {
+   1097                      ptmr_next = (OS_TMR *)ptmr->OSTmrNext;               /* Point to next timer to update because current ... */
+   1098                                                                           /* ... timer could get unlinked from the wheel.      */
+   1099                      if (OSTmrTime == ptmr->OSTmrMatch) {                 /* Process each timer that expires                   */
+   1100                          pfnct = ptmr->OSTmrCallback;                     /* Execute callback function if available            */
+   1101                          if (pfnct != (OS_TMR_CALLBACK)0) {
+   1102                              (*pfnct)((void *)ptmr, ptmr->OSTmrCallbackArg);
+   1103                          }
+   1104                          OSTmr_Unlink(ptmr);                              /* Remove from current wheel spoke                   */
+   1105                          if (ptmr->OSTmrOpt == OS_TMR_OPT_PERIODIC) {
+   1106                              OSTmr_Link(ptmr, OS_TMR_LINK_PERIODIC);      /* Recalculate new position of timer in wheel        */
+   1107                          } else {
+   1108                              ptmr->OSTmrState = OS_TMR_STATE_COMPLETED;   /* Indicate that the timer has completed             */
+   1109                          }
+   1110                      }
+   1111                      ptmr = ptmr_next;
+   1112                  }
+   1113                  OSTmr_Unlock();
+   \                     ??OSTmr_Task_1:
+   \   00000008   ........           BL       OSTmr_Unlock
+   \                     ??OSTmr_Task_0:
+   \   0000000C   00AA               ADD      R2,SP,#+0
+   \   0000000E   0021               MOVS     R1,#+0
+   \   00000010   ....               LDR.N    R0,??DataTable29  ;; OSTmrSemSignal
+   \   00000012   0068               LDR      R0,[R0, #+0]
+   \   00000014   ........           BL       OSSemPend
+   \   00000018   ........           BL       OSTmr_Lock
+   \   0000001C   2068               LDR      R0,[R4, #+0]
+   \   0000001E   401C               ADDS     R0,R0,#+1
+   \   00000020   2060               STR      R0,[R4, #+0]
+   \   00000022   00F00700           AND      R0,R0,#0x7
+   \   00000026   ....               LDR.N    R1,??DataTable30  ;; OSTmrWheelTbl
+   \   00000028   51F83060           LDR      R6,[R1, R0, LSL #+3]
+   \   0000002C   04E0               B.N      ??OSTmr_Task_2
+   \                     ??OSTmr_Task_3:
+   \   0000002E   06F13000           ADD      R0,R6,#+48
+   \   00000032   0221               MOVS     R1,#+2
+   \   00000034   4170               STRB     R1,[R0, #+1]
+   \                     ??OSTmr_Task_4:
+   \   00000036   2E46               MOV      R6,R5
+   \                     ??OSTmr_Task_2:
+   \   00000038   002E               CMP      R6,#+0
+   \   0000003A   E5D0               BEQ.N    ??OSTmr_Task_1
+   \   0000003C   301D               ADDS     R0,R6,#+4
+   \   0000003E   8568               LDR      R5,[R0, #+8]
+   \   00000040   2168               LDR      R1,[R4, #+0]
+   \   00000042   0269               LDR      R2,[R0, #+16]
+   \   00000044   9142               CMP      R1,R2
+   \   00000046   F6D1               BNE.N    ??OSTmr_Task_4
+   \   00000048   7268               LDR      R2,[R6, #+4]
+   \   0000004A   1100               MOVS     R1,R2
+   \   0000004C   02D0               BEQ.N    ??OSTmr_Task_5
+   \   0000004E   4168               LDR      R1,[R0, #+4]
+   \   00000050   3046               MOV      R0,R6
+   \   00000052   9047               BLX      R2
+   \                     ??OSTmr_Task_5:
+   \   00000054   3046               MOV      R0,R6
+   \   00000056   ........           BL       OSTmr_Unlink
+   \   0000005A   96F83000           LDRB     R0,[R6, #+48]
+   \   0000005E   0228               CMP      R0,#+2
+   \   00000060   E5D1               BNE.N    ??OSTmr_Task_3
+   \   00000062   0121               MOVS     R1,#+1
+   \   00000064   3046               MOV      R0,R6
+   \   00000066   ........           BL       OSTmr_Link
+   \   0000006A   E4E7               B.N      ??OSTmr_Task_4
+   1114              }
+   1115          }
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable7:
+   \   00000000   ........           DC32     OSIntNesting
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable17:
+   \   00000000   ........           DC32     OSTmrUsed
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable18:
+   \   00000000   ........           DC32     OSTmrFree
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable19:
+   \   00000000   ........           DC32     OSTmrFreeList
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable27:
+   \   00000000   ........           DC32     OSTmrSem
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable28:
+   \   00000000   ........           DC32     OSTmrTime
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable29:
+   \   00000000   ........           DC32     OSTmrSemSignal
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable30:
+   \   00000000   ........           DC32     OSTmrWheelTbl
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "OS-TmrLock">`:
+   \   00000000   4F532D546D72       DC8 "OS-TmrLock"
+   \              4C6F636B00  
+   \   0000000B   00                 DC8 0
+   \   0000000C   4F532D546D72       DC8 "OS-TmrSig"
+   \              53696700    
+   \   00000016   0000               DC8 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "uC/OS-II Tmr">`:
+   \   00000000   75432F4F532D       DC8 "uC/OS-II Tmr"
+   \              494920546D72
+   \              00          
+   \   0000000D   000000             DC8 0, 0, 0
+   1116          #endif
+
+   Maximum stack usage in bytes:
+
+     Function       .cstack
+     --------       -------
+     OSTmrCreate        40
+     OSTmrDel           16
+     OSTmrNameGet       16
+     OSTmrRemainGet     16
+     OSTmrSignal         8
+     OSTmrStart         16
+     OSTmrStateGet      16
+     OSTmrStop          24
+     OSTmr_Alloc         0
+     OSTmr_Free          0
+     OSTmr_Init         24
+     OSTmr_InitTask     32
+     OSTmr_Link          0
+     OSTmr_Lock          8
+     OSTmr_Task         24
+     OSTmr_Unlink        8
+     OSTmr_Unlock        8
+
+
+   Section sizes:
+
+     Function/Label             Bytes
+     --------------             -----
+     OSTmrCreate                 226
+     OSTmrDel                    142
+     OSTmrNameGet                134
+     OSTmrRemainGet              178
+     OSTmrStateGet                86
+     OSTmrStart                  146
+     OSTmrStop                   192
+     OSTmrSignal                   8
+     OSTmr_Alloc                  36
+     OSTmr_Free                   58
+     OSTmr_Init                  176
+     OSTmr_InitTask               64
+     OSTmr_Link                   78
+     OSTmr_Unlink                 74
+     OSTmr_Lock                   16
+     OSTmr_Unlock                  8
+     OSTmr_Task                  108
+     ??DataTable7                  4
+     ??DataTable17                 4
+     ??DataTable18                 4
+     ??DataTable19                 4
+     ??DataTable27                 4
+     ??DataTable28                 4
+     ??DataTable29                 4
+     ??DataTable30                 4
+     ?<Constant "OS-TmrLock">     24
+     ?<Constant "uC/OS-II Tmr">   16
+
+ 
+    40 bytes in section .rodata
+ 1 762 bytes in section .text
+ 
+ 1 762 bytes of CODE  memory
+    40 bytes of CONST memory
+
+Errors: none
+Warnings: none

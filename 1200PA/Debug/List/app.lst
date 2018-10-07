@@ -1,0 +1,1259 @@
+###############################################################################
+#                                                                             #
+#                                                       29/Jun/2009  17:23:07 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\app.c      #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\app.c"    #
+#                    -D _DLIB_FILE_DESCRIPTOR -lC "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Debug\List\" -o "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Debug\Obj\" --no_unroll --no_inline         #
+#                    --no_tbaa --no_scheduling --debug --endian=little        #
+#                    --cpu=Cortex-M3 -e --fpu=None --dlib_config "D:\Program  #
+#                    Files\IAR Systems\Embedded Workbench 5.4                 #
+#                    Kickstart\arm\INC\DLib_Config_Normal.h" -I               #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\app.lst                                    #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over IP\Debug\Obj\app.o   #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\app.c
+      1          /*
+      2          *********************************************************************************************************
+      3          *                                       GLOBAL VARIABLES
+      4          *********************************************************************************************************
+      5          */
+      6          
+      7          /*
+      8          *********************************************************************************************************
+      9          *                                             INCLUDE FILES
+     10          *********************************************************************************************************
+     11          */
+     12          
+     13          #include <stdio.h>
+     14          #include <string.h>
+     15          
+     16          #include "bsp.h"
+     17          #include "uart/STM32/stm32_usart.h"
+     18          #include "network/w5100_inter.h"
+     19          #include "eeprom/at24c64.h"
+     20          #include "uart/usart_Inter.h"
+     21          #include "NetWork/w5100/socket.h"
+     22          #include "Can/STM32Can.h"
+     23          
+     24          /*
+     25          *********************************************************************************************************
+     26          *                                            LOCAL DEFINES
+     27          *********************************************************************************************************
+     28          */
+     29                                       
+     30          #define XOFF "\x13"
+     31          #define XON	 "\x11"
+     32          
+     33          /*
+     34          *********************************************************************************************************
+     35          *                                       LOCAL GLOBAL VARIABLES
+     36          *********************************************************************************************************
+     37          */
+     38          
+     39          /* ----------------- APPLICATION GLOBALS ------------------ */
+
+   \                                 In section .bss, align 4
+     40          static  void 		   *SockMsg[SockMsgNum];
+     41          static  void 		   *UartMsg[UartMsgNum];
+     42          static  void           *CanMsg[CanMsgNum];
+     43          
+     44          /* -------- uC/OS-II APPLICATION TASK STACKS -------------- */
+     45          static  OS_STK         App_TaskStartStk[APP_CFG_TASK_START_STK_SIZE];
+     46          static  OS_STK         USART_TaskStk[USART_TASK_STK_SIZE];
+     47          static  OS_STK         CAN_TaskStk[CAN_Task_STK_SIZE];
+     48          static  OS_STK         Socked_TaskStk[Socked_Task_STK_SIZE];
+     49          static  OS_STK         HyperTerminal_TaskStk[HYPER_TERMINAL_TASK_STK_SIZE];
+     50          /*
+     51          *********************************************************************************************************
+     52          *                                      GLOBAL VARIABLES
+     53          *********************************************************************************************************
+     54          */
+     55          /* ---------- uC/OS-II APPLICATION EVENTS ----------------- */
+     56          OS_EVENT	*SockMsgQ;
+   \                     SockMsgQ:
+   \   00000000                      DS8 4
+   \   00000004                      DS8 40
+   \   0000002C                      DS8 256
+
+   \                                 In section .bss, align 4
+     57          OS_EVENT	*UartMsgQ;
+   \                     UartMsgQ:
+   \   00000000                      DS8 4
+   \   00000004                      DS8 512
+   \   00000204                      DS8 256
+
+   \                                 In section .bss, align 4
+     58          OS_EVENT	*CanMsgQ;
+   \                     CanMsgQ:
+   \   00000000                      DS8 4
+   \   00000004                      DS8 64
+   \   00000044                      DS8 256
+
+   \                                 In section .bss, align 4
+   \                     App_TaskStartStk:
+   \   00000000                      DS8 512
+
+   \                                 In section .bss, align 4
+   \                     HyperTerminal_TaskStk:
+   \   00000000                      DS8 256
+     59          /*
+     60          *********************************************************************************************************
+     61          *                                      FUNCTION PROTOTYPES
+     62          *********************************************************************************************************
+     63          */
+     64           
+     65          
+     66          
+     67          /*
+     68          *********************************************************************************************************
+     69          *                                      LOCAL FUNCTION PROTOTYPES
+     70          *********************************************************************************************************
+     71          */
+     72          static  void            HyperTerminal_TaskCreate     (void);
+     73          static  void            USART_TaskCreate             (void);
+     74          static  void            Socked_TaskCreate            (void);
+     75          static  void            CAN_TaskCreate               (void);
+     76          static  void            App_TaskStart                (void       *p_arg);
+     77          static  void            HyperTerminal_Task           (void       *p_arg);
+     78          static  void            USART_Task           	     (void       *p_arg);
+     79          static  void            Socked_Task           	     (void       *p_arg);
+     80          static  void            CAN_Task           	         (void       *p_arg);
+     81          //static  void            App_FormatDec                (CPU_INT08U  *s, CPU_INT32U value, CPU_INT08U   digits);
+     82          
+     83          /*
+     84          *********************************************************************************************************
+     85          *                                                main()
+     86          *
+     87          * Description : This is the standard entry point for C code.  It is assumed that your code will call
+     88          *               main() once you have performed all necessary initialization.
+     89          *
+     90          * Argument(s) : none.
+     91          *
+     92          * Return(s)   : none.
+     93          *
+     94          * Caller(s)   : This the main standard entry point.
+     95          *
+     96          * Note(s)     : none.
+     97          *********************************************************************************************************
+     98          */
+
+   \                                 In section .text, align 4, keep-with-next
+     99          int  main (void)
+    100          {
+   \                     main:
+   \   00000000   80B5               PUSH     {R7,LR}
+    101          #if (OS_TASK_NAME_SIZE > 5)    
+    102              CPU_INT08U  err;
+    103          #endif
+    104          
+    105              BSP_IntDisAll();                                            /* Disable all interrupts until we are ready to accept them */
+   \   00000002   ........           BL       BSP_IntDisAll
+    106          
+    107              OSInit();                                                   /* Initialize "uC/OS-II, The Real-Time Kernel"              */
+   \   00000006   ........           BL       OSInit
+    108          
+    109          	
+    110          	
+    111              OSTaskCreateExt((void (*)(void *)) App_TaskStart,           /* Create the start task                                    */
+    112                              (void           *) 0,
+    113                              (OS_STK         *)&App_TaskStartStk[APP_CFG_TASK_START_STK_SIZE - 1],
+    114                              (INT8U           ) APP_CFG_TASK_START_PRIO,
+    115                              (INT16U          ) APP_CFG_TASK_START_PRIO,
+    116                              (OS_STK         *)&App_TaskStartStk[0],
+    117                              (INT32U          ) APP_CFG_TASK_START_STK_SIZE,
+    118                              (void           *) 0,
+    119                              (INT16U          )(OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+   \   0000000A   0D4A               LDR.N    R2,??main_0      ;; App_TaskStartStk
+   \   0000000C   0320               MOVS     R0,#+3
+   \   0000000E   01B5               PUSH     {R0,LR}
+   \   00000010   0021               MOVS     R1,#+0
+   \   00000012   8020               MOVS     R0,#+128
+   \   00000014   03B4               PUSH     {R0,R1}
+   \   00000016   1146               MOV      R1,R2
+   \   00000018   0320               MOVS     R0,#+3
+   \   0000001A   03B4               PUSH     {R0,R1}
+   \   0000001C   0346               MOV      R3,R0
+   \   0000001E   02F5FE72           ADD      R2,R2,#+508
+   \   00000022   0021               MOVS     R1,#+0
+   \   00000024   0748               LDR.N    R0,??main_0+0x4  ;; App_TaskStart
+   \   00000026   ........           BL       OSTaskCreateExt
+   \   0000002A   06B0               ADD      SP,SP,#+24
+    120          
+    121          #if (OS_TASK_NAME_SIZE > 5)
+    122              OSTaskNameSet(APP_CFG_TASK_START_PRIO, "Start", &err);
+   \   0000002C   00AA               ADD      R2,SP,#+0
+   \   0000002E   0649               LDR.N    R1,??main_0+0x8  ;; `?<Constant "Start">`
+   \   00000030   0320               MOVS     R0,#+3
+   \   00000032   ........           BL       OSTaskNameSet
+    123          #endif
+    124          
+    125              OSStart();                                                  /* Start multitasking (i.e. give control to uC/OS-II)       */
+   \   00000036   ........           BL       OSStart
+    126          }
+   \   0000003A   0020               MOVS     R0,#+0
+   \   0000003C   02BD               POP      {R1,PC}          ;; return
+   \   0000003E   00BF               Nop      
+   \                     ??main_0:
+   \   00000040   ........           DC32     App_TaskStartStk
+   \   00000044   ........           DC32     App_TaskStart
+   \   00000048   ........           DC32     `?<Constant "Start">`
+    127          
+    128          /*
+    129          *********************************************************************************************************
+    130          *                                          App_TaskStart()
+    131          *
+    132          * Description : This is an example of a startup task.  As mentioned in the book's text, you MUST
+    133          *               initialize the ticker only once multitasking has started.
+    134          *
+    135          * Argument(s) : p_arg   is the argument passed to 'App_TaskStart()' by 'OSTaskCreate()'.
+    136          *
+    137          * Return(s)   : none.
+    138          *
+    139          * Caller(s)   : This is a task.
+    140          *
+    141          * Notes       : (1) The first line of code is used to prevent a compiler warning because 'p_arg' is not
+    142          *                   used.  The compiler should not generate any code for this statement.
+    143          *********************************************************************************************************
+    144          */
+    145          
+
+   \                                 In section .text, align 2, keep-with-next
+    146          static  void  App_TaskStart (void *p_arg)
+    147          {
+   \                     App_TaskStart:
+   \   00000000   10B5               PUSH     {R4,LR}
+    148              (void)p_arg;                                                /* See Note #1                                              */
+    149          	
+    150              BSP_Init();                                                 /* Initialize BSP functions                                 */
+   \   00000002   ........           BL       BSP_Init
+    151              OS_CPU_SysTickInit();                                       /* Initialize the SysTick.                              */
+   \   00000006   ........           BL       OS_CPU_SysTickInit
+    152          
+    153          #if (OS_TASK_STAT_EN > 0)
+    154              OSStatInit();                                               /* Determine CPU capacity                                   */
+   \   0000000A   ........           BL       OSStatInit
+    155          #endif
+    156          	AT24C64_Init();
+   \   0000000E   ........           BL       AT24C64_Init
+    157          	USART2_5_Init();
+   \   00000012   ........           BL       USART2_5_Init
+    158          	W5100_Init();
+   \   00000016   ........           BL       W5100_Init
+    159          	STM32_CAN_Init();
+   \   0000001A   ........           BL       STM32_CAN_Init
+    160          	HyperTerminal_TaskCreate();                                 //Create HyperTerminal tasks
+   \   0000001E   ........           BL       HyperTerminal_TaskCreate
+    161          	USART_TaskCreate();                                 		//Create USART_Net tasks
+   \   00000022   ........           BL       USART_TaskCreate
+    162          	Socked_TaskCreate();                                 		//Create Net_USART tasks
+   \   00000026   ........           BL       Socked_TaskCreate
+    163          	CAN_TaskCreate();
+   \   0000002A   ........           BL       CAN_TaskCreate
+    164          	
+    165              while (DEF_TRUE) {                                          /* Task body, always written as an infinite loop.            */
+    166          		for(int i=1;i<5;i++){
+   \                     ??App_TaskStart_0:
+   \   0000002E   0124               MOVS     R4,#+1
+   \                     ??App_TaskStart_1:
+   \   00000030   052C               CMP      R4,#+5
+   \   00000032   FCDA               BGE.N    ??App_TaskStart_0
+    167          			BSP_Relay_On(i); 
+   \   00000034   2046               MOV      R0,R4
+   \   00000036   C0B2               UXTB     R0,R0
+   \   00000038   ........           BL       BSP_Relay_On
+    168          			OSTimeDlyHMSM(0, 0, 0, 100);
+   \   0000003C   6423               MOVS     R3,#+100
+   \   0000003E   0022               MOVS     R2,#+0
+   \   00000040   1146               MOV      R1,R2
+   \   00000042   0846               MOV      R0,R1
+   \   00000044   ........           BL       OSTimeDlyHMSM
+    169          			BSP_Relay_Off(i);
+   \   00000048   2046               MOV      R0,R4
+   \   0000004A   C0B2               UXTB     R0,R0
+   \   0000004C   ........           BL       BSP_Relay_Off
+    170          			OSTimeDlyHMSM(0, 0, 0, 100);
+   \   00000050   6423               MOVS     R3,#+100
+   \   00000052   0022               MOVS     R2,#+0
+   \   00000054   1146               MOV      R1,R2
+   \   00000056   0846               MOV      R0,R1
+   \   00000058   ........           BL       OSTimeDlyHMSM
+    171          		}
+   \   0000005C   641C               ADDS     R4,R4,#+1
+   \   0000005E   E7E7               B.N      ??App_TaskStart_1
+    172              }
+    173          }
+    174          
+    175          
+    176          /*
+    177          *********************************************************************************************************
+    178          *                                      App_TaskCreate()
+    179          *
+    180          * Description :  This function creates the application tasks.
+    181          *
+    182          * Argument(s) :  none.
+    183          *
+    184          * Return(s)   :  none.
+    185          *
+    186          * Caller(s)   :  App_TaskStart().
+    187          *
+    188          * Note(s)     :  none.
+    189          *********************************************************************************************************
+    190          */
+    191          #if 0
+    192          static  void  App_TaskCreate (void)
+    193          {
+    194          #if (OS_TASK_NAME_SIZE > 8)        
+    195              CPU_INT08U      err;
+    196          #endif
+    197              
+    198              OSTaskCreateExt((void (*)(void *)) App_TaskPB,
+    199                              (void           *) 0,
+    200                              (OS_STK         *)&App_TaskPBStk[APP_CFG_TASK_PB_STK_SIZE - 1],
+    201                              (INT8U           ) APP_CFG_TASK_PB_PRIO,
+    202                              (INT16U          ) APP_CFG_TASK_PB_PRIO,
+    203                              (OS_STK         *)&App_TaskPBStk[0],
+    204                              (INT32U          ) APP_CFG_TASK_PB_STK_SIZE,
+    205                              (void           *) 0,
+    206                              (INT16U          )(OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+    207          
+    208          #if (OS_TASK_NAME_SIZE > 12)
+    209              OSTaskNameSet(APP_CFG_TASK_PB_PRIO, "Push Buttons", &err);
+    210          #endif
+    211          }
+    212          #endif
+    213          
+    214          
+    215          /*
+    216          *********************************************************************************************************
+    217          *                                      HyperTerminal_TaskCreate()
+    218          *
+    219          * Description :  This function creates the HyperTerminal tasks.
+    220          *
+    221          * Argument(s) :  none.
+    222          *
+    223          * Return(s)   :  none.
+    224          *
+    225          * Caller(s)   :  App_TaskStart().
+    226          *
+    227          * Note(s)     :  David Wang
+    228          *********************************************************************************************************
+    229          */
+    230          
+
+   \                                 In section .text, align 4, keep-with-next
+    231          static void HyperTerminal_TaskCreate(void)
+    232          {
+   \                     HyperTerminal_TaskCreate:
+   \   00000000   80B5               PUSH     {R7,LR}
+    233          #if (OS_TASK_NAME_SIZE > 8)        
+    234              CPU_INT08U      err;
+    235          #endif
+    236              OSTaskCreateExt((void (*)(void *)) HyperTerminal_Task,
+    237                              (void           *) 0,
+    238                              (OS_STK         *)&HyperTerminal_TaskStk[HYPER_TERMINAL_TASK_STK_SIZE - 1],
+    239                              (INT8U           ) HYPER_TERMINAL_TASK_PRIO,
+    240                              (INT16U          ) HYPER_TERMINAL_TASK_PRIO,
+    241                              (OS_STK         *)&HyperTerminal_TaskStk[0],
+    242                              (INT32U          ) HYPER_TERMINAL_TASK_STK_SIZE,
+    243                              (void           *) 0,
+    244                              (INT16U          )(OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+   \   00000002   0B4A               LDR.N    R2,??HyperTerminal_TaskCreate_0  ;; HyperTerminal_TaskStk
+   \   00000004   0320               MOVS     R0,#+3
+   \   00000006   01B5               PUSH     {R0,LR}
+   \   00000008   0021               MOVS     R1,#+0
+   \   0000000A   4020               MOVS     R0,#+64
+   \   0000000C   03B4               PUSH     {R0,R1}
+   \   0000000E   1146               MOV      R1,R2
+   \   00000010   0720               MOVS     R0,#+7
+   \   00000012   03B4               PUSH     {R0,R1}
+   \   00000014   0346               MOV      R3,R0
+   \   00000016   FC32               ADDS     R2,R2,#+252
+   \   00000018   0021               MOVS     R1,#+0
+   \   0000001A   0648               LDR.N    R0,??HyperTerminal_TaskCreate_0+0x4  ;; HyperTerminal_Task
+   \   0000001C   ........           BL       OSTaskCreateExt
+   \   00000020   06B0               ADD      SP,SP,#+24
+    245          
+    246          #if (OS_TASK_NAME_SIZE > 15)
+    247              OSTaskNameSet(HYPER_TERMINAL_TASK_PRIO, "HyperTerminal", &err);
+   \   00000022   00AA               ADD      R2,SP,#+0
+   \   00000024   0449               LDR.N    R1,??HyperTerminal_TaskCreate_0+0x8  ;; `?<Constant "HyperTerminal">`
+   \   00000026   0720               MOVS     R0,#+7
+   \   00000028   ........           BL       OSTaskNameSet
+    248          #endif
+    249          }
+   \   0000002C   01BD               POP      {R0,PC}          ;; return
+   \   0000002E   00BF               Nop      
+   \                     ??HyperTerminal_TaskCreate_0:
+   \   00000030   ........           DC32     HyperTerminal_TaskStk
+   \   00000034   ........           DC32     HyperTerminal_Task
+   \   00000038   ........           DC32     `?<Constant "HyperTerminal">`
+    250          /*
+    251          *********************************************************************************************************
+    252          *                                      USART_TaskCreate()
+    253          *
+    254          * Description :  This function creates the USART_Task tasks.
+    255          *
+    256          * Argument(s) :  none.
+    257          *
+    258          * Return(s)   :  none.
+    259          *
+    260          * Caller(s)   :  App_TaskStart().
+    261          *
+    262          * Note(s)     :  David Wang
+    263          *********************************************************************************************************
+    264          */
+    265          
+
+   \                                 In section .text, align 4, keep-with-next
+    266          static void USART_TaskCreate(void)
+    267          {
+   \                     USART_TaskCreate:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   82B0               SUB      SP,SP,#+8
+    268          #if (OS_TASK_NAME_SIZE > 8)        
+    269              CPU_INT08U      err;
+    270          #endif
+    271              OSTaskCreateExt((void (*)(void *)) USART_Task,
+    272                              (void           *) 0,
+    273                              (OS_STK         *)&USART_TaskStk[USART_TASK_STK_SIZE - 1],
+    274                              (INT8U           ) USART_TASK_PRIO,
+    275                              (INT16U          ) USART_TASK_PRIO,
+    276                              (OS_STK         *)&USART_TaskStk[0],
+    277                              (INT32U          ) USART_TASK_STK_SIZE,
+    278                              (void           *) 0,
+    279                              (INT16U          )(OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+   \   00000004   ....               LDR.N    R4,??DataTable3  ;; SockMsgQ
+   \   00000006   0320               MOVS     R0,#+3
+   \   00000008   01B5               PUSH     {R0,LR}
+   \   0000000A   0021               MOVS     R1,#+0
+   \   0000000C   4020               MOVS     R0,#+64
+   \   0000000E   03B4               PUSH     {R0,R1}
+   \   00000010   04F12C01           ADD      R1,R4,#+44
+   \   00000014   0420               MOVS     R0,#+4
+   \   00000016   03B4               PUSH     {R0,R1}
+   \   00000018   0346               MOV      R3,R0
+   \   0000001A   04F59472           ADD      R2,R4,#+296
+   \   0000001E   0021               MOVS     R1,#+0
+   \   00000020   0748               LDR.N    R0,??USART_TaskCreate_0  ;; USART_Task
+   \   00000022   ........           BL       OSTaskCreateExt
+   \   00000026   06B0               ADD      SP,SP,#+24
+    280          
+    281          #if (OS_TASK_NAME_SIZE > 15)
+    282              OSTaskNameSet(USART_TASK_PRIO, "USART_Net", &err);
+   \   00000028   00AA               ADD      R2,SP,#+0
+   \   0000002A   0649               LDR.N    R1,??USART_TaskCreate_0+0x4  ;; `?<Constant "USART_Net">`
+   \   0000002C   0420               MOVS     R0,#+4
+   \   0000002E   ........           BL       OSTaskNameSet
+    283          #endif
+    284          	SockMsgQ=OSQCreate(SockMsg,SockMsgNum);
+   \   00000032   0A21               MOVS     R1,#+10
+   \   00000034   201D               ADDS     R0,R4,#+4
+   \   00000036   ........           BL       OSQCreate
+   \   0000003A   2060               STR      R0,[R4, #+0]
+    285          }
+   \   0000003C   13BD               POP      {R0,R1,R4,PC}    ;; return
+   \   0000003E   00BF               Nop      
+   \                     ??USART_TaskCreate_0:
+   \   00000040   ........           DC32     USART_Task
+   \   00000044   ........           DC32     `?<Constant "USART_Net">`
+    286          
+    287          /*
+    288          *********************************************************************************************************
+    289          *                                      Socked_TaskCreate()
+    290          *
+    291          * Description :  This function creates the Socked_Task tasks.
+    292          *
+    293          * Argument(s) :  none.
+    294          *
+    295          * Return(s)   :  none.
+    296          *
+    297          * Caller(s)   :  App_TaskStart().
+    298          *
+    299          * Note(s)     :  David Wang
+    300          *********************************************************************************************************
+    301          */
+    302          
+
+   \                                 In section .text, align 4, keep-with-next
+    303          static void Socked_TaskCreate(void)
+    304          {
+   \                     Socked_TaskCreate:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   82B0               SUB      SP,SP,#+8
+    305          #if (OS_TASK_NAME_SIZE > 8)        
+    306              CPU_INT08U      err;
+    307          #endif
+    308              OSTaskCreateExt((void (*)(void *)) Socked_Task,
+    309                              (void           *) 0,
+    310                              (OS_STK         *)&Socked_TaskStk[Socked_Task_STK_SIZE - 1],
+    311                              (INT8U           ) Socked_TASK_PRIO,
+    312                              (INT16U          ) Socked_TASK_PRIO,
+    313                              (OS_STK         *)&Socked_TaskStk[0],
+    314                              (INT32U          ) Socked_Task_STK_SIZE,
+    315                              (void           *) 0,
+    316                              (INT16U          )(OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+   \   00000004   ....               LDR.N    R4,??DataTable4  ;; UartMsgQ
+   \   00000006   0320               MOVS     R0,#+3
+   \   00000008   01B5               PUSH     {R0,LR}
+   \   0000000A   0021               MOVS     R1,#+0
+   \   0000000C   4020               MOVS     R0,#+64
+   \   0000000E   03B4               PUSH     {R0,R1}
+   \   00000010   04F50171           ADD      R1,R4,#+516
+   \   00000014   0620               MOVS     R0,#+6
+   \   00000016   03B4               PUSH     {R0,R1}
+   \   00000018   0346               MOV      R3,R0
+   \   0000001A   04F54072           ADD      R2,R4,#+768
+   \   0000001E   0021               MOVS     R1,#+0
+   \   00000020   0748               LDR.N    R0,??Socked_TaskCreate_0  ;; Socked_Task
+   \   00000022   ........           BL       OSTaskCreateExt
+   \   00000026   06B0               ADD      SP,SP,#+24
+    317          
+    318          #if (OS_TASK_NAME_SIZE > 15)
+    319              OSTaskNameSet(Socked_TASK_PRIO, "Net_USART and CAN", &err);
+   \   00000028   00AA               ADD      R2,SP,#+0
+   \   0000002A   0649               LDR.N    R1,??Socked_TaskCreate_0+0x4  ;; `?<Constant "Net_USART and CAN">`
+   \   0000002C   0620               MOVS     R0,#+6
+   \   0000002E   ........           BL       OSTaskNameSet
+    320          #endif
+    321          	UartMsgQ=OSQCreate(UartMsg,UartMsgNum);
+   \   00000032   8021               MOVS     R1,#+128
+   \   00000034   201D               ADDS     R0,R4,#+4
+   \   00000036   ........           BL       OSQCreate
+   \   0000003A   2060               STR      R0,[R4, #+0]
+    322          }
+   \   0000003C   13BD               POP      {R0,R1,R4,PC}    ;; return
+   \   0000003E   00BF               Nop      
+   \                     ??Socked_TaskCreate_0:
+   \   00000040   ........           DC32     Socked_Task
+   \   00000044   ........           DC32     `?<Constant "Net_USART and CAN">`
+    323          
+    324          /*
+    325          *********************************************************************************************************
+    326          *                                      CAN_TaskCreate()
+    327          *
+    328          * Description :  This function creates the CAN_Task tasks.
+    329          *
+    330          * Argument(s) :  none.
+    331          *
+    332          * Return(s)   :  none.
+    333          *
+    334          * Caller(s)   :  App_TaskStart().
+    335          *
+    336          * Note(s)     :  David Wang
+    337          *********************************************************************************************************
+    338          */
+    339          
+
+   \                                 In section .text, align 4, keep-with-next
+    340          static void CAN_TaskCreate(void)
+    341          {
+   \                     CAN_TaskCreate:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   82B0               SUB      SP,SP,#+8
+    342          #if (OS_TASK_NAME_SIZE > 8)        
+    343              CPU_INT08U      err;
+    344          #endif
+    345              OSTaskCreateExt((void (*)(void *)) CAN_Task,
+    346                              (void           *) 0,
+    347                              (OS_STK         *)&CAN_TaskStk[CAN_Task_STK_SIZE - 1],
+    348                              (INT8U           ) CAN_TASK_PRIO,
+    349                              (INT16U          ) CAN_TASK_PRIO,
+    350                              (OS_STK         *)&CAN_TaskStk[0],
+    351                              (INT32U          ) CAN_Task_STK_SIZE,
+    352                              (void           *) 0,
+    353                              (INT16U          )(OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+   \   00000004   ....               LDR.N    R4,??DataTable5  ;; CanMsgQ
+   \   00000006   0320               MOVS     R0,#+3
+   \   00000008   01B5               PUSH     {R0,LR}
+   \   0000000A   0021               MOVS     R1,#+0
+   \   0000000C   4020               MOVS     R0,#+64
+   \   0000000E   03B4               PUSH     {R0,R1}
+   \   00000010   04F14401           ADD      R1,R4,#+68
+   \   00000014   0520               MOVS     R0,#+5
+   \   00000016   03B4               PUSH     {R0,R1}
+   \   00000018   0346               MOV      R3,R0
+   \   0000001A   04F5A072           ADD      R2,R4,#+320
+   \   0000001E   0021               MOVS     R1,#+0
+   \   00000020   0848               LDR.N    R0,??CAN_TaskCreate_0+0x4  ;; CAN_Task
+   \   00000022   ........           BL       OSTaskCreateExt
+   \   00000026   06B0               ADD      SP,SP,#+24
+    354          
+    355          #if (OS_TASK_NAME_SIZE > 15)
+    356              OSTaskNameSet(CAN_TASK_PRIO, "CAN", &err);
+   \   00000028   00AA               ADD      R2,SP,#+0
+   \   0000002A   05A1               ADR.N    R1,??CAN_TaskCreate_0  ;; "CAN"
+   \   0000002C   0520               MOVS     R0,#+5
+   \   0000002E   ........           BL       OSTaskNameSet
+    357          #endif
+    358          	CanMsgQ=OSQCreate(CanMsg,CanMsgNum);
+   \   00000032   1021               MOVS     R1,#+16
+   \   00000034   201D               ADDS     R0,R4,#+4
+   \   00000036   ........           BL       OSQCreate
+   \   0000003A   2060               STR      R0,[R4, #+0]
+    359          }
+   \   0000003C   13BD               POP      {R0,R1,R4,PC}    ;; return
+   \   0000003E   00BF               Nop      
+   \                     ??CAN_TaskCreate_0:
+   \   00000040   43414E00           DC8      "CAN"
+   \   00000044   ........           DC32     CAN_Task
+    360          /*
+    361          *********************************************************************************************************
+    362          *                                      HyperTerminal_Task()
+    363          *
+    364          * Description : 
+    365          *
+    366          * Argument(s) : p_arg  is the argument passed to 'HyperTerminal_Task()' by 'OSTaskCreate()'.
+    367          *
+    368          * Return(s)  : none.
+    369          *
+    370          * Caller(s)  : 
+    371          *
+    372          * Note(s)    : none.
+    373          *********************************************************************************************************
+    374          */
+    375          
+
+   \                                 In section .text, align 2, keep-with-next
+    376          static void HyperTerminal_Task(void *p_arg)
+    377          {
+   \                     HyperTerminal_Task:
+   \   00000000   80B5               PUSH     {R7,LR}
+    378          	(void)p_arg;
+    379          	
+    380          	STM32_USART1_Init();
+   \   00000002   ........           BL       STM32_USART1_Init
+    381          	
+    382              while (DEF_TRUE) {
+    383                  OSTimeDlyHMSM(0, 0, 0, 10);
+   \                     ??HyperTerminal_Task_0:
+   \   00000006   0A23               MOVS     R3,#+10
+   \   00000008   0022               MOVS     R2,#+0
+   \   0000000A   1146               MOV      R1,R2
+   \   0000000C   0846               MOV      R0,R1
+   \   0000000E   ........           BL       OSTimeDlyHMSM
+    384          		HyperTerminal();
+   \   00000012   ........           BL       HyperTerminal
+   \   00000016   F6E7               B.N      ??HyperTerminal_Task_0
+    385              }
+    386          }
+    387          
+    388          /*
+    389          *********************************************************************************************************
+    390          *                                      Socked_Task(void *p_arg)
+    391          *
+    392          * Description : 
+    393          *
+    394          * Argument(s) : p_arg  is the argument passed to 'Socked_TaskCreate()' by 'OSTaskCreate()'.
+    395          *
+    396          * Return(s)  : none.
+    397          *
+    398          * Caller(s)  : 
+    399          *
+    400          * Note(s)    : none.
+    401          *********************************************************************************************************
+    402          */
+    403          
+
+   \                                 In section .text, align 4, keep-with-next
+    404          static void Socked_Task(void *p_arg)
+    405          {
+   \                     Socked_Task:
+   \   00000000   2DE9F047           PUSH     {R4-R10,LR}
+   \   00000004   88B0               SUB      SP,SP,#+32
+    406          	(void)p_arg;
+    407          	INT8U err;
+    408          	const char *cmd[]={"SELECT","READ","WRITE"};
+   \   00000006   7749               LDR.N    R1,??Socked_Task_0+0x8  ;; `?<Constant {&"SELECT", &"READ", &"WRITE"}>`
+   \   00000008   01A8               ADD      R0,SP,#+4
+   \   0000000A   1CC9               LDM      R1!,{R2-R4}
+   \   0000000C   1CC0               STM      R0!,{R2-R4}
+   \   0000000E   0C39               SUBS     R1,R1,#+12
+    409          	const char *ComPort[]={"COM2","COM3","COM4","UNKNOWN"};
+   \   00000010   0C31               ADDS     R1,R1,#+12
+   \   00000012   1022               MOVS     R2,#+16
+   \   00000014   ........           BL       __aeabi_memcpy4
+    410          	RECVSOCK *msg;
+    411          	INT8U port=COM2;
+   \   00000018   0026               MOVS     R6,#+0
+   \   0000001A   0EE0               B.N      ??Socked_Task_1
+    412          	
+    413              while (DEF_TRUE){
+    414          	  	msg=OSQPend(SockMsgQ,0,&err);
+    415          		if(msg->sock==3){		//SOCK3 为控制口
+    416          			if(!memcmp(cmd[0],msg->buff,strlen(cmd[0]))){
+    417          			  	if(!memcmp(ComPort[0],msg->buff+strlen(cmd[0])+1,strlen(ComPort[0]))){
+    418          					port=COM2;	
+   \                     ??Socked_Task_2:
+   \   0000001C   0026               MOVS     R6,#+0
+    419          					sendto(msg->sock,(INT8U *)ComPort[0], strlen(ComPort[0]),(unsigned char*)&msg->sip,msg->port);
+   \   0000001E   0498               LDR      R0,[SP, #+16]
+   \   00000020   ........           BL       strlen
+   \   00000024   0246               MOV      R2,R0
+   \   00000026   B4F88800           LDRH     R0,[R4, #+136]
+   \   0000002A   01B5               PUSH     {R0,LR}
+   \   0000002C   4346               MOV      R3,R8
+   \   0000002E   92B2               UXTH     R2,R2
+   \   00000030   0699               LDR      R1,[SP, #+24]
+   \   00000032   A878               LDRB     R0,[R5, #+2]
+   \   00000034   ........           BL       sendto
+   \   00000038   02B0               ADD      SP,SP,#+8
+    420          					continue;
+    421          				}
+   \                     ??Socked_Task_1:
+   \   0000003A   0DF10102           ADD      R2,SP,#+1
+   \   0000003E   0021               MOVS     R1,#+0
+   \   00000040   ....               LDR.N    R0,??DataTable3  ;; SockMsgQ
+   \   00000042   0068               LDR      R0,[R0, #+0]
+   \   00000044   ........           BL       OSQPend
+   \   00000048   0446               MOV      R4,R0
+   \   0000004A   04F18805           ADD      R5,R4,#+136
+   \   0000004E   A878               LDRB     R0,[R5, #+2]
+   \   00000050   0328               CMP      R0,#+3
+   \   00000052   6FD1               BNE.N    ??Socked_Task_3
+   \   00000054   0198               LDR      R0,[SP, #+4]
+   \   00000056   ........           BL       strlen
+   \   0000005A   0246               MOV      R2,R0
+   \   0000005C   A11C               ADDS     R1,R4,#+2
+   \   0000005E   0198               LDR      R0,[SP, #+4]
+   \   00000060   ........           BL       memcmp
+   \   00000064   0028               CMP      R0,#+0
+   \   00000066   65D1               BNE.N    ??Socked_Task_3
+   \   00000068   0498               LDR      R0,[SP, #+16]
+   \   0000006A   ........           BL       strlen
+   \   0000006E   0746               MOV      R7,R0
+   \   00000070   0198               LDR      R0,[SP, #+4]
+   \   00000072   ........           BL       strlen
+   \   00000076   04F18408           ADD      R8,R4,#+132
+   \   0000007A   3A46               MOV      R2,R7
+   \   0000007C   0019               ADDS     R0,R0,R4
+   \   0000007E   C11C               ADDS     R1,R0,#+3
+   \   00000080   0498               LDR      R0,[SP, #+16]
+   \   00000082   ........           BL       memcmp
+   \   00000086   0028               CMP      R0,#+0
+   \   00000088   C8D0               BEQ.N    ??Socked_Task_2
+    422          				else if(!memcmp(ComPort[1],msg->buff+strlen(cmd[0])+1,strlen(ComPort[1]))){
+   \   0000008A   0DF11009           ADD      R9,SP,#+16
+   \   0000008E   D9F80470           LDR      R7,[R9, #+4]
+   \   00000092   3846               MOV      R0,R7
+   \   00000094   ........           BL       strlen
+   \   00000098   8246               MOV      R10,R0
+   \   0000009A   0198               LDR      R0,[SP, #+4]
+   \   0000009C   ........           BL       strlen
+   \   000000A0   5246               MOV      R2,R10
+   \   000000A2   0019               ADDS     R0,R0,R4
+   \   000000A4   C11C               ADDS     R1,R0,#+3
+   \   000000A6   3846               MOV      R0,R7
+   \   000000A8   ........           BL       memcmp
+   \   000000AC   0028               CMP      R0,#+0
+   \   000000AE   0FD1               BNE.N    ??Socked_Task_4
+    423          				  	port=COM3;	
+   \   000000B0   0126               MOVS     R6,#+1
+    424          					sendto(msg->sock,(INT8U *)ComPort[1], strlen(ComPort[1]),(unsigned char*)&msg->sip,msg->port);
+   \   000000B2   3846               MOV      R0,R7
+   \   000000B4   ........           BL       strlen
+   \   000000B8   B4F88810           LDRH     R1,[R4, #+136]
+   \   000000BC   02B5               PUSH     {R1,LR}
+   \   000000BE   4346               MOV      R3,R8
+   \   000000C0   0246               MOV      R2,R0
+   \   000000C2   92B2               UXTH     R2,R2
+   \   000000C4   3946               MOV      R1,R7
+   \   000000C6   A878               LDRB     R0,[R5, #+2]
+   \   000000C8   ........           BL       sendto
+   \   000000CC   02B0               ADD      SP,SP,#+8
+    425          					continue;
+   \   000000CE   B4E7               B.N      ??Socked_Task_1
+    426          				}
+    427          				else if(!memcmp(ComPort[2],msg->buff+strlen(cmd[0])+1,strlen(ComPort[2]))){
+   \                     ??Socked_Task_4:
+   \   000000D0   D9F80870           LDR      R7,[R9, #+8]
+   \   000000D4   3846               MOV      R0,R7
+   \   000000D6   ........           BL       strlen
+   \   000000DA   8246               MOV      R10,R0
+   \   000000DC   0198               LDR      R0,[SP, #+4]
+   \   000000DE   ........           BL       strlen
+   \   000000E2   5246               MOV      R2,R10
+   \   000000E4   0019               ADDS     R0,R0,R4
+   \   000000E6   C11C               ADDS     R1,R0,#+3
+   \   000000E8   3846               MOV      R0,R7
+   \   000000EA   ........           BL       memcmp
+   \   000000EE   0028               CMP      R0,#+0
+   \   000000F0   0FD1               BNE.N    ??Socked_Task_5
+    428          				  	port=COM4;
+   \   000000F2   0226               MOVS     R6,#+2
+    429          					sendto(msg->sock,(INT8U *)ComPort[2], strlen(ComPort[2]),(unsigned char*)&msg->sip,msg->port);
+   \   000000F4   3846               MOV      R0,R7
+   \   000000F6   ........           BL       strlen
+   \   000000FA   B4F88810           LDRH     R1,[R4, #+136]
+   \   000000FE   02B5               PUSH     {R1,LR}
+   \   00000100   4346               MOV      R3,R8
+   \   00000102   0246               MOV      R2,R0
+   \   00000104   92B2               UXTH     R2,R2
+   \   00000106   3946               MOV      R1,R7
+   \   00000108   A878               LDRB     R0,[R5, #+2]
+   \   0000010A   ........           BL       sendto
+   \   0000010E   02B0               ADD      SP,SP,#+8
+    430          					continue;
+   \   00000110   93E7               B.N      ??Socked_Task_1
+    431          				}
+    432          				else{
+    433          				  	sendto(msg->sock,(INT8U *)ComPort[3], strlen(ComPort[3]),(unsigned char*)&msg->sip,msg->port);
+   \                     ??Socked_Task_5:
+   \   00000112   D9F80C70           LDR      R7,[R9, #+12]
+   \   00000116   3846               MOV      R0,R7
+   \   00000118   ........           BL       strlen
+   \   0000011C   B4F88810           LDRH     R1,[R4, #+136]
+   \   00000120   02B5               PUSH     {R1,LR}
+   \   00000122   4346               MOV      R3,R8
+   \   00000124   0246               MOV      R2,R0
+   \   00000126   92B2               UXTH     R2,R2
+   \   00000128   3946               MOV      R1,R7
+   \   0000012A   A878               LDRB     R0,[R5, #+2]
+   \   0000012C   ........           BL       sendto
+   \   00000130   02B0               ADD      SP,SP,#+8
+    434          					continue;
+   \   00000132   82E7               B.N      ??Socked_Task_1
+    435          				}
+    436          			}
+    437          		}  
+    438          		if(msg->sock==2){	//SOCK2 为CAN
+   \                     ??Socked_Task_3:
+   \   00000134   A878               LDRB     R0,[R5, #+2]
+   \   00000136   0228               CMP      R0,#+2
+   \   00000138   0FD1               BNE.N    ??Socked_Task_6
+    439          		  	INT8U CanStatus;
+    440          			CanStatus=STM32_CAN_Send(msg);
+   \   0000013A   2046               MOV      R0,R4
+   \   0000013C   ........           BL       STM32_CAN_Send
+   \   00000140   8DF80000           STRB     R0,[SP, #+0]
+    441          			sendto(msg->sock,&CanStatus,sizeof(CanStatus),(unsigned char*)&msg->sip,msg->port);
+   \   00000144   B4F88800           LDRH     R0,[R4, #+136]
+   \   00000148   01B5               PUSH     {R0,LR}
+   \   0000014A   04F18403           ADD      R3,R4,#+132
+   \   0000014E   0122               MOVS     R2,#+1
+   \   00000150   02A9               ADD      R1,SP,#+8
+   \   00000152   A878               LDRB     R0,[R5, #+2]
+   \   00000154   ........           BL       sendto
+   \   00000158   02B0               ADD      SP,SP,#+8
+    442          			
+    443          		}
+    444          		if(msg->sock==1){	//SOCK1 为COM2-4公用
+   \                     ??Socked_Task_6:
+   \   0000015A   A878               LDRB     R0,[R5, #+2]
+   \   0000015C   0128               CMP      R0,#+1
+   \   0000015E   1AD1               BNE.N    ??Socked_Task_7
+    445          		  	sendto(msg->sock,XOFF, strlen(XOFF),(unsigned char*)&msg->sip,msg->port);
+   \   00000160   04F18408           ADD      R8,R4,#+132
+   \   00000164   B4F88800           LDRH     R0,[R4, #+136]
+   \   00000168   01B5               PUSH     {R0,LR}
+   \   0000016A   4346               MOV      R3,R8
+   \   0000016C   0122               MOVS     R2,#+1
+   \   0000016E   1BA1               ADR.N    R1,??Socked_Task_0  ;; ""
+   \   00000170   A878               LDRB     R0,[R5, #+2]
+   \   00000172   ........           BL       sendto
+   \   00000176   02B0               ADD      SP,SP,#+8
+    446          			USART_Send((enum COMPORT)port,msg->buff,msg->len);
+   \   00000178   2288               LDRH     R2,[R4, #+0]
+   \   0000017A   A11C               ADDS     R1,R4,#+2
+   \   0000017C   3046               MOV      R0,R6
+   \   0000017E   ........           BL       USART_Send
+    447          			sendto(msg->sock, XON, strlen(XON),(unsigned char*)&msg->sip,msg->port);
+   \   00000182   B4F88800           LDRH     R0,[R4, #+136]
+   \   00000186   01B5               PUSH     {R0,LR}
+   \   00000188   4346               MOV      R3,R8
+   \   0000018A   0122               MOVS     R2,#+1
+   \   0000018C   14A1               ADR.N    R1,??Socked_Task_0+0x4  ;; ""
+   \   0000018E   A878               LDRB     R0,[R5, #+2]
+   \   00000190   ........           BL       sendto
+   \   00000194   02B0               ADD      SP,SP,#+8
+    448          		}
+    449          		if(msg->sock==0){	//SOCK0 为COM5
+   \                     ??Socked_Task_7:
+   \   00000196   A878               LDRB     R0,[R5, #+2]
+   \   00000198   0028               CMP      R0,#+0
+   \   0000019A   1AD1               BNE.N    ??Socked_Task_8
+    450          			sendto(msg->sock,XOFF, strlen(XOFF),(unsigned char*)&msg->sip,msg->port);
+   \   0000019C   04F18408           ADD      R8,R4,#+132
+   \   000001A0   B4F88800           LDRH     R0,[R4, #+136]
+   \   000001A4   01B5               PUSH     {R0,LR}
+   \   000001A6   4346               MOV      R3,R8
+   \   000001A8   0122               MOVS     R2,#+1
+   \   000001AA   0CA1               ADR.N    R1,??Socked_Task_0  ;; ""
+   \   000001AC   A878               LDRB     R0,[R5, #+2]
+   \   000001AE   ........           BL       sendto
+   \   000001B2   02B0               ADD      SP,SP,#+8
+    451          			USART_Send(COM5,msg->buff,msg->len);
+   \   000001B4   2288               LDRH     R2,[R4, #+0]
+   \   000001B6   A11C               ADDS     R1,R4,#+2
+   \   000001B8   0320               MOVS     R0,#+3
+   \   000001BA   ........           BL       USART_Send
+    452          			sendto(msg->sock, XON, strlen(XON),(unsigned char*)&msg->sip,msg->port);	  
+   \   000001BE   B4F88800           LDRH     R0,[R4, #+136]
+   \   000001C2   01B5               PUSH     {R0,LR}
+   \   000001C4   4346               MOV      R3,R8
+   \   000001C6   0122               MOVS     R2,#+1
+   \   000001C8   05A1               ADR.N    R1,??Socked_Task_0+0x4  ;; ""
+   \   000001CA   A878               LDRB     R0,[R5, #+2]
+   \   000001CC   ........           BL       sendto
+   \   000001D0   02B0               ADD      SP,SP,#+8
+    453          		}
+    454          		
+    455          		free(msg);
+   \                     ??Socked_Task_8:
+   \   000001D2   2046               MOV      R0,R4
+   \   000001D4   ........           BL       free
+   \   000001D8   2FE7               B.N      ??Socked_Task_1
+   \   000001DA   00BF               Nop      
+   \                     ??Socked_Task_0:
+   \   000001DC   13000000           DC8      "",+0,+0
+   \   000001E0   11000000           DC8      "",+0,+0
+   \   000001E4   ........           DC32     `?<Constant {&"SELECT", &"READ", &"WRITE"}>`
+    456              }
+    457          }
+    458          /*
+    459          *********************************************************************************************************
+    460          *                                      USART_Task(void *p_arg)
+    461          *
+    462          * Description : 
+    463          *
+    464          * Argument(s) : p_arg  is the argument passed to 'USART_TaskCreate' by 'OSTaskCreate()'.
+    465          *
+    466          * Return(s)  : none.
+    467          *
+    468          * Caller(s)  : 
+    469          *
+    470          * Note(s)    : none.
+    471          *********************************************************************************************************
+    472          */
+    473          
+
+   \                                 In section .text, align 2, keep-with-next
+    474          static void USART_Task(void *p_arg)
+    475          {
+   \                     USART_Task:
+   \   00000000   00B5               PUSH     {LR}
+   \   00000002   8BB0               SUB      SP,SP,#+44
+    476          	(void)p_arg;
+    477          	INT8U err;
+    478          	RXBUFF *RxBuffer;
+    479          	CHCONF ChConf[COMMPORTNUM];
+    480          	
+    481          	
+    482          	get_chconf(ChConf);	
+   \   00000004   01A8               ADD      R0,SP,#+4
+   \   00000006   ........           BL       get_chconf
+   \   0000000A   09E0               B.N      ??USART_Task_0
+    483          	
+    484              while (DEF_TRUE) {
+    485          	  	RxBuffer=OSQPend(UartMsgQ,0,&err);
+    486          		
+    487          		switch(RxBuffer->id){
+    488          			case COM2:
+    489          			  	sendto(1, &RxBuffer->msg, 1,(unsigned char*)(&(ChConf[COM2].destip)),ChConf[COM2].port);
+   \                     ??USART_Task_1:
+   \   0000000C   BDF80810           LDRH     R1,[SP, #+8]
+   \   00000010   02B5               PUSH     {R1,LR}
+   \   00000012   03AB               ADD      R3,SP,#+12
+   \   00000014   0122               MOVS     R2,#+1
+   \   00000016   411C               ADDS     R1,R0,#+1
+   \   00000018   1046               MOV      R0,R2
+   \   0000001A   ........           BL       sendto
+   \   0000001E   02B0               ADD      SP,SP,#+8
+   \                     ??USART_Task_0:
+   \   00000020   00AA               ADD      R2,SP,#+0
+   \   00000022   0021               MOVS     R1,#+0
+   \   00000024   ....               LDR.N    R0,??DataTable4  ;; UartMsgQ
+   \   00000026   0068               LDR      R0,[R0, #+0]
+   \   00000028   ........           BL       OSQPend
+   \   0000002C   0178               LDRB     R1,[R0, #+0]
+   \   0000002E   0029               CMP      R1,#+0
+   \   00000030   ECD0               BEQ.N    ??USART_Task_1
+   \   00000032   0229               CMP      R1,#+2
+   \   00000034   0ED0               BEQ.N    ??USART_Task_2
+   \   00000036   02D3               BCC.N    ??USART_Task_3
+   \   00000038   0329               CMP      R1,#+3
+   \   0000003A   16D0               BEQ.N    ??USART_Task_4
+   \   0000003C   F0E7               B.N      ??USART_Task_0
+    490          		  		break;
+    491          			case COM3:
+    492          			  	sendto(1, &RxBuffer->msg, 1,(unsigned char*)(&(ChConf[COM3].destip)),ChConf[COM3].port);
+   \                     ??USART_Task_3:
+   \   0000003E   BDF81010           LDRH     R1,[SP, #+16]
+   \   00000042   02B5               PUSH     {R1,LR}
+   \   00000044   05AB               ADD      R3,SP,#+20
+   \   00000046   0122               MOVS     R2,#+1
+   \   00000048   411C               ADDS     R1,R0,#+1
+   \   0000004A   1046               MOV      R0,R2
+   \   0000004C   ........           BL       sendto
+   \   00000050   02B0               ADD      SP,SP,#+8
+   \   00000052   E5E7               B.N      ??USART_Task_0
+    493          		  		break;
+    494          			case COM4:
+    495          			  	sendto(1, &RxBuffer->msg, 1,(unsigned char*)(&(ChConf[COM4].destip)),ChConf[COM4].port);
+   \                     ??USART_Task_2:
+   \   00000054   BDF81810           LDRH     R1,[SP, #+24]
+   \   00000058   02B5               PUSH     {R1,LR}
+   \   0000005A   07AB               ADD      R3,SP,#+28
+   \   0000005C   0122               MOVS     R2,#+1
+   \   0000005E   411C               ADDS     R1,R0,#+1
+   \   00000060   1046               MOV      R0,R2
+   \   00000062   ........           BL       sendto
+   \   00000066   02B0               ADD      SP,SP,#+8
+   \   00000068   DAE7               B.N      ??USART_Task_0
+    496          		  		break;
+    497          			case COM5:
+    498          			  	sendto(0, &RxBuffer->msg, 1,(unsigned char*)(&(ChConf[COM5].destip)),ChConf[COM5].port);
+   \                     ??USART_Task_4:
+   \   0000006A   BDF82010           LDRH     R1,[SP, #+32]
+   \   0000006E   02B5               PUSH     {R1,LR}
+   \   00000070   09AB               ADD      R3,SP,#+36
+   \   00000072   0122               MOVS     R2,#+1
+   \   00000074   411C               ADDS     R1,R0,#+1
+   \   00000076   0020               MOVS     R0,#+0
+   \   00000078   ........           BL       sendto
+   \   0000007C   02B0               ADD      SP,SP,#+8
+   \   0000007E   CFE7               B.N      ??USART_Task_0
+    499          		  		break;
+    500          		}
+    501          		
+    502              }
+    503          }
+    504          
+    505          /*
+    506          *********************************************************************************************************
+    507          *                                      CAN_Task(void *p_arg)
+    508          *
+    509          * Description : 
+    510          *
+    511          * Argument(s) : p_arg  is the argument passed to 'CAN_TaskCreate' by 'OSTaskCreate()'.
+    512          *
+    513          * Return(s)  : none.
+    514          *
+    515          * Caller(s)  : 
+    516          *
+    517          * Note(s)    : none.
+    518          *********************************************************************************************************
+    519          */
+    520          
+
+   \                                 In section .text, align 2, keep-with-next
+    521          static void CAN_Task(void *p_arg)
+    522          {
+   \                     CAN_Task:
+   \   00000000   00B5               PUSH     {LR}
+   \   00000002   8BB0               SUB      SP,SP,#+44
+    523          	(void)p_arg;
+    524          	INT8U err;
+    525          	CANBUFF *CanBuffer;
+    526          	CHCONF ChConf[COMMPORTNUM];
+    527          	get_chconf(ChConf);	
+   \   00000004   01A8               ADD      R0,SP,#+4
+   \   00000006   ........           BL       get_chconf
+    528              while (DEF_TRUE) {
+    529          	  	CanBuffer=OSQPend(CanMsgQ,0,&err);
+   \                     ??CAN_Task_0:
+   \   0000000A   00AA               ADD      R2,SP,#+0
+   \   0000000C   0021               MOVS     R1,#+0
+   \   0000000E   ....               LDR.N    R0,??DataTable5  ;; CanMsgQ
+   \   00000010   0068               LDR      R0,[R0, #+0]
+   \   00000012   ........           BL       OSQPend
+    530          		sendto(2, (INT8U *)(&CanBuffer->Id), CanBuffer->DLC+4,(unsigned char*)(&(ChConf[CANPORT].destip)),ChConf[CANPORT].port);
+   \   00000016   BDF82810           LDRH     R1,[SP, #+40]
+   \   0000001A   02B5               PUSH     {R1,LR}
+   \   0000001C   0BAB               ADD      R3,SP,#+44
+   \   0000001E   0178               LDRB     R1,[R0, #+0]
+   \   00000020   0A1D               ADDS     R2,R1,#+4
+   \   00000022   92B2               UXTH     R2,R2
+   \   00000024   011D               ADDS     R1,R0,#+4
+   \   00000026   0220               MOVS     R0,#+2
+   \   00000028   ........           BL       sendto
+   \   0000002C   02B0               ADD      SP,SP,#+8
+   \   0000002E   ECE7               B.N      ??CAN_Task_0
+    531              }
+    532          }
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable3:
+   \   00000000   ........           DC32     SockMsgQ
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable4:
+   \   00000000   ........           DC32     UartMsgQ
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5:
+   \   00000000   ........           DC32     CanMsgQ
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "Start">`:
+   \   00000000   537461727400       DC8 "Start"
+   \   00000006   0000               DC8 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "HyperTerminal">`:
+   \   00000000   487970657254       DC8 "HyperTerminal"
+   \              65726D696E61
+   \              6C00        
+   \   0000000E   0000               DC8 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "USART_Net">`:
+   \   00000000   55534152545F       DC8 "USART_Net"
+   \              4E657400    
+   \   0000000A   0000               DC8 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "Net_USART and CAN">`:
+   \   00000000   4E65745F5553       DC8 "Net_USART and CAN"
+   \              41525420616E
+   \              642043414E00
+   \   00000012   0000               DC8 0, 0
+
+   \                                 In section .rodata, align 4
+   \   00000000   43414E00           DC8 "CAN"
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "SELECT">`:
+   \   00000000   53454C454354       DC8 "SELECT"
+   \              00          
+   \   00000007   00                 DC8 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "READ">`:
+   \   00000000   5245414400         DC8 "READ"
+   \   00000005   000000             DC8 0, 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "WRITE">`:
+   \   00000000   575249544500       DC8 "WRITE"
+   \   00000006   0000               DC8 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant {&"SELECT", &"READ", &"WRITE"}>`:
+   \   00000000   ............       DC32 `?<Constant "SELECT">`, `?<Constant "READ">`
+   \              ....        
+   \   00000008   ........           DC32 `?<Constant "WRITE">`
+   \   0000000C   ............       DC32 `?<Constant "COM2">`, `?<Constant "COM3">`, `?<Constant "COM4">`
+   \              ............
+   \   00000018   ........           DC32 `?<Constant "UNKNOWN">`
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "COM2">`:
+   \   00000000   434F4D3200         DC8 "COM2"
+   \   00000005   000000             DC8 0, 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "COM3">`:
+   \   00000000   434F4D3300         DC8 "COM3"
+   \   00000005   000000             DC8 0, 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "COM4">`:
+   \   00000000   434F4D3400         DC8 "COM4"
+   \   00000005   000000             DC8 0, 0, 0
+
+   \                                 In section .rodata, align 4
+   \                     `?<Constant "UNKNOWN">`:
+   \   00000000   554E4B4E4F57       DC8 "UNKNOWN"
+   \              4E00        
+
+   \                                 In section .rodata, align 2
+   \   00000000   1300               DC8 "\023"
+
+   \                                 In section .rodata, align 2
+   \   00000000   1100               DC8 "\021"
+
+   Maximum stack usage in bytes:
+
+     Function                 .cstack
+     --------                 -------
+     App_TaskStart                 8
+     CAN_Task                     56
+     CAN_TaskCreate               40
+     HyperTerminal_Task            8
+     HyperTerminal_TaskCreate     32
+     Socked_Task                  72
+     Socked_TaskCreate            40
+     USART_Task                   56
+     USART_TaskCreate             40
+     main                         32
+
+
+   Section sizes:
+
+     Function/Label                             Bytes
+     --------------                             -----
+     SockMsgQ                                    300
+     SockMsg
+     USART_TaskStk
+     UartMsgQ                                    772
+     UartMsg
+     Socked_TaskStk
+     CanMsgQ                                     324
+     CanMsg
+     CAN_TaskStk
+     App_TaskStartStk                            512
+     HyperTerminal_TaskStk                       256
+     main                                         76
+     App_TaskStart                                96
+     HyperTerminal_TaskCreate                     60
+     USART_TaskCreate                             72
+     Socked_TaskCreate                            72
+     CAN_TaskCreate                               72
+     HyperTerminal_Task                           24
+     Socked_Task                                 488
+     USART_Task                                  128
+     CAN_Task                                     48
+     ??DataTable3                                  4
+     ??DataTable4                                  4
+     ??DataTable5                                  4
+     ?<Constant "Start">                           8
+     ?<Constant "HyperTerminal">                  16
+     ?<Constant "USART_Net">                      12
+     ?<Constant "Net_USART and CAN">              20
+     ?<Constant "CAN">                             4
+     ?<Constant "SELECT">                          8
+     ?<Constant "READ">                            8
+     ?<Constant "WRITE">                           8
+     ?<Constant {&"SELECT", &"READ", &"WRITE"}>   28
+     ?<Constant "COM2">                            8
+     ?<Constant "COM3">                            8
+     ?<Constant "COM4">                            8
+     ?<Constant "UNKNOWN">                         8
+     ?<Constant "\023">                            2
+     ?<Constant "\021">                            2
+
+ 
+ 2 164 bytes in section .bss
+   148 bytes in section .rodata
+ 1 148 bytes in section .text
+ 
+ 1 148 bytes of CODE  memory
+   148 bytes of CONST memory
+ 2 164 bytes of DATA  memory
+
+Errors: none
+Warnings: none

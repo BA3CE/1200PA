@@ -1,0 +1,55 @@
+[DebugChecksum]
+Checksum=-465433496
+[Stack]
+FillEnabled=0
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnLogOnly=1
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[Exceptions]
+StopOnUncaught=_ 0
+StopOnThrow=_ 0
+[CallStack]
+ShowArgs=0
+[Disassembly]
+MixedMode=1
+[watch_formats]
+Fmt0={W}0:((val & 0xff) << 16)	1	0
+Fmt1={W}0:((val & 0xff) << 8)	1	0
+Fmt2={W}0:((val & 0xff00)>>8)	1	0
+Fmt3={W}0:(val & 0xff)	1	0
+Fmt4={W}0:(val & 0xff00)	1	0
+Fmt5={W}0:dat	1	0
+Fmt6={W}0:in_data	1	0
+Fmt7={W}0:temp	3	0
+Fmt8={W}0:tmp	1	0
+Fmt9={W}0:val	1	0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[CallStackLog]
+Enabled=0
+[DriverProfiling]
+Enabled=0
+Mode=0
+Graph=0
+Symbiont=0
+Exclusions=
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\Interrupt\stm32f10x_it.c}.526.17" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\Interrupt\stm32f10x_it.c}.510.2" 0 0 1 "" 0 "" 0
+Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\Interrupt\stm32f10x_it.c}.495.1" 0 0 1 "" 0 "" 0
+Count=3
+[Aliases]
+Count=0
+SuppressDialog=0

@@ -1,0 +1,410 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  23:01:44 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Boards\NetWork\w5100_inter.c                          #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\Boards\NetWork\w5100_inter.c" -D                      #
+#                    _DLIB_FILE_DESCRIPTOR -lC "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Debug\List\" -o "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Debug\Obj\" --no_unroll --no_inline         #
+#                    --no_tbaa --no_scheduling --debug --endian=little        #
+#                    --cpu=Cortex-M3 -e --fpu=None --dlib_config "D:\Program  #
+#                    Files\IAR Systems\Embedded Workbench 5.4                 #
+#                    Kickstart\arm\INC\DLib_Config_Normal.h" -I               #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\w5100_inter.lst                            #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\Obj\w5100_inter.o                               #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\NetWork\w5100_inter.c
+      1          /* Includes ------------------------------------------------------------------*/
+      2          #include <string.h>
+      3          
+      4          #include "bsp.h"
+      5          #include "stm32f10x_it.h"
+      6          #include "w5100/w5100.h"		
+      7          #include "w5100/socket.h"
+      8          #include "util/sockutil.h"
+      9          #include "eeprom/at24c64.h"
+     10          
+     11          /* Extern variables ------------------------------------------------------------*/
+     12          extern OS_EVENT	*SockMsgQ;
+     13          /* Private typedef -----------------------------------------------------------*/
+     14          /* Private define ------------------------------------------------------------*/
+     15          #define DEFAULT_NET_MEMALLOC	0x55		/**< Default iinchip memory allocation */
+     16          /* Private macro -------------------------------------------------------------*/
+     17          /* Private variables ---------------------------------------------------------*/
+
+   \                                 In section .bss, align 4
+     18          static RECVSOCK *RecvSock;
+   \                     RecvSock:
+   \   00000000                      DS8 4
+     19          
+     20          /* Private functions ---------------------------------------------------------*/
+     21          void W5100_Recv_UDP(SOCKET sock);
+     22          
+
+   \                                 In section .text, align 2, keep-with-next
+     23          void NetWorkInterrupt(void)		// 由EXTI0_IRQHandler调用
+     24          {
+   \                     NetWorkInterrupt:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+     25            	unsigned char InterruptStatus;
+     26          	
+     27            	InterruptStatus = IINCHIP_READ(IR);
+   \   00000002   1520               MOVS     R0,#+21
+   \   00000004   ........           BL       IINCHIP_READ
+   \   00000008   0446               MOV      R4,R0
+     28          	IINCHIP_WRITE(IR, InterruptStatus);		//清除IR中断标记
+   \   0000000A   2146               MOV      R1,R4
+   \   0000000C   1520               MOVS     R0,#+21
+   \   0000000E   ........           BL       IINCHIP_WRITE
+     29          	
+     30          	if((InterruptStatus & 0xE0) == 0x00){	//无错误中断
+   \   00000012   2046               MOV      R0,R4
+   \   00000014   10F0E00F           TST      R0,#0xE0
+   \   00000018   4AD1               BNE.N    ??NetWorkInterrupt_0
+     31          		if(InterruptStatus & 0x01){			//SOCK1
+   \   0000001A   10F0010F           TST      R0,#0x1
+   \   0000001E   0FD0               BEQ.N    ??NetWorkInterrupt_1
+     32          			InterruptStatus = IINCHIP_READ(Sn_IR(0)); 	
+   \   00000020   40F20245           MOVW     R5,#+1026
+   \   00000024   2846               MOV      R0,R5
+   \   00000026   ........           BL       IINCHIP_READ
+   \   0000002A   0446               MOV      R4,R0
+     33          			IINCHIP_WRITE(Sn_IR(0), InterruptStatus);	//清除Sock1中断标记
+   \   0000002C   2146               MOV      R1,R4
+   \   0000002E   2846               MOV      R0,R5
+   \   00000030   ........           BL       IINCHIP_WRITE
+     34          			if(InterruptStatus == Sn_IR_RECV){
+   \   00000034   042C               CMP      R4,#+4
+   \   00000036   3BD1               BNE.N    ??NetWorkInterrupt_0
+     35          				W5100_Recv_UDP(0);  
+   \   00000038   0020               MOVS     R0,#+0
+   \   0000003A   BDE83240           POP      {R1,R4,R5,LR}
+   \   0000003E   ....               B.N      W5100_Recv_UDP
+     36          			}
+     37          		}
+     38          		else if(InterruptStatus & 0x02){			//SOCK2
+   \                     ??NetWorkInterrupt_1:
+   \   00000040   10F0020F           TST      R0,#0x2
+   \   00000044   0FD0               BEQ.N    ??NetWorkInterrupt_2
+     39          		  	InterruptStatus = IINCHIP_READ(Sn_IR(1)); 	
+   \   00000046   40F20255           MOVW     R5,#+1282
+   \   0000004A   2846               MOV      R0,R5
+   \   0000004C   ........           BL       IINCHIP_READ
+   \   00000050   0446               MOV      R4,R0
+     40          			IINCHIP_WRITE(Sn_IR(1), InterruptStatus);	//清除Sock2中断标记
+   \   00000052   2146               MOV      R1,R4
+   \   00000054   2846               MOV      R0,R5
+   \   00000056   ........           BL       IINCHIP_WRITE
+     41          			if(InterruptStatus == Sn_IR_RECV){
+   \   0000005A   042C               CMP      R4,#+4
+   \   0000005C   28D1               BNE.N    ??NetWorkInterrupt_0
+     42          				W5100_Recv_UDP(1);  
+   \   0000005E   0120               MOVS     R0,#+1
+   \   00000060   BDE83240           POP      {R1,R4,R5,LR}
+   \   00000064   ....               B.N      W5100_Recv_UDP
+     43          			}
+     44          		}
+     45          		else if(InterruptStatus & 0x04){			//SOCK3
+   \                     ??NetWorkInterrupt_2:
+   \   00000066   10F0040F           TST      R0,#0x4
+   \   0000006A   0FD0               BEQ.N    ??NetWorkInterrupt_3
+     46          		  	InterruptStatus = IINCHIP_READ(Sn_IR(2)); 	
+   \   0000006C   40F20265           MOVW     R5,#+1538
+   \   00000070   2846               MOV      R0,R5
+   \   00000072   ........           BL       IINCHIP_READ
+   \   00000076   0446               MOV      R4,R0
+     47          			IINCHIP_WRITE(Sn_IR(2), InterruptStatus);	//清除Sock3中断标记
+   \   00000078   2146               MOV      R1,R4
+   \   0000007A   2846               MOV      R0,R5
+   \   0000007C   ........           BL       IINCHIP_WRITE
+     48          			if(InterruptStatus == Sn_IR_RECV){
+   \   00000080   042C               CMP      R4,#+4
+   \   00000082   15D1               BNE.N    ??NetWorkInterrupt_0
+     49          				W5100_Recv_UDP(2);  
+   \   00000084   0220               MOVS     R0,#+2
+   \   00000086   BDE83240           POP      {R1,R4,R5,LR}
+   \   0000008A   ....               B.N      W5100_Recv_UDP
+     50          			}
+     51          		}
+     52          		else if(InterruptStatus & 0x08){			//SOCK4
+   \                     ??NetWorkInterrupt_3:
+   \   0000008C   14F0080F           TST      R4,#0x8
+   \   00000090   0ED0               BEQ.N    ??NetWorkInterrupt_0
+     53          		  	InterruptStatus = IINCHIP_READ(Sn_IR(3)); 	
+   \   00000092   40F20275           MOVW     R5,#+1794
+   \   00000096   2846               MOV      R0,R5
+   \   00000098   ........           BL       IINCHIP_READ
+   \   0000009C   0446               MOV      R4,R0
+     54          			IINCHIP_WRITE(Sn_IR(3), InterruptStatus);	//清除Sock4中断标记
+   \   0000009E   2146               MOV      R1,R4
+   \   000000A0   2846               MOV      R0,R5
+   \   000000A2   ........           BL       IINCHIP_WRITE
+     55          			if(InterruptStatus == Sn_IR_RECV){
+   \   000000A6   042C               CMP      R4,#+4
+   \   000000A8   02D1               BNE.N    ??NetWorkInterrupt_0
+     56          				W5100_Recv_UDP(3);  
+   \   000000AA   0320               MOVS     R0,#+3
+   \   000000AC   ........           BL       W5100_Recv_UDP
+     57          			}
+     58          		}
+     59          	}
+     60          }
+   \                     ??NetWorkInterrupt_0:
+   \   000000B0   31BD               POP      {R0,R4,R5,PC}    ;; return
+     61          
+
+   \                                 In section .text, align 4, keep-with-next
+     62          void W5100_Recv_UDP(SOCKET sock)
+     63          {
+   \                     W5100_Recv_UDP:
+   \   00000000   7FB5               PUSH     {R0-R6,LR}
+   \   00000002   0446               MOV      R4,R0
+     64            	OS_Q_DATA data;
+     65          	
+     66          	OSQQuery(SockMsgQ,&data);
+   \   00000004   174D               LDR.N    R5,??W5100_Recv_UDP_0  ;; SockMsgQ
+   \   00000006   00A9               ADD      R1,SP,#+0
+   \   00000008   2868               LDR      R0,[R5, #+0]
+   \   0000000A   ........           BL       OSQQuery
+     67          	
+     68          	if(data.OSNMsgs<SockMsgNum)
+   \   0000000E   164E               LDR.N    R6,??W5100_Recv_UDP_0+0x4  ;; RecvSock
+   \   00000010   BDF80400           LDRH     R0,[SP, #+4]
+   \   00000014   0A28               CMP      R0,#+10
+   \   00000016   03D2               BCS.N    ??W5100_Recv_UDP_1
+     69          		RecvSock=malloc(sizeof(RECVSOCK));
+   \   00000018   8C20               MOVS     R0,#+140
+   \   0000001A   ........           BL       malloc
+   \   0000001E   3060               STR      R0,[R6, #+0]
+     70          	if(RecvSock==NULL)
+   \                     ??W5100_Recv_UDP_1:
+   \   00000020   3068               LDR      R0,[R6, #+0]
+   \   00000022   0028               CMP      R0,#+0
+   \   00000024   1DD0               BEQ.N    ??W5100_Recv_UDP_2
+     71          	  	return;
+     72          	
+     73          	
+     74            	if((RecvSock->len = getSn_RX_RSR(sock)) > 0){	/* check Rx data */
+   \   00000026   2046               MOV      R0,R4
+   \   00000028   ........           BL       getSn_RX_RSR
+   \   0000002C   3168               LDR      R1,[R6, #+0]
+   \   0000002E   0880               STRH     R0,[R1, #+0]
+   \   00000030   0028               CMP      R0,#+0
+   \   00000032   10D0               BEQ.N    ??W5100_Recv_UDP_3
+     75          		if (RecvSock->len > W5100_TX_RX_MAX_BUF_SIZE)
+   \   00000034   8128               CMP      R0,#+129
+   \   00000036   01D3               BCC.N    ??W5100_Recv_UDP_4
+     76          	  		RecvSock->len = W5100_TX_RX_MAX_BUF_SIZE;		/* if Rx data size is lager than TX_RX_MAX_BUF_SIZE 
+   \   00000038   8020               MOVS     R0,#+128
+   \   0000003A   0880               STRH     R0,[R1, #+0]
+     77          							   						   the data size to read is MAX_BUF_SIZE. */
+     78          
+     79          		RecvSock->len = recvfrom(sock,RecvSock->buff,RecvSock->len,(unsigned char*)&RecvSock->sip,&RecvSock->port);	/* read the received data */
+   \                     ??W5100_Recv_UDP_4:
+   \   0000003C   01F18800           ADD      R0,R1,#+136
+   \   00000040   01B5               PUSH     {R0,LR}
+   \   00000042   01F18403           ADD      R3,R1,#+132
+   \   00000046   0A88               LDRH     R2,[R1, #+0]
+   \   00000048   891C               ADDS     R1,R1,#+2
+   \   0000004A   2046               MOV      R0,R4
+   \   0000004C   ........           BL       recvfrom
+   \   00000050   02B0               ADD      SP,SP,#+8
+   \   00000052   3168               LDR      R1,[R6, #+0]
+   \   00000054   0880               STRH     R0,[R1, #+0]
+     80            	}
+     81          	RecvSock->sock=sock;
+   \                     ??W5100_Recv_UDP_3:
+   \   00000056   3168               LDR      R1,[R6, #+0]
+   \   00000058   81F88A40           STRB     R4,[R1, #+138]
+     82          	OSQPost(SockMsgQ,RecvSock);
+   \   0000005C   2868               LDR      R0,[R5, #+0]
+   \   0000005E   ........           BL       OSQPost
+     83          }
+   \                     ??W5100_Recv_UDP_2:
+   \   00000062   7FBD               POP      {R0-R6,PC}       ;; return
+   \                     ??W5100_Recv_UDP_0:
+   \   00000064   ........           DC32     SockMsgQ
+   \   00000068   ........           DC32     RecvSock
+     84          
+     85          ////***************************************************************************
+     86          
+
+   \                                 In section .text, align 4, keep-with-next
+     87          void W5100_Init(void)
+     88          {
+   \                     W5100_Init:
+   \   00000000   00B5               PUSH     {LR}
+   \   00000002   89B0               SUB      SP,SP,#+36
+     89            	//SYSINFO	SysInfo;
+     90            	NETCONF	NetConf;		/**< network info.(mac, ip,...) */
+     91          	
+     92            	//>>>from eeprom	get_netconf(NetConf);
+     93              get_netconf(&NetConf);		
+   \   00000004   00A8               ADD      R0,SP,#+0
+   \   00000006   ........           BL       get_netconf
+     94          	
+     95          	//get_chconf(ChConf);
+     96          	
+     97              ResetW5100();
+   \   0000000A   ........           BL       ResetW5100
+     98                  
+     99              iinchip_init();
+   \   0000000E   ........           BL       iinchip_init
+    100              OSTimeDlyHMSM(0, 0, 0, 50);
+   \   00000012   3223               MOVS     R3,#+50
+   \   00000014   0022               MOVS     R2,#+0
+   \   00000016   1146               MOV      R1,R2
+   \   00000018   0846               MOV      R0,R1
+   \   0000001A   ........           BL       OSTimeDlyHMSM
+    101          	
+    102              setSHAR(NetConf.mac);
+   \   0000001E   00A8               ADD      R0,SP,#+0
+   \   00000020   ........           BL       setSHAR
+    103           	OSTimeDlyHMSM(0, 0, 0, 1);
+   \   00000024   0123               MOVS     R3,#+1
+   \   00000026   0022               MOVS     R2,#+0
+   \   00000028   1146               MOV      R1,R2
+   \   0000002A   0846               MOV      R0,R1
+   \   0000002C   ........           BL       OSTimeDlyHMSM
+    104          
+    105              //NetConf.sip=inet_addr("192.168.0.160");
+    106                  
+    107              setSIPR((unsigned char*)&NetConf.sip);
+   \   00000030   02A8               ADD      R0,SP,#+8
+   \   00000032   ........           BL       setSIPR
+    108              OSTimeDlyHMSM(0, 0, 0, 1);
+   \   00000036   0123               MOVS     R3,#+1
+   \   00000038   0022               MOVS     R2,#+0
+   \   0000003A   1146               MOV      R1,R2
+   \   0000003C   0846               MOV      R0,R1
+   \   0000003E   ........           BL       OSTimeDlyHMSM
+    109                  
+    110              //NetConf.gwip=inet_addr("192.168.0.1");
+    111                 
+    112              setGAR((unsigned char*)&NetConf.gwip);
+   \   00000042   03A8               ADD      R0,SP,#+12
+   \   00000044   ........           BL       setGAR
+    113              OSTimeDlyHMSM(0, 0, 0, 1);
+   \   00000048   0123               MOVS     R3,#+1
+   \   0000004A   0022               MOVS     R2,#+0
+   \   0000004C   1146               MOV      R1,R2
+   \   0000004E   0846               MOV      R0,R1
+   \   00000050   ........           BL       OSTimeDlyHMSM
+    114                 
+    115              //NetConf.sn=inet_addr("255.255.255.0");
+    116              setSUBR((unsigned char*)&NetConf.sn);
+   \   00000054   04A8               ADD      R0,SP,#+16
+   \   00000056   ........           BL       setSUBR
+    117              OSTimeDlyHMSM(0, 0, 0, 1);
+   \   0000005A   0123               MOVS     R3,#+1
+   \   0000005C   0022               MOVS     R2,#+0
+   \   0000005E   1146               MOV      R1,R2
+   \   00000060   0846               MOV      R0,R1
+   \   00000062   ........           BL       OSTimeDlyHMSM
+    118                  
+    119              setIMR(0x0F);  //允许端口0-3中断
+   \   00000066   0F20               MOVS     R0,#+15
+   \   00000068   ........           BL       setIMR
+    120          
+    121              NetConf.Mem_alloc = DEFAULT_NET_MEMALLOC;
+   \   0000006C   5520               MOVS     R0,#+85
+   \   0000006E   8DF81800           STRB     R0,[SP, #+24]
+    122              sysinit(NetConf.Mem_alloc,NetConf.Mem_alloc);
+   \   00000072   0146               MOV      R1,R0
+   \   00000074   ........           BL       sysinit
+    123                  
+    124              //>>>> open sock0,1 ,4 and 4for udp
+    125              socket(0,Sn_MR_UDP,NetConf.port[0],0x00);    /* reinitialize the socket */
+   \   00000078   0023               MOVS     R3,#+0
+   \   0000007A   BDF81A20           LDRH     R2,[SP, #+26]
+   \   0000007E   0221               MOVS     R1,#+2
+   \   00000080   1846               MOV      R0,R3
+   \   00000082   ........           BL       socket
+    126          	socket(1,Sn_MR_UDP,NetConf.port[1],0x00);    /* reinitialize the socket */
+   \   00000086   0023               MOVS     R3,#+0
+   \   00000088   BDF81C20           LDRH     R2,[SP, #+28]
+   \   0000008C   0221               MOVS     R1,#+2
+   \   0000008E   0120               MOVS     R0,#+1
+   \   00000090   ........           BL       socket
+    127          	socket(2,Sn_MR_UDP,NetConf.port[2],0x00);    /* reinitialize the socket */
+   \   00000094   0023               MOVS     R3,#+0
+   \   00000096   BDF81E20           LDRH     R2,[SP, #+30]
+   \   0000009A   0221               MOVS     R1,#+2
+   \   0000009C   0846               MOV      R0,R1
+   \   0000009E   ........           BL       socket
+    128          	socket(3,Sn_MR_UDP,NetConf.port[3],0x00);    /* reinitialize the socket */
+   \   000000A2   0023               MOVS     R3,#+0
+   \   000000A4   BDF82020           LDRH     R2,[SP, #+32]
+   \   000000A8   0221               MOVS     R1,#+2
+   \   000000AA   0320               MOVS     R0,#+3
+   \   000000AC   ........           BL       socket
+    129                  
+    130              //设置中断向量
+    131             	BSP_IntVectSet(BSP_INT_ID_EXTI0, EXTI0_IRQHandler);
+   \   000000B0   0449               LDR.N    R1,??W5100_Init_0  ;; EXTI0_IRQHandler
+   \   000000B2   0620               MOVS     R0,#+6
+   \   000000B4   ........           BL       BSP_IntVectSet
+    132            	BSP_IntEn(BSP_INT_ID_EXTI0);
+   \   000000B8   0620               MOVS     R0,#+6
+   \   000000BA   ........           BL       BSP_IntEn
+    133          }
+   \   000000BE   09B0               ADD      SP,SP,#+36
+   \   000000C0   00BD               POP      {PC}             ;; return
+   \   000000C2   00BF               Nop      
+   \                     ??W5100_Init_0:
+   \   000000C4   ........           DC32     EXTI0_IRQHandler
+    134          
+    135          
+
+   Maximum stack usage in bytes:
+
+     Function         .cstack
+     --------         -------
+     NetWorkInterrupt     16
+     W5100_Init           40
+     W5100_Recv_UDP       40
+
+
+   Section sizes:
+
+     Function/Label   Bytes
+     --------------   -----
+     RecvSock            4
+     NetWorkInterrupt  178
+     W5100_Recv_UDP    108
+     W5100_Init        200
+
+ 
+   4 bytes in section .bss
+ 486 bytes in section .text
+ 
+ 486 bytes of CODE memory
+   4 bytes of DATA memory
+
+Errors: none
+Warnings: none

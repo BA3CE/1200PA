@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+  <CurrentConfigs><Project>GPSDO/Debug</Project></CurrentConfigs></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>226</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>980</ColumnWidth1><ColumnWidth2>261</ColumnWidth2><ColumnWidth3>65</ColumnWidth3></Build>
+    <Debug-Log><ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1307</ColumnWidth1></Debug-Log><TerminalIO/></Static>
+    <Windows>
+      
+      
+    <Wnd2>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-10452-21686</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>GPSDO</ExpandedNode><ExpandedNode>GPSDO/APP</ExpandedNode><ExpandedNode>GPSDO/BSP</ExpandedNode><ExpandedNode>GPSDO/CAN</ExpandedNode><ExpandedNode>GPSDO/EPROM</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd2><Wnd3>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-18586-21739</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        <Tab><Identity>TabID-23633-1067</Identity><TabName>Debug Log</TabName><Factory>Debug-Log</Factory><Session/></Tab></Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd3></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\FWLib\library\inc\stm32f10x_conf.h</Filename><XPos>0</XPos><YPos>108</YPos><SelStart>4412</SelStart><SelEnd>4412</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\BSP\bsp.h</Filename><XPos>0</XPos><YPos>77</YPos><SelStart>3401</SelStart><SelEnd>3401</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\BSP\bsp.c</Filename><XPos>0</XPos><YPos>192</YPos><SelStart>7411</SelStart><SelEnd>7419</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\FWLib\library\inc\stm32f10x_gpio.h</Filename><XPos>0</XPos><YPos>33</YPos><SelStart>2421</SelStart><SelEnd>2434</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\FWLib\library\inc\stm32f10x_rcc.h</Filename><XPos>0</XPos><YPos>190</YPos><SelStart>10827</SelStart><SelEnd>10845</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\app.c</Filename><XPos>0</XPos><YPos>82</YPos><SelStart>3776</SelStart><SelEnd>3776</SelEnd></Tab><ActiveTab>5</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Boards\EEPROM\at24c64.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>503</SelStart><SelEnd>520</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\Interrupt\stm32f10x_it.c</Filename><XPos>0</XPos><YPos>476</YPos><SelStart>17070</SelStart><SelEnd>17070</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\uCOS-II\Source\os_core.c</Filename><XPos>0</XPos><YPos>1761</YPos><SelStart>75016</SelStart><SelEnd>75016</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\os_cpu_a.asm</Filename><XPos>0</XPos><YPos>78</YPos><SelStart>4224</SelStart><SelEnd>4224</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\FWLib\library\src\stm32f10x_gpio.c</Filename><XPos>0</XPos><YPos>240</YPos><SelStart>9517</SelStart><SelEnd>9538</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\os_cpu_c.c</Filename><XPos>0</XPos><YPos>137</YPos><SelStart>5627</SelStart><SelEnd>5627</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-04e72618><key>iaridepm.enu1</key></Toolbar-04e72618></Sizes></Row0><Row1><Sizes/></Row1></Top><Left><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>506</Bottom><Right>300</Right><x>-2</x><y>-2</y><xscreen>148</xscreen><yscreen>136</yscreen><sizeHorzCX>108346</sizeHorzCX><sizeHorzCY>198540</sizeHorzCY><sizeVertCX>221083</sizeVertCX><sizeVertCY>741606</sizeVertCY></Rect></Wnd2></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>134</Bottom><Right>1368</Right><x>-2</x><y>-2</y><xscreen>1370</xscreen><yscreen>136</yscreen><sizeHorzCX>1002928</sizeHorzCX><sizeHorzCY>198540</sizeHorzCY><sizeVertCX>108346</sizeVertCX><sizeVertCY>198540</sizeVertCY></Rect></Wnd3></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+

@@ -1,0 +1,1044 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  22:57:20 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\BSP\bsp.c  #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\Boards\BSP\bsp.c" -D _DLIB_FILE_DESCRIPTOR -lC        #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Debug\List\" -o  #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Debug\Obj\"      #
+#                    --no_unroll --no_inline --no_tbaa --no_scheduling        #
+#                    --debug --endian=little --cpu=Cortex-M3 -e --fpu=None    #
+#                    --dlib_config "D:\Program Files\IAR Systems\Embedded     #
+#                    Workbench 5.4 Kickstart\arm\INC\DLib_Config_Normal.h"    #
+#                    -I "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I   #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\bsp.lst                                    #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over IP\Debug\Obj\bsp.o   #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\BSP\bsp.c
+      1          /*
+      2          *********************************************************************************************************
+      3          *                                     MICIRUM BOARD SUPPORT PACKAGE
+      4          *
+      5          *                             (c) Copyright 2008; Micrium, Inc.; Weston, FL
+      6          *
+      7          *               All rights reserved.  Protected by international copyright laws.
+      8          *               Knowledge of the source code may NOT be used to develop a similar product.
+      9          *               Please help us continue to provide the Embedded community with the finest
+     10          *               software available.  Your honesty is greatly appreciated.
+     11          *********************************************************************************************************
+     12          */
+     13          
+     14          /*
+     15          *********************************************************************************************************
+     16          *
+     17          *                                        BOARD SUPPORT PACKAGE
+     18          *
+     19          *                                     ST Microelectronics STM32
+     20          *                                              on the 
+     21          *                                 IAR STM32F103ZE-SK Evaluation Board
+     22          *
+     23          * Filename      : bsp.c
+     24          * Version       : V1.00
+     25          * Programmer(s) : FT
+     26          *********************************************************************************************************
+     27          */
+     28          
+     29          /*
+     30          *********************************************************************************************************
+     31          *                                             INCLUDE FILES
+     32          *********************************************************************************************************
+     33          */
+     34          
+     35          #define  BSP_MODULE
+     36          #include "bsp.h"
+     37          #include "stm32f10x_it.h"
+     38          /*
+     39          *********************************************************************************************************
+     40          *                                            LOCAL DEFINES
+     41          *********************************************************************************************************
+     42          */
+     43          /* ---------------------- GPIOA Pins ---------------------- */
+     44          #define  W5100_INT						DEF_BIT_00
+     45          #define  RESET_BUTTON					DEF_BIT_08
+     46          //tcp_int,reset_button input
+     47          /* ---------------------- GPIOB Pins ---------------------- */
+     48          #define  PI1_INT						DEF_BIT_01
+     49          #define  CH432_INT						DEF_BIT_07
+     50          /* ---------------------- GPIOC Pins ---------------------- */
+     51          #define  BSP_GPIOC_J1                  DEF_BIT_06             /* GPIOC 06:                                */
+     52          #define  BSP_GPIOC_J2                  DEF_BIT_07             /* GPIOC 07:                               */
+     53          #define  BSP_GPIOC_J3                  DEF_BIT_08             /* GPIOC 08:                                  */
+     54          #define  BSP_GPIOC_J4                  DEF_BIT_09             /* GPIOC 09:                                */
+     55          
+     56          #define  BSP_GPIOC_Relay_GRP             BSP_GPIOC_J1       | \
+     57                                                   BSP_GPIOC_J2       | \
+     58                                                   BSP_GPIOC_J3       | \
+     59                                                   BSP_GPIOC_J4   
+     60          
+     61          /* ---------------------- GPIOD Pins ---------------------- */
+     62          
+     63          
+     64          
+     65          #define  BSP_RCC_TO_VAL                  0x00000FFF             /* Max Timeout for RCC register                             */
+     66          
+     67          /*
+     68          *********************************************************************************************************
+     69          *                                           EXTERNAL FUNCTIONS
+     70          *********************************************************************************************************
+     71          */
+     72          
+     73          
+     74          
+     75          /*
+     76          *********************************************************************************************************
+     77          *                                          LOCAL DATA TYPES
+     78          *********************************************************************************************************
+     79          */
+     80          
+     81          
+     82          /*
+     83          *********************************************************************************************************
+     84          *                                            LOCAL TABLES
+     85          *********************************************************************************************************
+     86          */
+     87          
+     88          
+     89          /*
+     90          *********************************************************************************************************
+     91          *                                       LOCAL GLOBAL VARIABLES
+     92          *********************************************************************************************************
+     93          */
+     94          
+     95          
+     96          /*
+     97          *********************************************************************************************************
+     98          *                                      LOCAL FUNCTION PROTOTYPES
+     99          *********************************************************************************************************
+    100          */
+    101          void  BSP_GPIO_Init(void);
+    102          void  BSP_RCC_Init(void);
+    103          void  BSP_SPI_Init(void);
+    104          void  BSP_EXT_Init(void);
+    105          /*
+    106          *********************************************************************************************************
+    107          *                                     LOCAL CONFIGURATION ERRORS
+    108          *********************************************************************************************************
+    109          */
+    110          
+    111          
+    112          /*
+    113          **********************************************************************************************************
+    114          **********************************************************************************************************
+    115          **                                         GLOBAL FUNCTIONS
+    116          **********************************************************************************************************
+    117          **********************************************************************************************************
+    118          */
+    119          
+    120          /*
+    121          *********************************************************************************************************
+    122          *                                            BSP_Init()
+    123          *
+    124          * Description : This function should be called by your application code before you make use of any of the
+    125          *               functions found in this module.
+    126          *
+    127          * Argument(s) : none.
+    128          *
+    129          * Return(s)   : none.
+    130          *
+    131          * Caller(s)   : Application.
+    132          *
+    133          * Note(s)     : none.
+    134          *********************************************************************************************************
+    135          */
+
+   \                                 In section .text, align 2, keep-with-next
+    136          void  BSP_Init (void)
+    137          {    
+   \                     BSP_Init:
+   \   00000000   80B5               PUSH     {R7,LR}
+    138              BSP_RCC_Init();                                             /* Initialize the Reset and Control (RCC) module             */
+   \   00000002   ........           BL       BSP_RCC_Init
+    139          	BSP_GPIO_Init();
+   \   00000006   ........           BL       BSP_GPIO_Init
+    140          	BSP_SPI_Init();
+   \   0000000A   ........           BL       BSP_SPI_Init
+    141          	BSP_EXT_Init();
+   \   0000000E   BDE80140           POP      {R0,LR}
+   \   00000012   ....               B.N      BSP_EXT_Init
+    142          }
+    143          
+    144          /*
+    145          *********************************************************************************************************
+    146          *                                       BSP_CPU_ClkFreq()
+    147          *
+    148          * Description : This function reads CPU registers to determine the CPU clock frequency of the chip in KHz.
+    149          *
+    150          * Argument(s) : none.
+    151          *
+    152          * Return(s)   : The CPU clock frequency, in Hz.
+    153          *
+    154          * Caller(s)   : none.
+    155          *
+    156          * Note(s)     : none.
+    157          *********************************************************************************************************
+    158          */
+    159          
+
+   \                                 In section .text, align 4, keep-with-next
+    160          CPU_INT32U  BSP_CPU_ClkFreq (void)
+    161          {
+   \                     BSP_CPU_ClkFreq:
+   \   00000000   10B5               PUSH     {R4,LR}
+    162              static  RCC_ClocksTypeDef  rcc_clocks;
+    163          
+    164          
+    165              RCC_GetClocksFreq(&rcc_clocks);
+   \   00000002   034C               LDR.N    R4,??BSP_CPU_ClkFreq_0  ;; ??rcc_clocks
+   \   00000004   2046               MOV      R0,R4
+   \   00000006   ........           BL       RCC_GetClocksFreq
+    166          
+    167              return ((CPU_INT32U)rcc_clocks.HCLK_Frequency);
+   \   0000000A   6068               LDR      R0,[R4, #+4]
+   \   0000000C   10BD               POP      {R4,PC}          ;; return
+   \   0000000E   00BF               Nop      
+   \                     ??BSP_CPU_ClkFreq_0:
+   \   00000010   ........           DC32     ??rcc_clocks
+    168          }
+
+   \                                 In section .bss, align 4
+   \                     ??rcc_clocks:
+   \   00000000                      DS8 20
+    169          
+    170          /*
+    171          *********************************************************************************************************
+    172          *********************************************************************************************************
+    173          *                                         OS CORTEX-M3 FUNCTIONS
+    174          *********************************************************************************************************
+    175          *********************************************************************************************************
+    176          */
+    177          
+    178          /*
+    179          *********************************************************************************************************
+    180          *                                         OS_CPU_SysTickClkFreq()
+    181          *
+    182          * Description : Get system tick clock frequency.
+    183          *
+    184          * Argument(s) : none.
+    185          *
+    186          * Return(s)   : Clock frequency (of system tick).
+    187          *
+    188          * Caller(s)   : BSP_Init().
+    189          *
+    190          * Note(s)     : none.
+    191          *********************************************************************************************************
+    192          */
+    193          
+
+   \                                 In section .text, align 2, keep-with-next
+    194          INT32U  OS_CPU_SysTickClkFreq (void)
+    195          {
+    196              INT32U  freq;
+    197          
+    198          
+    199              freq = BSP_CPU_ClkFreq();
+    200              return (freq);
+   \                     OS_CPU_SysTickClkFreq:
+   \   00000000   ....               B.N      BSP_CPU_ClkFreq
+    201          }
+    202          
+    203          
+    204          
+    205          /*
+    206          ************************************************************************************************************
+    207          ************************************************************************************************************
+    208          **                                             Relay SERVICES
+    209          ************************************************************************************************************
+    210          ************************************************************************************************************
+    211          */
+    212          
+    213          /*
+    214          *********************************************************************************************************
+    215          *                                             BSP_Relay_On()
+    216          *
+    217          * Description : Turns on the LEDs on the board specified by led_id parameter.
+    218          *
+    219          * Argument(s) : led_id  is the number of the LED to control
+    220          *                       0    indicates that you want ALL the LEDs to be ON
+    221          *                       1    turns ON user LED1  on the board
+    222          *                       2    turns ON user LED2  on the board
+    223          *                       3    turns ON user LED3  on the board
+    224          *                       4    turns ON user LED4  on the board
+    225          *
+    226          * Return(s)  : none.
+    227          *
+    228          * Caller(s)  : Application.
+    229          *
+    230          * Note(s)    : David Wang.
+    231          *********************************************************************************************************
+    232          */
+    233          
+
+   \                                 In section .text, align 2, keep-with-next
+    234          void  BSP_Relay_On (CPU_INT08U relay_id)
+    235          {
+    236              switch (relay_id) {
+   \                     BSP_Relay_On:
+   \   00000000   0028               CMP      R0,#+0
+   \   00000002   06D0               BEQ.N    ??BSP_Relay_On_0
+   \   00000004   0228               CMP      R0,#+2
+   \   00000006   0DD0               BEQ.N    ??BSP_Relay_On_1
+   \   00000008   08D3               BCC.N    ??BSP_Relay_On_2
+   \   0000000A   0428               CMP      R0,#+4
+   \   0000000C   13D0               BEQ.N    ??BSP_Relay_On_3
+   \   0000000E   0DD3               BCC.N    ??BSP_Relay_On_4
+   \   00000010   7047               BX       LR               ;; return
+    237                  case 0:
+    238                       GPIO_SetBits(GPIOC, BSP_GPIOC_Relay_GRP);
+   \                     ??BSP_Relay_On_0:
+   \   00000012   4FF47071           MOV      R1,#+960
+   \   00000016   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   00000018   ........           B.W      GPIO_SetBits
+    239                       break;
+    240          
+    241                  case 1:
+    242                       GPIO_SetBits(GPIOC, BSP_GPIOC_J1);
+   \                     ??BSP_Relay_On_2:
+   \   0000001C   4021               MOVS     R1,#+64
+   \   0000001E   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   00000020   ........           B.W      GPIO_SetBits
+    243                       break;
+    244          
+    245                  case 2:
+    246                       GPIO_SetBits(GPIOC, BSP_GPIOC_J2);
+   \                     ??BSP_Relay_On_1:
+   \   00000024   8021               MOVS     R1,#+128
+   \   00000026   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   00000028   ........           B.W      GPIO_SetBits
+    247                       break;
+    248          
+    249                  case 3:
+    250                       GPIO_SetBits(GPIOC, BSP_GPIOC_J3);
+   \                     ??BSP_Relay_On_4:
+   \   0000002C   4FF48071           MOV      R1,#+256
+   \   00000030   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   00000032   ........           B.W      GPIO_SetBits
+    251                       break;
+    252          
+    253                  case 4:
+    254                       GPIO_SetBits(GPIOC, BSP_GPIOC_J4);
+   \                     ??BSP_Relay_On_3:
+   \   00000036   4FF40071           MOV      R1,#+512
+   \   0000003A   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   0000003C   ........           B.W      GPIO_SetBits
+    255                       break;
+    256          
+    257                  default:
+    258                       break;
+    259              }
+    260          }
+    261          
+    262          /*
+    263          *********************************************************************************************************
+    264          *                                             BSP_Relay_Off()
+    265          *
+    266          * Description : Turns off the LEDs on the board specified by led_id parameter.
+    267          *
+    268          * Argument(s) : led_id  is the number of the LED to turn OFF
+    269          *                       0    indicates that you want ALL the LEDs to be OFF
+    270          *                       1    turns OFF user LED1  on the board
+    271          *                       2    turns OFF user LED2  on the board
+    272          *                       3    turns OFF user LED3  on the board
+    273          *                       4    turns OFF user LED4  on the board
+    274          
+    275          *
+    276          * Return(s)  : none
+    277          *
+    278          * Caller(s)  : Application.
+    279          *
+    280          * Note(s)    : David Wang.
+    281          
+    282          *********************************************************************************************************
+    283          */
+    284          
+
+   \                                 In section .text, align 2, keep-with-next
+    285          void  BSP_Relay_Off (CPU_INT08U relay_id)
+    286          {
+    287              switch (relay_id) {
+   \                     BSP_Relay_Off:
+   \   00000000   0028               CMP      R0,#+0
+   \   00000002   06D0               BEQ.N    ??BSP_Relay_Off_0
+   \   00000004   0228               CMP      R0,#+2
+   \   00000006   0DD0               BEQ.N    ??BSP_Relay_Off_1
+   \   00000008   08D3               BCC.N    ??BSP_Relay_Off_2
+   \   0000000A   0428               CMP      R0,#+4
+   \   0000000C   13D0               BEQ.N    ??BSP_Relay_Off_3
+   \   0000000E   0DD3               BCC.N    ??BSP_Relay_Off_4
+   \   00000010   7047               BX       LR               ;; return
+    288                  case 0:
+    289                       GPIO_ResetBits(GPIOC, BSP_GPIOC_Relay_GRP);
+   \                     ??BSP_Relay_Off_0:
+   \   00000012   4FF47071           MOV      R1,#+960
+   \   00000016   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   00000018   ........           B.W      GPIO_ResetBits
+    290                       break;
+    291          
+    292                  case 1:
+    293                       GPIO_ResetBits(GPIOC, BSP_GPIOC_J1);
+   \                     ??BSP_Relay_Off_2:
+   \   0000001C   4021               MOVS     R1,#+64
+   \   0000001E   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   00000020   ........           B.W      GPIO_ResetBits
+    294                       break;
+    295          
+    296                  case 2:
+    297                       GPIO_ResetBits(GPIOC, BSP_GPIOC_J2);
+   \                     ??BSP_Relay_Off_1:
+   \   00000024   8021               MOVS     R1,#+128
+   \   00000026   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   00000028   ........           B.W      GPIO_ResetBits
+    298                       break;
+    299          
+    300                  case 3:
+    301                       GPIO_ResetBits(GPIOC, BSP_GPIOC_J3);
+   \                     ??BSP_Relay_Off_4:
+   \   0000002C   4FF48071           MOV      R1,#+256
+   \   00000030   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   00000032   ........           B.W      GPIO_ResetBits
+    302                       break;
+    303          
+    304                  case 4:
+    305                       GPIO_ResetBits(GPIOC, BSP_GPIOC_J4);
+   \                     ??BSP_Relay_Off_3:
+   \   00000036   4FF40071           MOV      R1,#+512
+   \   0000003A   ....               LDR.N    R0,??DataTable12  ;; 0x40011000
+   \   0000003C   ........           B.W      GPIO_ResetBits
+    306                       break;
+    307          
+    308                  default:
+    309                       break;
+    310              }
+    311          }
+    312          
+    313          /*
+    314          *********************************************************************************************************
+    315          *                                              BSP_PB_Init()
+    316          *
+    317          * Description : Initialize the board's PB.
+    318          *
+    319          * Argument(s) : none.
+    320          *
+    321          * Return(s)   : none.
+    322          *
+    323          * Caller(s)   : BSP_Init().
+    324          *
+    325          * Note(s)     : David Wang.
+    326          *********************************************************************************************************
+    327          */
+    328          
+
+   \                                 In section .text, align 4, keep-with-next
+    329          void  BSP_GPIO_Init(void)
+    330          {
+   \                     BSP_GPIO_Init:
+   \   00000000   38B5               PUSH     {R3-R5,LR}
+    331          	GPIO_InitTypeDef  GPIO_InitStructure;
+    332          	
+    333          	//GPIOA
+    334              GPIO_InitStructure.GPIO_Pin  = W5100_CS|W5100_RESET;			//0x12 TCP_CS,TCP_RESET output
+   \   00000002   1220               MOVS     R0,#+18
+   \   00000004   ADF80000           STRH     R0,[SP, #+0]
+    335              GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   00000008   0320               MOVS     R0,#+3
+   \   0000000A   8DF80200           STRB     R0,[SP, #+2]
+    336              GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+   \   0000000E   1020               MOVS     R0,#+16
+   \   00000010   8DF80300           STRB     R0,[SP, #+3]
+    337              GPIO_Init(GPIOA, &GPIO_InitStructure);
+   \   00000014   ....               LDR.N    R5,??DataTable13  ;; 0x40010800
+   \   00000016   00A9               ADD      R1,SP,#+0
+   \   00000018   2846               MOV      R0,R5
+   \   0000001A   ........           BL       GPIO_Init
+    338          
+    339              GPIO_InitStructure.GPIO_Pin  = W5100_INT|RESET_BUTTON;			//0x0101 tcp_int,reset_button input
+   \   0000001E   40F20110           MOVW     R0,#+257
+   \   00000022   ADF80000           STRH     R0,[SP, #+0]
+    340              GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IPU;
+   \   00000026   4820               MOVS     R0,#+72
+   \   00000028   8DF80300           STRB     R0,[SP, #+3]
+    341              GPIO_Init(GPIOA, &GPIO_InitStructure);
+   \   0000002C   00A9               ADD      R1,SP,#+0
+   \   0000002E   2846               MOV      R0,R5
+   \   00000030   ........           BL       GPIO_Init
+    342              
+    343              /* Configure SPI1 pins: SCK, MISO and MOSI */
+    344              GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
+   \   00000034   E020               MOVS     R0,#+224
+   \   00000036   ADF80000           STRH     R0,[SP, #+0]
+    345              GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+   \   0000003A   1820               MOVS     R0,#+24
+   \   0000003C   8DF80300           STRB     R0,[SP, #+3]
+    346              GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   00000040   0320               MOVS     R0,#+3
+   \   00000042   8DF80200           STRB     R0,[SP, #+2]
+    347              GPIO_Init(GPIOA, &GPIO_InitStructure);
+   \   00000046   00A9               ADD      R1,SP,#+0
+   \   00000048   2846               MOV      R0,R5
+   \   0000004A   ........           BL       GPIO_Init
+    348          	
+    349          	/* Configure USART1 RxD1,RxD2 (PA.10 PA.03) as alternate float */
+    350          	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10|GPIO_Pin_3;	
+   \   0000004E   4FF48160           MOV      R0,#+1032
+   \   00000052   ADF80000           STRH     R0,[SP, #+0]
+    351              GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;	
+   \   00000056   0420               MOVS     R0,#+4
+   \   00000058   8DF80300           STRB     R0,[SP, #+3]
+    352              GPIO_Init(GPIOA, &GPIO_InitStructure);
+   \   0000005C   00A9               ADD      R1,SP,#+0
+   \   0000005E   2846               MOV      R0,R5
+   \   00000060   ........           BL       GPIO_Init
+    353            
+    354            	/* Configure USART1 TxD1,TxD2 (PA.09 PA.02) as alternate push-pull */
+    355              GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9|GPIO_Pin_2;
+   \   00000064   4FF40170           MOV      R0,#+516
+   \   00000068   ADF80000           STRH     R0,[SP, #+0]
+    356              GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   0000006C   0320               MOVS     R0,#+3
+   \   0000006E   8DF80200           STRB     R0,[SP, #+2]
+    357              GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+   \   00000072   1820               MOVS     R0,#+24
+   \   00000074   8DF80300           STRB     R0,[SP, #+3]
+    358              GPIO_Init(GPIOA, &GPIO_InitStructure);
+   \   00000078   00A9               ADD      R1,SP,#+0
+   \   0000007A   2846               MOV      R0,R5
+   \   0000007C   ........           BL       GPIO_Init
+    359          	
+    360          	/* Configure CAN pin: RX */
+    361            	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
+   \   00000080   4FF40064           MOV      R4,#+2048
+   \   00000084   ADF80040           STRH     R4,[SP, #+0]
+    362            	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+   \   00000088   4820               MOVS     R0,#+72
+   \   0000008A   8DF80300           STRB     R0,[SP, #+3]
+    363            	GPIO_Init(GPIOA, &GPIO_InitStructure);
+   \   0000008E   00A9               ADD      R1,SP,#+0
+   \   00000090   2846               MOV      R0,R5
+   \   00000092   ........           BL       GPIO_Init
+    364            
+    365            	/* Configure CAN pin: TX */
+    366            	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
+   \   00000096   4FF48050           MOV      R0,#+4096
+   \   0000009A   ADF80000           STRH     R0,[SP, #+0]
+    367            	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+   \   0000009E   1820               MOVS     R0,#+24
+   \   000000A0   8DF80300           STRB     R0,[SP, #+3]
+    368            	GPIO_Init(GPIOA, &GPIO_InitStructure);
+   \   000000A4   00A9               ADD      R1,SP,#+0
+   \   000000A6   2846               MOV      R0,R5
+   \   000000A8   ........           BL       GPIO_Init
+    369          	
+    370          	//GPIOB
+    371          	/* Configure I2C1 pins: SCL and SDA */
+    372            	GPIO_InitStructure.GPIO_Pin =  SCL | SDA ;
+   \   000000AC   4FF44070           MOV      R0,#+768
+   \   000000B0   ADF80000           STRH     R0,[SP, #+0]
+    373            	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   000000B4   0320               MOVS     R0,#+3
+   \   000000B6   8DF80200           STRB     R0,[SP, #+2]
+    374          	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+   \   000000BA   1420               MOVS     R0,#+20
+   \   000000BC   8DF80300           STRB     R0,[SP, #+3]
+    375          	GPIO_Init(GPIOB, &GPIO_InitStructure);
+   \   000000C0   ....               LDR.N    R5,??DataTable14  ;; 0x40010c00
+   \   000000C2   00A9               ADD      R1,SP,#+0
+   \   000000C4   2846               MOV      R0,R5
+   \   000000C6   ........           BL       GPIO_Init
+    376          	
+    377          	GPIO_InitStructure.GPIO_Pin =  CH432_CS|CH432_HLF;
+   \   000000CA   4FF48250           MOV      R0,#+4160
+   \   000000CE   ADF80000           STRH     R0,[SP, #+0]
+    378            	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   000000D2   0320               MOVS     R0,#+3
+   \   000000D4   8DF80200           STRB     R0,[SP, #+2]
+    379          	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+   \   000000D8   1020               MOVS     R0,#+16
+   \   000000DA   8DF80300           STRB     R0,[SP, #+3]
+    380            	GPIO_Init(GPIOB, &GPIO_InitStructure);
+   \   000000DE   00A9               ADD      R1,SP,#+0
+   \   000000E0   2846               MOV      R0,R5
+   \   000000E2   ........           BL       GPIO_Init
+    381          	
+    382          	GPIO_InitStructure.GPIO_Pin  = PI1_INT;		
+   \   000000E6   0220               MOVS     R0,#+2
+   \   000000E8   ADF80000           STRH     R0,[SP, #+0]
+    383              GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN_FLOATING;
+   \   000000EC   0420               MOVS     R0,#+4
+   \   000000EE   8DF80300           STRB     R0,[SP, #+3]
+    384              GPIO_Init(GPIOB, &GPIO_InitStructure);
+   \   000000F2   00A9               ADD      R1,SP,#+0
+   \   000000F4   2846               MOV      R0,R5
+   \   000000F6   ........           BL       GPIO_Init
+    385          	
+    386          	GPIO_InitStructure.GPIO_Pin  = CH432_INT;		//CH432_int input
+   \   000000FA   8020               MOVS     R0,#+128
+   \   000000FC   ADF80000           STRH     R0,[SP, #+0]
+    387              GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IPU;
+   \   00000100   4820               MOVS     R0,#+72
+   \   00000102   8DF80300           STRB     R0,[SP, #+3]
+    388              GPIO_Init(GPIOB, &GPIO_InitStructure);
+   \   00000106   00A9               ADD      R1,SP,#+0
+   \   00000108   2846               MOV      R0,R5
+   \   0000010A   ........           BL       GPIO_Init
+    389          	
+    390          	/* Configure SPI2 pins: SCK, MOSI */
+    391              GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_15;
+   \   0000010E   4FF42040           MOV      R0,#+40960
+   \   00000112   ADF80000           STRH     R0,[SP, #+0]
+    392              GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+   \   00000116   1020               MOVS     R0,#+16
+   \   00000118   8DF80300           STRB     R0,[SP, #+3]
+    393              GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   0000011C   0320               MOVS     R0,#+3
+   \   0000011E   8DF80200           STRB     R0,[SP, #+2]
+    394              GPIO_Init(GPIOB, &GPIO_InitStructure);
+   \   00000122   00A9               ADD      R1,SP,#+0
+   \   00000124   2846               MOV      R0,R5
+   \   00000126   ........           BL       GPIO_Init
+    395          	/* Configure SPI2 pins: MISO */
+    396          	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14 ;
+   \   0000012A   4FF48040           MOV      R0,#+16384
+   \   0000012E   ADF80000           STRH     R0,[SP, #+0]
+    397              GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+   \   00000132   0420               MOVS     R0,#+4
+   \   00000134   8DF80300           STRB     R0,[SP, #+3]
+    398              GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   00000138   0320               MOVS     R0,#+3
+   \   0000013A   8DF80200           STRB     R0,[SP, #+2]
+    399              GPIO_Init(GPIOB, &GPIO_InitStructure);
+   \   0000013E   00A9               ADD      R1,SP,#+0
+   \   00000140   2846               MOV      R0,R5
+   \   00000142   ........           BL       GPIO_Init
+    400          	
+    401          	//GPIOC
+    402              GPIO_InitStructure.GPIO_Pin   = BSP_GPIOC_Relay_GRP|AT24C64WP;
+   \   00000146   4FF40F50           MOV      R0,#+9152
+   \   0000014A   ADF80000           STRH     R0,[SP, #+0]
+    403              GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   0000014E   0320               MOVS     R0,#+3
+   \   00000150   8DF80200           STRB     R0,[SP, #+2]
+    404              GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+   \   00000154   1020               MOVS     R0,#+16
+   \   00000156   8DF80300           STRB     R0,[SP, #+3]
+    405              GPIO_Init(GPIOC, &GPIO_InitStructure);
+   \   0000015A   ....               LDR.N    R5,??DataTable12  ;; 0x40011000
+   \   0000015C   00A9               ADD      R1,SP,#+0
+   \   0000015E   2846               MOV      R0,R5
+   \   00000160   ........           BL       GPIO_Init
+    406          	
+    407          	//USART3 部分映射，使用PC.11为RxD,PC10为TxD
+    408          	GPIO_PinRemapConfig(GPIO_PartialRemap_USART3, ENABLE);
+   \   00000164   0121               MOVS     R1,#+1
+   \   00000166   0D48               LDR.N    R0,??BSP_GPIO_Init_0  ;; 0x140010
+   \   00000168   ........           BL       GPIO_PinRemapConfig
+    409          	
+    410          	/* Configure USART1 RxD3 (PC.11) as alternate float */
+    411          	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;	
+   \   0000016C   ADF80040           STRH     R4,[SP, #+0]
+    412              GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;	
+   \   00000170   0420               MOVS     R0,#+4
+   \   00000172   8DF80300           STRB     R0,[SP, #+3]
+    413              GPIO_Init(GPIOC, &GPIO_InitStructure);
+   \   00000176   00A9               ADD      R1,SP,#+0
+   \   00000178   2846               MOV      R0,R5
+   \   0000017A   ........           BL       GPIO_Init
+    414            
+    415            	/* Configure USART1 TxD3 (PC.10) as alternate push-pull */
+    416              GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+   \   0000017E   4FF48060           MOV      R0,#+1024
+   \   00000182   ADF80000           STRH     R0,[SP, #+0]
+    417              GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \   00000186   0320               MOVS     R0,#+3
+   \   00000188   8DF80200           STRB     R0,[SP, #+2]
+    418              GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+   \   0000018C   1820               MOVS     R0,#+24
+   \   0000018E   8DF80300           STRB     R0,[SP, #+3]
+    419              GPIO_Init(GPIOC, &GPIO_InitStructure);
+   \   00000192   00A9               ADD      R1,SP,#+0
+   \   00000194   2846               MOV      R0,R5
+   \   00000196   ........           BL       GPIO_Init
+    420          	
+    421          	
+    422          }
+   \   0000019A   31BD               POP      {R0,R4,R5,PC}    ;; return
+   \                     ??BSP_GPIO_Init_0:
+   \   0000019C   10001400           DC32     0x140010
+    423          /*
+    424          *********************************************************************************************************
+    425          *                                         BSP_RCC_Init()
+    426          *
+    427          * Description : Initializes the RCC module. Set the FLASH memmory timing and the system clock dividers
+    428          *
+    429          * Argument(s) : none.
+    430          *
+    431          * Return(s)   : none.
+    432          *
+    433          * Caller(s)   : BSP_Init().
+    434          *
+    435          * Note(s)     : none.
+    436          *********************************************************************************************************
+    437          */
+    438          
+
+   \                                 In section .text, align 2, keep-with-next
+    439          void  BSP_RCC_Init (void) 
+    440          {    
+   \                     BSP_RCC_Init:
+   \   00000000   80B5               PUSH     {R7,LR}
+    441              RCC_DeInit(); 				//Resets the RCC clock configuration to the default reset state.
+   \   00000002   ........           BL       RCC_DeInit
+    442              RCC_HSEConfig(RCC_HSE_ON);  //使用外部高速晶振
+   \   00000006   4FF48030           MOV      R0,#+65536
+   \   0000000A   ........           BL       RCC_HSEConfig
+    443              RCC_WaitForHSEStartUp();    //等待晶振稳定
+   \   0000000E   ........           BL       RCC_WaitForHSEStartUp
+    444          
+    445              RCC_HCLKConfig(RCC_SYSCLK_Div1);   //HCLK 
+   \   00000012   0020               MOVS     R0,#+0
+   \   00000014   ........           BL       RCC_HCLKConfig
+    446              RCC_PCLK2Config(RCC_HCLK_Div1);
+   \   00000018   0020               MOVS     R0,#+0
+   \   0000001A   ........           BL       RCC_PCLK2Config
+    447              RCC_PCLK1Config(RCC_HCLK_Div2);    //pclk1 = hclk/2 
+   \   0000001E   4FF48060           MOV      R0,#+1024
+   \   00000022   ........           BL       RCC_PCLK1Config
+    448              RCC_ADCCLKConfig(RCC_PCLK2_Div8);  //以后改为不用
+   \   00000026   4FF44040           MOV      R0,#+49152
+   \   0000002A   ........           BL       RCC_ADCCLKConfig
+    449              FLASH_SetLatency(FLASH_Latency_2);  //FLASH 延时
+   \   0000002E   0220               MOVS     R0,#+2
+   \   00000030   ........           BL       FLASH_SetLatency
+    450              FLASH_PrefetchBufferCmd(FLASH_PrefetchBuffer_Enable);
+   \   00000034   1020               MOVS     R0,#+16
+   \   00000036   ........           BL       FLASH_PrefetchBufferCmd
+    451              RCC_PLLConfig(RCC_PLLSource_HSE_Div1, RCC_PLLMul_6);  //8*6 = 48Mhz
+   \   0000003A   4FF48011           MOV      R1,#+1048576
+   \   0000003E   4FF48030           MOV      R0,#+65536
+   \   00000042   ........           BL       RCC_PLLConfig
+    452              RCC_PLLCmd(ENABLE);
+   \   00000046   0120               MOVS     R0,#+1
+   \   00000048   ........           BL       RCC_PLLCmd
+    453          
+    454              while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
+   \                     ??BSP_RCC_Init_0:
+   \   0000004C   3920               MOVS     R0,#+57
+   \   0000004E   ........           BL       RCC_GetFlagStatus
+   \   00000052   0028               CMP      R0,#+0
+   \   00000054   FAD0               BEQ.N    ??BSP_RCC_Init_0
+    455          
+    456              RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+   \   00000056   0220               MOVS     R0,#+2
+   \   00000058   ........           BL       RCC_SYSCLKConfig
+    457          
+    458              while (RCC_GetSYSCLKSource() != 0x08);
+   \                     ??BSP_RCC_Init_1:
+   \   0000005C   ........           BL       RCC_GetSYSCLKSource
+   \   00000060   0828               CMP      R0,#+8
+   \   00000062   FBD1               BNE.N    ??BSP_RCC_Init_1
+    459              
+    460          	/* Enable peripheral clocks --------------------------------------------------*/
+    461          	/*AFIO clock enable */
+    462          	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);	
+   \   00000064   0121               MOVS     R1,#+1
+   \   00000066   0846               MOV      R0,R1
+   \   00000068   ........           BL       RCC_APB2PeriphClockCmd
+    463          	/*GPIOA clock enable */
+    464          	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+   \   0000006C   0121               MOVS     R1,#+1
+   \   0000006E   0420               MOVS     R0,#+4
+   \   00000070   ........           BL       RCC_APB2PeriphClockCmd
+    465          	/*GPIOB clock enable */
+    466              RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+   \   00000074   0121               MOVS     R1,#+1
+   \   00000076   0820               MOVS     R0,#+8
+   \   00000078   ........           BL       RCC_APB2PeriphClockCmd
+    467          	/*GPIOC clock enable */
+    468              RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+   \   0000007C   0121               MOVS     R1,#+1
+   \   0000007E   1020               MOVS     R0,#+16
+   \   00000080   ........           BL       RCC_APB2PeriphClockCmd
+    469          	/* DMA1 clock enable */
+    470            	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+   \   00000084   0121               MOVS     R1,#+1
+   \   00000086   0846               MOV      R0,R1
+   \   00000088   ........           BL       RCC_AHBPeriphClockCmd
+    471          	/*USART1 clock enable */
+    472          	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);
+   \   0000008C   0121               MOVS     R1,#+1
+   \   0000008E   4FF48040           MOV      R0,#+16384
+   \   00000092   ........           BL       RCC_APB2PeriphClockCmd
+    473          	/*USART2 clock enable */
+    474          	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
+   \   00000096   0121               MOVS     R1,#+1
+   \   00000098   4FF40030           MOV      R0,#+131072
+   \   0000009C   ........           BL       RCC_APB1PeriphClockCmd
+    475          	/*USART3 clock enable */
+    476          	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3,ENABLE);
+   \   000000A0   0121               MOVS     R1,#+1
+   \   000000A2   4FF48020           MOV      R0,#+262144
+   \   000000A6   ........           BL       RCC_APB1PeriphClockCmd
+    477            	/*SPI1 clock enable */
+    478            	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
+   \   000000AA   0121               MOVS     R1,#+1
+   \   000000AC   4FF48050           MOV      R0,#+4096
+   \   000000B0   ........           BL       RCC_APB2PeriphClockCmd
+    479          	/*SPI2 clock enable */
+    480            	//RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
+    481          	/* I2C1 Periph clock enable */
+    482            	//RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+    483          	/*DMA1 clock enable */
+    484          	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+   \   000000B4   0121               MOVS     R1,#+1
+   \   000000B6   0846               MOV      R0,R1
+   \   000000B8   ........           BL       RCC_AHBPeriphClockCmd
+    485          	/* CAN Periph clock enable */
+    486          	RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN, ENABLE);
+   \   000000BC   0121               MOVS     R1,#+1
+   \   000000BE   4FF00070           MOV      R0,#+33554432
+   \   000000C2   BDE80440           POP      {R2,LR}
+   \   000000C6   ........           B.W      RCC_APB1PeriphClockCmd
+    487          }
+    488          
+
+   \                                 In section .text, align 4, keep-with-next
+    489          void BSP_SPI_Init(void)
+    490          {
+   \                     BSP_SPI_Init:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   86B0               SUB      SP,SP,#+24
+    491          	SPI_InitTypeDef  SPI_InitStructure;
+    492          /* SPI1 configuration ------------------------------------------------------*/
+    493          	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+   \   00000004   0020               MOVS     R0,#+0
+   \   00000006   ADF80000           STRH     R0,[SP, #+0]
+    494          	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
+   \   0000000A   4FF48270           MOV      R0,#+260
+   \   0000000E   ADF80200           STRH     R0,[SP, #+2]
+    495          	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+   \   00000012   0020               MOVS     R0,#+0
+   \   00000014   0190               STR      R0,[SP, #+4]
+    496          	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low; 
+    497          	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+   \   00000016   ADF80800           STRH     R0,[SP, #+8]
+    498          	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
+   \   0000001A   4FF40070           MOV      R0,#+512
+   \   0000001E   ADF80A00           STRH     R0,[SP, #+10]
+    499          	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;
+   \   00000022   1020               MOVS     R0,#+16
+   \   00000024   ADF80C00           STRH     R0,[SP, #+12]
+    500          	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+   \   00000028   0020               MOVS     R0,#+0
+   \   0000002A   ADF80E00           STRH     R0,[SP, #+14]
+    501          	SPI_InitStructure.SPI_CRCPolynomial = 7;
+   \   0000002E   0720               MOVS     R0,#+7
+   \   00000030   ADF81000           STRH     R0,[SP, #+16]
+    502          	SPI_Init(SPI1, &SPI_InitStructure);
+   \   00000034   0B4C               LDR.N    R4,??BSP_SPI_Init_0  ;; 0x40013000
+   \   00000036   00A9               ADD      R1,SP,#+0
+   \   00000038   2046               MOV      R0,R4
+   \   0000003A   ........           BL       SPI_Init
+    503          	
+    504          	/* Disable SPI1 CRC calculation */
+    505          	SPI_CalculateCRC(SPI1, DISABLE);
+   \   0000003E   0021               MOVS     R1,#+0
+   \   00000040   2046               MOV      R0,R4
+   \   00000042   ........           BL       SPI_CalculateCRC
+    506          	/* Enable SPI1 */
+    507          	SPI_Cmd(SPI1, ENABLE);
+   \   00000046   0121               MOVS     R1,#+1
+   \   00000048   2046               MOV      R0,R4
+   \   0000004A   ........           BL       SPI_Cmd
+    508          	  
+    509          	GPIO_SetBits(GPIOA, W5100_CS);
+   \   0000004E   1021               MOVS     R1,#+16
+   \   00000050   ....               LDR.N    R0,??DataTable13  ;; 0x40010800
+   \   00000052   ........           BL       GPIO_SetBits
+    510          	
+    511          	
+    512          	GPIO_SetBits(GPIOB, CH432_CS);
+   \   00000056   4FF48051           MOV      R1,#+4096
+   \   0000005A   ....               LDR.N    R0,??DataTable14  ;; 0x40010c00
+   \   0000005C   ........           BL       GPIO_SetBits
+    513          }
+   \   00000060   06B0               ADD      SP,SP,#+24
+   \   00000062   10BD               POP      {R4,PC}          ;; return
+   \                     ??BSP_SPI_Init_0:
+   \   00000064   00300140           DC32     0x40013000
+    514          
+    515          
+
+   \                                 In section .text, align 4, keep-with-next
+    516          void BSP_EXT_Init(void)
+    517          {
+   \                     BSP_EXT_Init:
+   \   00000000   00B5               PUSH     {LR}
+   \   00000002   83B0               SUB      SP,SP,#+12
+    518            	EXTI_InitTypeDef EXTI_InitStructure;
+    519            
+    520            //设置io口  
+    521            /* Connect EXTI Line to W5100 GPIO Pin */
+    522          	GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource0);  //PA0 为EXTI
+   \   00000004   0021               MOVS     R1,#+0
+   \   00000006   0846               MOV      R0,R1
+   \   00000008   ........           BL       GPIO_EXTILineConfig
+    523          
+    524            /* Configure EXTI Line to generate an interrupt on falling edge */  
+    525          	EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+   \   0000000C   0120               MOVS     R0,#+1
+   \   0000000E   0090               STR      R0,[SP, #+0]
+    526          	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+   \   00000010   0020               MOVS     R0,#+0
+   \   00000012   8DF80400           STRB     R0,[SP, #+4]
+    527          	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+   \   00000016   0C20               MOVS     R0,#+12
+   \   00000018   8DF80500           STRB     R0,[SP, #+5]
+    528          	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+   \   0000001C   0120               MOVS     R0,#+1
+   \   0000001E   8DF80600           STRB     R0,[SP, #+6]
+    529          	EXTI_Init(&EXTI_InitStructure);
+   \   00000022   00A8               ADD      R0,SP,#+0
+   \   00000024   ........           BL       EXTI_Init
+    530          	
+    531              GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);  //PB1 为EXTI
+   \   00000028   0121               MOVS     R1,#+1
+   \   0000002A   0846               MOV      R0,R1
+   \   0000002C   ........           BL       GPIO_EXTILineConfig
+    532            /* Configure EXTI Line to generate an interrupt on falling edge */  
+    533          	
+    534          	EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+   \   00000030   0220               MOVS     R0,#+2
+   \   00000032   0090               STR      R0,[SP, #+0]
+    535          	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+   \   00000034   0020               MOVS     R0,#+0
+   \   00000036   8DF80400           STRB     R0,[SP, #+4]
+    536          	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+   \   0000003A   0C20               MOVS     R0,#+12
+   \   0000003C   8DF80500           STRB     R0,[SP, #+5]
+    537          	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+   \   00000040   0120               MOVS     R0,#+1
+   \   00000042   8DF80600           STRB     R0,[SP, #+6]
+    538          	EXTI_Init(&EXTI_InitStructure);
+   \   00000046   00A8               ADD      R0,SP,#+0
+   \   00000048   ........           BL       EXTI_Init
+    539          	
+    540          	BSP_IntVectSet(BSP_INT_ID_EXTI1, EXTI1_IRQHandler);
+   \   0000004C   0C49               LDR.N    R1,??BSP_EXT_Init_0  ;; EXTI1_IRQHandler
+   \   0000004E   0720               MOVS     R0,#+7
+   \   00000050   ........           BL       BSP_IntVectSet
+    541            	BSP_IntEn(BSP_INT_ID_EXTI1);
+   \   00000054   0720               MOVS     R0,#+7
+   \   00000056   ........           BL       BSP_IntEn
+    542          	
+    543          	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource7);  //PB7 为EXTI
+   \   0000005A   0721               MOVS     R1,#+7
+   \   0000005C   0120               MOVS     R0,#+1
+   \   0000005E   ........           BL       GPIO_EXTILineConfig
+    544            /* Configure EXTI Line to generate an interrupt on falling edge */  
+    545          	
+    546          	EXTI_InitStructure.EXTI_Line = EXTI_Line7;
+   \   00000062   8020               MOVS     R0,#+128
+   \   00000064   0090               STR      R0,[SP, #+0]
+    547          	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+   \   00000066   0020               MOVS     R0,#+0
+   \   00000068   8DF80400           STRB     R0,[SP, #+4]
+    548          	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+   \   0000006C   0C20               MOVS     R0,#+12
+   \   0000006E   8DF80500           STRB     R0,[SP, #+5]
+    549          	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+   \   00000072   0120               MOVS     R0,#+1
+   \   00000074   8DF80600           STRB     R0,[SP, #+6]
+    550          	EXTI_Init(&EXTI_InitStructure);
+   \   00000078   00A8               ADD      R0,SP,#+0
+   \   0000007A   ........           BL       EXTI_Init
+    551          }
+   \   0000007E   07BD               POP      {R0-R2,PC}       ;; return
+   \                     ??BSP_EXT_Init_0:
+   \   00000080   ........           DC32     EXTI1_IRQHandler
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable12:
+   \   00000000   00100140           DC32     0x40011000
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable13:
+   \   00000000   00080140           DC32     0x40010800
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable14:
+   \   00000000   000C0140           DC32     0x40010c00
+    552          
+    553          
+    554          
+
+   Maximum stack usage in bytes:
+
+     Function              .cstack
+     --------              -------
+     BSP_CPU_ClkFreq            8
+     BSP_EXT_Init              16
+     BSP_GPIO_Init             16
+     BSP_Init                   8
+     BSP_RCC_Init               8
+     BSP_Relay_Off              8
+     BSP_Relay_On               8
+     BSP_SPI_Init              32
+     OS_CPU_SysTickClkFreq      8
+
+
+   Section sizes:
+
+     Function/Label        Bytes
+     --------------        -----
+     BSP_Init                20
+     BSP_CPU_ClkFreq         20
+     rcc_clocks              20
+     OS_CPU_SysTickClkFreq    2
+     BSP_Relay_On            64
+     BSP_Relay_Off           64
+     BSP_GPIO_Init          416
+     BSP_RCC_Init           202
+     BSP_SPI_Init           104
+     BSP_EXT_Init           132
+     ??DataTable12            4
+     ??DataTable13            4
+     ??DataTable14            4
+
+ 
+    20 bytes in section .bss
+ 1 036 bytes in section .text
+ 
+ 1 036 bytes of CODE memory
+    20 bytes of DATA memory
+
+Errors: none
+Warnings: none

@@ -1,0 +1,448 @@
+###############################################################################
+#                                                                             #
+#                                                       16/Jun/2009  22:57:19 #
+# IAR ANSI C/C++ Compiler V5.30.2.31295/W32 KICKSTART for ARM                 #
+# Copyright 1999-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Cpu mode     =  thumb                                                    #
+#    Endian       =  little                                                   #
+#    Source file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Boards\Can\STM32Can.c                                 #
+#    Command line =  "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\Boards\Can\STM32Can.c" -D _DLIB_FILE_DESCRIPTOR -lC   #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Debug\List\" -o  #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\Debug\Obj\"      #
+#                    --no_unroll --no_inline --no_tbaa --no_scheduling        #
+#                    --debug --endian=little --cpu=Cortex-M3 -e --fpu=None    #
+#                    --dlib_config "D:\Program Files\IAR Systems\Embedded     #
+#                    Workbench 5.4 Kickstart\arm\INC\DLib_Config_Normal.h"    #
+#                    -I "F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\" -I   #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uCOS-II\Source\" -I "F:\MyProjects\Tjinc\CAN & Uart   #
+#                    over IP\uCOS-II\Ports\arm-cortex-m3\Generic\IAR\" -I     #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\uC-CPU\ARM-Cortex-M3\IAR\" -I                         #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-CPU\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over IP\uC-LIB\" -I      #
+#                    "F:\MyProjects\Tjinc\CAN & Uart over                     #
+#                    IP\FWLib\library\inc\" -I "F:\MyProjects\Tjinc\CAN &     #
+#                    Uart over IP\Boards\BSP\" -I "F:\MyProjects\Tjinc\CAN &  #
+#                    Uart over IP\Interrupt\" -I "D:\Program Files\IAR        #
+#                    Systems\Embedded Workbench 5.4 Kickstart\arm\INC\" -Om   #
+#    List file    =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\List\STM32Can.lst                               #
+#    Object file  =  F:\MyProjects\Tjinc\CAN & Uart over                      #
+#                    IP\Debug\Obj\STM32Can.o                                  #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+F:\MyProjects\Tjinc\CAN & Uart over IP\Boards\Can\STM32Can.c
+      1          /* Includes ------------------------------------------------------------------*/
+      2          #include <string.h>
+
+   \                                 In section .text, align 2
+   \   __??Code16?? __intrinsic __code __interwork void *memcpy(void *, void const *, size_t)
+   \                     memcpy:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   0446               MOV      R4,R0
+   \   00000004   ........           BL       __aeabi_memcpy
+   \   00000008   2046               MOV      R0,R4
+   \   0000000A   10BD               POP      {R4,PC}          ;; return
+      3          
+      4          #include "bsp.h"
+      5          #include "stm32f10x_lib.h"
+      6          #include "stm32f10x_it.h"
+      7          #include "eeprom/at24c64.h"
+      8          /* Extern variables ------------------------------------------------------------*/
+      9          extern OS_EVENT	*CanMsgQ;
+     10          /* Private typedef -----------------------------------------------------------*/
+     11          /* Private define ------------------------------------------------------------*/
+     12          /* Private macro -------------------------------------------------------------*/
+     13          /* Private variables ---------------------------------------------------------*/
+
+   \                                 In section .bss, align 4
+     14          static CANCONF	CanConf;
+   \                     CanConf:
+   \   00000000                      DS8 4
+
+   \                                 In section .bss, align 4
+     15          static CANBUFF  CanBuffer[CanMsgNum];
+     16          static INT8U CanMsgCount=0;
+   \                     CanMsgCount:
+   \   00000000                      DS8 1
+   \   00000001                      DS8 3
+   \   00000004                      DS8 256
+     17          /* Private functions ---------------------------------------------------------*/
+     18          
+     19          
+
+   \                                 In section .text, align 4, keep-with-next
+     20          void STM32_CAN_Init(void)
+     21          {
+   \                     STM32_CAN_Init:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   88B0               SUB      SP,SP,#+32
+     22          	CAN_InitTypeDef        CAN_InitStructure;
+     23            	CAN_FilterInitTypeDef  CAN_FilterInitStructure;
+     24          	
+     25            	/* CAN register init */
+     26            	CAN_DeInit();
+   \   00000004   ........           BL       CAN_DeInit
+     27          
+     28            	/* CAN cell init */
+     29            	CAN_InitStructure.CAN_TTCM=DISABLE;
+   \   00000008   0020               MOVS     R0,#+0
+   \   0000000A   0090               STR      R0,[SP, #+0]
+     30            	CAN_InitStructure.CAN_ABOM=DISABLE;
+     31            	CAN_InitStructure.CAN_AWUM=DISABLE;
+     32            	CAN_InitStructure.CAN_NART=DISABLE;
+     33            	CAN_InitStructure.CAN_RFLM=DISABLE;
+   \   0000000C   ADF80400           STRH     R0,[SP, #+4]
+     34            	CAN_InitStructure.CAN_TXFP=DISABLE;
+     35            	CAN_InitStructure.CAN_Mode=CAN_Mode_Normal;
+   \   00000010   8DF80600           STRB     R0,[SP, #+6]
+     36          /*
+     37            can主频=pclk1/CAN_Prescaler=24M/150 = 160K
+     38            baund = can主频 / (sjw+bs1+bs2) = 160k /16 = 10k
+     39            24M - >10k , 1,7,8,150
+     40          */  
+     41          	get_canbus(&CanConf);
+   \   00000014   ....               LDR.N    R4,??DataTable1  ;; CanConf
+   \   00000016   2046               MOV      R0,R4
+   \   00000018   ........           BL       get_canbus
+     42          	
+     43          	switch(CanConf.BaudRate){
+   \   0000001C   2088               LDRH     R0,[R4, #+0]
+   \   0000001E   0528               CMP      R0,#+5
+   \   00000020   04D0               BEQ.N    ??STM32_CAN_Init_0
+   \   00000022   1428               CMP      R0,#+20
+   \   00000024   10D0               BEQ.N    ??STM32_CAN_Init_1
+   \   00000026   3228               CMP      R0,#+50
+   \   00000028   1BD0               BEQ.N    ??STM32_CAN_Init_2
+   \   0000002A   27E0               B.N      ??STM32_CAN_Init_3
+     44          		case 5:
+     45          		  	CAN_InitStructure.CAN_SJW=CAN_SJW_1tq;    
+   \                     ??STM32_CAN_Init_0:
+   \   0000002C   0020               MOVS     R0,#+0
+   \   0000002E   8DF80700           STRB     R0,[SP, #+7]
+     46            			CAN_InitStructure.CAN_BS1=CAN_BS1_8tq;    
+   \   00000032   0720               MOVS     R0,#+7
+   \   00000034   8DF80800           STRB     R0,[SP, #+8]
+     47            			CAN_InitStructure.CAN_BS2=CAN_BS2_7tq;
+   \   00000038   0620               MOVS     R0,#+6
+   \   0000003A   8DF80900           STRB     R0,[SP, #+9]
+     48          			CAN_InitStructure.CAN_Prescaler=300;	//5K
+   \   0000003E   4FF49670           MOV      R0,#+300
+   \   00000042   ADF80A00           STRH     R0,[SP, #+10]
+   \   00000046   25E0               B.N      ??STM32_CAN_Init_4
+     49          			break;
+     50          		case 20:
+     51          		  	CAN_InitStructure.CAN_SJW=CAN_SJW_1tq;    
+   \                     ??STM32_CAN_Init_1:
+   \   00000048   0020               MOVS     R0,#+0
+   \   0000004A   8DF80700           STRB     R0,[SP, #+7]
+     52            			CAN_InitStructure.CAN_BS1=CAN_BS1_8tq;    
+   \   0000004E   0720               MOVS     R0,#+7
+   \   00000050   8DF80800           STRB     R0,[SP, #+8]
+     53            			CAN_InitStructure.CAN_BS2=CAN_BS2_7tq;
+   \   00000054   0620               MOVS     R0,#+6
+   \   00000056   8DF80900           STRB     R0,[SP, #+9]
+     54          			CAN_InitStructure.CAN_Prescaler=75;		//20K
+   \   0000005A   4B20               MOVS     R0,#+75
+   \   0000005C   ADF80A00           STRH     R0,[SP, #+10]
+   \   00000060   18E0               B.N      ??STM32_CAN_Init_4
+     55          			break;		
+     56          		case 50:
+     57          		  	CAN_InitStructure.CAN_SJW=CAN_SJW_1tq;    
+   \                     ??STM32_CAN_Init_2:
+   \   00000062   0020               MOVS     R0,#+0
+   \   00000064   8DF80700           STRB     R0,[SP, #+7]
+     58            			CAN_InitStructure.CAN_BS1=CAN_BS1_8tq;    
+   \   00000068   0720               MOVS     R0,#+7
+   \   0000006A   8DF80800           STRB     R0,[SP, #+8]
+     59            			CAN_InitStructure.CAN_BS2=CAN_BS2_7tq;
+   \   0000006E   0620               MOVS     R0,#+6
+   \   00000070   8DF80900           STRB     R0,[SP, #+9]
+     60          			CAN_InitStructure.CAN_Prescaler=30;		//50K
+   \   00000074   1E20               MOVS     R0,#+30
+   \   00000076   ADF80A00           STRH     R0,[SP, #+10]
+   \   0000007A   0BE0               B.N      ??STM32_CAN_Init_4
+     61          			break;	
+     62          		default:		//10K	
+     63          		  	CAN_InitStructure.CAN_SJW=CAN_SJW_1tq;    
+   \                     ??STM32_CAN_Init_3:
+   \   0000007C   0020               MOVS     R0,#+0
+   \   0000007E   8DF80700           STRB     R0,[SP, #+7]
+     64            			CAN_InitStructure.CAN_BS1=CAN_BS1_8tq;    
+   \   00000082   0720               MOVS     R0,#+7
+   \   00000084   8DF80800           STRB     R0,[SP, #+8]
+     65            			CAN_InitStructure.CAN_BS2=CAN_BS2_7tq;
+   \   00000088   0620               MOVS     R0,#+6
+   \   0000008A   8DF80900           STRB     R0,[SP, #+9]
+     66          			CAN_InitStructure.CAN_Prescaler=150;	//10K
+   \   0000008E   9620               MOVS     R0,#+150
+   \   00000090   ADF80A00           STRH     R0,[SP, #+10]
+     67          			break;
+     68          	}
+     69            	
+     70          	
+     71            	CAN_Init(&CAN_InitStructure);
+   \                     ??STM32_CAN_Init_4:
+   \   00000094   00A8               ADD      R0,SP,#+0
+   \   00000096   ........           BL       CAN_Init
+     72          
+     73            	/* CAN filter init */
+     74            	CAN_FilterInitStructure.CAN_FilterNumber=0;
+   \   0000009A   0020               MOVS     R0,#+0
+   \   0000009C   ADF80C00           STRH     R0,[SP, #+12]
+     75            	CAN_FilterInitStructure.CAN_FilterMode=CAN_FilterMode_IdMask;
+     76            	CAN_FilterInitStructure.CAN_FilterScale=CAN_FilterScale_32bit;
+   \   000000A0   0120               MOVS     R0,#+1
+   \   000000A2   8DF80E00           STRB     R0,[SP, #+14]
+     77            	CAN_FilterInitStructure.CAN_FilterIdHigh=0x0000;
+   \   000000A6   0020               MOVS     R0,#+0
+   \   000000A8   0490               STR      R0,[SP, #+16]
+     78            	CAN_FilterInitStructure.CAN_FilterIdLow=0x0000;
+     79            	CAN_FilterInitStructure.CAN_FilterMaskIdHigh=0x0000;
+   \   000000AA   0590               STR      R0,[SP, #+20]
+     80            	CAN_FilterInitStructure.CAN_FilterMaskIdLow=0x0000;
+     81            	CAN_FilterInitStructure.CAN_FilterFIFOAssignment=0;
+   \   000000AC   ADF81800           STRH     R0,[SP, #+24]
+     82            	CAN_FilterInitStructure.CAN_FilterActivation=ENABLE;
+   \   000000B0   0120               MOVS     R0,#+1
+   \   000000B2   8DF81A00           STRB     R0,[SP, #+26]
+     83            	CAN_FilterInit(&CAN_FilterInitStructure);
+   \   000000B6   03A8               ADD      R0,SP,#+12
+   \   000000B8   ........           BL       CAN_FilterInit
+     84          	
+     85          	/* CAN FIFO0 message pending interrupt enable */ 
+     86            	CAN_ITConfig(CAN_IT_FMP0, ENABLE);
+   \   000000BC   0121               MOVS     R1,#+1
+   \   000000BE   0220               MOVS     R0,#+2
+   \   000000C0   ........           BL       CAN_ITConfig
+     87          	
+     88          	//设置中断向量
+     89            	BSP_IntVectSet(BSP_INT_ID_USB_LP_CAN_RX0, USB_LP_CAN_RX0_IRQHandler);
+   \   000000C4   0449               LDR.N    R1,??STM32_CAN_Init_5  ;; USB_LP_CAN_RX0_IRQHandler
+   \   000000C6   1420               MOVS     R0,#+20
+   \   000000C8   ........           BL       BSP_IntVectSet
+     90            	BSP_IntEn(BSP_INT_ID_USB_LP_CAN_RX0);
+   \   000000CC   1420               MOVS     R0,#+20
+   \   000000CE   ........           BL       BSP_IntEn
+     91          
+     92          }
+   \   000000D2   08B0               ADD      SP,SP,#+32
+   \   000000D4   10BD               POP      {R4,PC}          ;; return
+   \   000000D6   00BF               Nop      
+   \                     ??STM32_CAN_Init_5:
+   \   000000D8   ........           DC32     USB_LP_CAN_RX0_IRQHandler
+
+   \                                 In section .text, align 2, keep-with-next
+     93          INT8U STM32_CAN_Send(RECVSOCK *msg)
+     94          {
+   \                     STM32_CAN_Send:
+   \   00000000   00B5               PUSH     {LR}
+   \   00000002   85B0               SUB      SP,SP,#+20
+   \   00000004   ....               LDR.N    R1,??DataTable1  ;; CanConf
+   \   00000006   8978               LDRB     R1,[R1, #+2]
+   \   00000008   0029               CMP      R1,#+0
+   \   0000000A   C278               LDRB     R2,[R0, #+3]
+   \   0000000C   8378               LDRB     R3,[R0, #+2]
+   \   0000000E   03EB0222           ADD      R2,R3,R2, LSL #+8
+   \   00000012   4FEA0252           LSL      R2,R2,#+20
+   \   00000016   4FEA1252           LSR      R2,R2,#+20
+   \   0000001A   01D1               BNE.N    ??STM32_CAN_Send_0
+     95            	CanTxMsg TxMessage;
+     96            	INT8U TransmitMailbox = 0;
+     97            	/* transmit */
+     98          	if(CanConf.IDE==CAN_ID_STD)
+     99            		TxMessage.StdId=(((INT32U)msg->buff[2]<<16) + ((INT32U)msg->buff[1]<<8) + ((INT32U)msg->buff[0])) & 0x0FFF;
+   \   0000001C   0092               STR      R2,[SP, #+0]
+   \   0000001E   00E0               B.N      ??STM32_CAN_Send_1
+    100          	else
+    101          	  	TxMessage.ExtId=(((INT32U)msg->buff[2]<<16) + ((INT32U)msg->buff[1]<<8) + ((INT32U)msg->buff[0])) & 0x0FFF;
+   \                     ??STM32_CAN_Send_0:
+   \   00000020   0192               STR      R2,[SP, #+4]
+    102          	
+    103            	TxMessage.RTR=CAN_RTR_DATA;
+   \                     ??STM32_CAN_Send_1:
+   \   00000022   0022               MOVS     R2,#+0
+   \   00000024   8DF80920           STRB     R2,[SP, #+9]
+    104            	TxMessage.IDE=CanConf.IDE;
+   \   00000028   8DF80810           STRB     R1,[SP, #+8]
+    105          	
+    106          	if(msg->len>12)
+   \   0000002C   0188               LDRH     R1,[R0, #+0]
+   \   0000002E   0D29               CMP      R1,#+13
+   \   00000030   03D3               BCC.N    ??STM32_CAN_Send_2
+    107          		TxMessage.DLC=8;
+   \   00000032   0821               MOVS     R1,#+8
+   \   00000034   8DF80A10           STRB     R1,[SP, #+10]
+   \   00000038   08E0               B.N      ??STM32_CAN_Send_3
+    108          	else if(msg->len>4)
+   \                     ??STM32_CAN_Send_2:
+   \   0000003A   0529               CMP      R1,#+5
+   \   0000003C   03D3               BCC.N    ??STM32_CAN_Send_4
+    109          	  	TxMessage.DLC=msg->len-4;
+   \   0000003E   091F               SUBS     R1,R1,#+4
+   \   00000040   8DF80A10           STRB     R1,[SP, #+10]
+   \   00000044   02E0               B.N      ??STM32_CAN_Send_3
+    110          	else
+    111          	  	TxMessage.DLC=0;
+   \                     ??STM32_CAN_Send_4:
+   \   00000046   1146               MOV      R1,R2
+   \   00000048   8DF80A10           STRB     R1,[SP, #+10]
+    112          	
+    113          	memcpy(TxMessage.Data,msg->buff+4,TxMessage.DLC);
+   \                     ??STM32_CAN_Send_3:
+   \   0000004C   9DF80A20           LDRB     R2,[SP, #+10]
+   \   00000050   811D               ADDS     R1,R0,#+6
+   \   00000052   0DF10B00           ADD      R0,SP,#+11
+   \   00000056   ........           BL       memcpy
+    114          
+    115            	TransmitMailbox=CAN_Transmit(&TxMessage);
+   \   0000005A   00A8               ADD      R0,SP,#+0
+   \   0000005C   ........           BL       CAN_Transmit
+    116          	
+    117          	return CAN_TransmitStatus(TransmitMailbox);
+   \   00000060   ........           BL       CAN_TransmitStatus
+   \   00000064   05B0               ADD      SP,SP,#+20
+   \   00000066   00BD               POP      {PC}             ;; return
+    118          }
+
+   \                                 In section .text, align 4, keep-with-next
+    119          void CAN_Interrupt(void)
+    120          {
+   \                     CAN_Interrupt:
+   \   00000000   10B5               PUSH     {R4,LR}
+   \   00000002   86B0               SUB      SP,SP,#+24
+    121            	CanRxMsg RxMessage;
+    122          	
+    123            	CAN_Receive(CAN_FIFO0, &RxMessage);
+   \   00000004   00A9               ADD      R1,SP,#+0
+   \   00000006   0020               MOVS     R0,#+0
+   \   00000008   ........           BL       CAN_Receive
+    124          	
+    125          	if(RxMessage.IDE==CAN_ID_STD)
+   \   0000000C   144C               LDR.N    R4,??CAN_Interrupt_0  ;; CanMsgCount
+   \   0000000E   2078               LDRB     R0,[R4, #+0]
+   \   00000010   04EB0010           ADD      R0,R4,R0, LSL #+4
+   \   00000014   9DF80810           LDRB     R1,[SP, #+8]
+   \   00000018   0029               CMP      R1,#+0
+   \   0000001A   02D1               BNE.N    ??CAN_Interrupt_1
+    126          		CanBuffer[CanMsgCount].Id=RxMessage.StdId;
+   \   0000001C   0099               LDR      R1,[SP, #+0]
+   \   0000001E   8160               STR      R1,[R0, #+8]
+   \   00000020   01E0               B.N      ??CAN_Interrupt_2
+    127          	else
+    128          	  	CanBuffer[CanMsgCount].Id=RxMessage.ExtId;
+   \                     ??CAN_Interrupt_1:
+   \   00000022   0199               LDR      R1,[SP, #+4]
+   \   00000024   8160               STR      R1,[R0, #+8]
+    129          	
+    130          	CanBuffer[CanMsgCount].DLC=RxMessage.DLC;
+   \                     ??CAN_Interrupt_2:
+   \   00000026   9DF80A10           LDRB     R1,[SP, #+10]
+   \   0000002A   0171               STRB     R1,[R0, #+4]
+    131          	memcpy(CanBuffer[CanMsgCount].Data,RxMessage.Data,RxMessage.DLC);
+   \   0000002C   9DF80A20           LDRB     R2,[SP, #+10]
+   \   00000030   0DF10B01           ADD      R1,SP,#+11
+   \   00000034   0C30               ADDS     R0,R0,#+12
+   \   00000036   ........           BL       memcpy
+    132          	
+    133          	OSQPost(CanMsgQ,&CanBuffer[CanMsgCount]);
+   \   0000003A   2078               LDRB     R0,[R4, #+0]
+   \   0000003C   04EB0010           ADD      R0,R4,R0, LSL #+4
+   \   00000040   011D               ADDS     R1,R0,#+4
+   \   00000042   0848               LDR.N    R0,??CAN_Interrupt_0+0x4  ;; CanMsgQ
+   \   00000044   0068               LDR      R0,[R0, #+0]
+   \   00000046   ........           BL       OSQPost
+    134          	
+    135          	CanMsgCount++;
+   \   0000004A   2078               LDRB     R0,[R4, #+0]
+   \   0000004C   401C               ADDS     R0,R0,#+1
+   \   0000004E   2070               STRB     R0,[R4, #+0]
+    136          	if(CanMsgCount>=CanMsgNum)
+   \   00000050   C0B2               UXTB     R0,R0
+   \   00000052   1028               CMP      R0,#+16
+   \   00000054   01D3               BCC.N    ??CAN_Interrupt_3
+    137          		CanMsgCount=0;  	
+   \   00000056   0020               MOVS     R0,#+0
+   \   00000058   2070               STRB     R0,[R4, #+0]
+    138          }
+   \                     ??CAN_Interrupt_3:
+   \   0000005A   06B0               ADD      SP,SP,#+24
+   \   0000005C   10BD               POP      {R4,PC}          ;; return
+   \   0000005E   00BF               Nop      
+   \                     ??CAN_Interrupt_0:
+   \   00000060   ........           DC32     CanMsgCount
+   \   00000064   ........           DC32     CanMsgQ
+
+   \                                 In section .text, align 2, keep-with-next
+    139          unsigned char VerifyCanBaudRate(unsigned short BaudRate)
+    140          {
+    141          	switch(BaudRate){
+   \                     VerifyCanBaudRate:
+   \   00000000   0528               CMP      R0,#+5
+   \   00000002   05D0               BEQ.N    ??VerifyCanBaudRate_0
+   \   00000004   0A28               CMP      R0,#+10
+   \   00000006   03D0               BEQ.N    ??VerifyCanBaudRate_0
+   \   00000008   1428               CMP      R0,#+20
+   \   0000000A   01D0               BEQ.N    ??VerifyCanBaudRate_0
+   \   0000000C   3228               CMP      R0,#+50
+   \   0000000E   01D1               BNE.N    ??VerifyCanBaudRate_1
+    142          		case 5:
+    143          		case 10:
+    144          		case 20:
+    145          		case 50:
+    146          		  	return 1;
+   \                     ??VerifyCanBaudRate_0:
+   \   00000010   0120               MOVS     R0,#+1
+   \   00000012   7047               BX       LR
+    147          	default:
+    148          		  	return 0;
+   \                     ??VerifyCanBaudRate_1:
+   \   00000014   0020               MOVS     R0,#+0
+   \   00000016   7047               BX       LR               ;; return
+    149          	}
+    150          }
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable1:
+   \   00000000   ........           DC32     CanConf
+
+   Maximum stack usage in bytes:
+
+     Function          .cstack
+     --------          -------
+     CAN_Interrupt         32
+     STM32_CAN_Init        40
+     STM32_CAN_Send        24
+     VerifyCanBaudRate      0
+     memcpy                 8
+
+
+   Section sizes:
+
+     Function/Label    Bytes
+     --------------    -----
+     memcpy              12
+     CanConf              4
+     CanMsgCount        260
+     CanBuffer
+     STM32_CAN_Init     220
+     STM32_CAN_Send     104
+     CAN_Interrupt      104
+     VerifyCanBaudRate   24
+     ??DataTable1         4
+
+ 
+ 264 bytes in section .bss
+ 468 bytes in section .text
+ 
+ 456 bytes of CODE memory (+ 12 bytes shared)
+ 264 bytes of DATA memory
+
+Errors: none
+Warnings: none
